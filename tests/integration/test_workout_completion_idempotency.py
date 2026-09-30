@@ -78,8 +78,9 @@ def _event(duration_seconds: int = 600) -> CanonicalWorkoutEventV1:
 
 
 def test_duplicate_completion_creates_exactly_one_revision(tmp_path) -> None:
-    from hwa.db.models.workout import WorkoutDraft, WorkoutEvent, WorkoutRevision
     from hwa.services.workout_evidence import complete_workout
+
+    from hwa.db.models.workout import WorkoutDraft, WorkoutEvent, WorkoutRevision
 
     engine = create_engine(
         DatabaseSettings(database_url=f"sqlite:///{tmp_path / 'complete.db'}")
