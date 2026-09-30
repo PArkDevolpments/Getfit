@@ -2,10 +2,11 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 from sqlalchemy import select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 
 from hwa.clock import to_utc
@@ -142,18 +143,21 @@ def autosave_draft(
     if saved_utc < current.updated_at_utc:
         raise ValueError("saved_at cannot precede the current draft update")
 
-    result = session.execute(
-        update(WorkoutDraft)
-        .where(
-            WorkoutDraft.id == draft_id,
-            WorkoutDraft.person_id == person_id,
-            WorkoutDraft.version == expected_version,
-        )
-        .values(
-            version=expected_version + 1,
-            snapshot_json=parsed.model_dump_json(),
-            updated_at_utc=saved_utc,
-        )
+    result = cast(
+        CursorResult[Any],
+        session.execute(
+            update(WorkoutDraft)
+            .where(
+                WorkoutDraft.id == draft_id,
+                WorkoutDraft.person_id == person_id,
+                WorkoutDraft.version == expected_version,
+            )
+            .values(
+                version=expected_version + 1,
+                snapshot_json=parsed.model_dump_json(),
+                updated_at_utc=saved_utc,
+            )
+        ),
     )
     if result.rowcount != 1:
         session.rollback()
