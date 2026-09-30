@@ -45,7 +45,9 @@ def _valid_event_payload() -> dict[str, object]:
 def test_valid_canonical_event_has_fixed_schema_identity() -> None:
     module = _workout()
     event = module.CanonicalWorkoutEventV1.model_validate(_valid_event_payload())
-    assert event.schema == "home-workout-assistant.workout-event"
+    assert event.model_dump(by_alias=True)["schema"] == (
+        "home-workout-assistant.workout-event"
+    )
     assert event.schema_version == 1
     assert event.duration_seconds == 2550
     assert event.effort.session_rpe == 6.5
