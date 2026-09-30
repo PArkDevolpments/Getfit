@@ -1,5 +1,6 @@
 """Request-scoped API dependencies."""
 
+from collections.abc import Iterator
 from typing import cast
 
 from fastapi import HTTPException, Request, status
@@ -10,13 +11,19 @@ from hwa.domain.identity import IdentityNotMappedError, IdentityService, PersonC
 from hwa.repositories.identity import IdentityRepository
 
 
+def get_session(request: Request) -> Iterator[Session]:
+    """Provide one short-lived database session for a request handler."""
+
+    session_factory = cast(sessionmaker[Session], request.app.state.session_factory)
+    with session_factory() as session:
+        yield session
+
+
 def resolve_person_context(request: Request) -> PersonContext:
     """Resolve the request's authenticated person without trusting client IDs."""
 
     provider = cast(PrincipalProvider, request.app.state.principal_provider)
-    session_factory = cast(
-        sessionmaker[Session], request.app.state.session_factory
-    )
+    session_factory = cast(sessionmaker[Session], request.app.state.session_factory)
 
     try:
         principal = provider.resolve(request)
