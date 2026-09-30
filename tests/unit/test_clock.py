@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
@@ -12,7 +12,7 @@ def test_naive_timestamp_is_rejected() -> None:
 
 def test_offset_timestamp_normalizes_to_utc() -> None:
     value = datetime.fromisoformat("2026-10-01T18:00:00+01:00")
-    assert to_utc(value) == datetime(2026, 10, 1, 17, 0, tzinfo=timezone.utc)
+    assert to_utc(value) == datetime(2026, 10, 1, 17, 0, tzinfo=UTC)
 
 
 def test_equivalent_instants_normalize_identically() -> None:
@@ -22,15 +22,15 @@ def test_equivalent_instants_normalize_identically() -> None:
 
 
 def test_household_time_handles_spring_dst_transition() -> None:
-    before = datetime(2026, 3, 29, 0, 30, tzinfo=timezone.utc)
-    after = datetime(2026, 3, 29, 1, 30, tzinfo=timezone.utc)
+    before = datetime(2026, 3, 29, 0, 30, tzinfo=UTC)
+    after = datetime(2026, 3, 29, 1, 30, tzinfo=UTC)
     assert to_household_time(before).isoformat() == "2026-03-29T00:30:00+00:00"
     assert to_household_time(after).isoformat() == "2026-03-29T02:30:00+01:00"
 
 
 def test_household_time_handles_autumn_dst_transition() -> None:
-    first = datetime(2026, 10, 25, 0, 30, tzinfo=timezone.utc)
-    second = datetime(2026, 10, 25, 1, 30, tzinfo=timezone.utc)
+    first = datetime(2026, 10, 25, 0, 30, tzinfo=UTC)
+    second = datetime(2026, 10, 25, 1, 30, tzinfo=UTC)
     assert to_household_time(first).isoformat() == "2026-10-25T01:30:00+01:00"
     assert to_household_time(second).isoformat() == "2026-10-25T01:30:00+00:00"
 

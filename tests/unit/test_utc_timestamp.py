@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -23,4 +23,4 @@ def test_sqlite_bind_normalizes_to_naive_utc_storage() -> None:
 def test_sqlite_result_is_restored_as_aware_utc() -> None:
     type_ = UTCDateTime()
     value = type_.process_result_value(datetime(2026, 10, 1, 17, 0), dialect=None)
-    assert value == datetime(2026, 10, 1, 17, 0, tzinfo=timezone.utc)
+    assert value == datetime(2026, 10, 1, 17, 0, tzinfo=UTC)
