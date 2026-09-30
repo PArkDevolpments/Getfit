@@ -39,7 +39,9 @@ class ProgrammeDay(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     programme_id: Mapped[str] = mapped_column(
-        String(128), ForeignKey("programme_definitions.programme_id", ondelete="CASCADE"), nullable=False
+        String(128),
+        ForeignKey("programme_definitions.programme_id", ondelete="CASCADE"),
+        nullable=False,
     )
     week_number: Mapped[int] = mapped_column(Integer, nullable=False)
     day_number: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -86,7 +88,8 @@ class ProgrammeCardioItem(Base):
     __table_args__ = (
         UniqueConstraint("programme_day_id", "sequence", name="uq_cardio_day_sequence"),
         CheckConstraint(
-            "equipment != 'spin_bike' OR incline_percent IS NULL", name="ck_spin_bike_no_incline"
+            "equipment != 'spin_bike' OR incline_percent IS NULL",
+            name="ck_spin_bike_no_incline",
         ),
     )
 
@@ -125,13 +128,19 @@ class PersonProgrammeAssignment(Base):
 class PersonPrescriptionOverride(Base):
     __tablename__ = "person_prescription_overrides"
     __table_args__ = (
-        UniqueConstraint("person_id", "programme_strength_item_id", name="uq_person_strength_override"),
+        UniqueConstraint(
+            "person_id",
+            "programme_strength_item_id",
+            name="uq_person_strength_override",
+        ),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     person_id: Mapped[str] = mapped_column(String(36), ForeignKey("people.id"), nullable=False)
     programme_strength_item_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("programme_strength_items.id", ondelete="CASCADE"), nullable=False
+        String(36),
+        ForeignKey("programme_strength_items.id", ondelete="CASCADE"),
+        nullable=False,
     )
     load_value: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
     load_unit: Mapped[str | None] = mapped_column(String(16))
