@@ -11,7 +11,6 @@ from hwa.db.models.identity import ExternalIdentityMapping, Person
 def _load_app_factory():
     assert Path("src/hwa/main.py").exists()
     from hwa.auth.principal import StaticPrincipalProvider
-
     from hwa.main import create_app
 
     return create_app, StaticPrincipalProvider
