@@ -10,8 +10,8 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    event as sa_event,
 )
+from sqlalchemy import event as sa_event
 from sqlalchemy.orm import Mapped, mapped_column
 
 from hwa.db.base import Base
