@@ -104,7 +104,10 @@ def test_correction_projection_keeps_logical_event_and_explicit_supersession() -
 
 
 def test_projection_rejects_cross_person_revision() -> None:
-    from hwa.integrations.pep.workout_projection import PepProjectionIdentityError, project_workout_for_pep
+    from hwa.integrations.pep.workout_projection import (
+        PepProjectionIdentityError,
+        project_workout_for_pep,
+    )
 
     revision = WorkoutRevisionRecord(
         revision_id="revision-other",
