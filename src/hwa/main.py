@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from sqlalchemy import Engine
 
 from hwa.api.routes.me import router as me_router
+from hwa.api.routes.workouts import router as workouts_router
 from hwa.auth.ha_ingress import HomeAssistantIngressPrincipalProvider
 from hwa.auth.principal import PrincipalProvider
 from hwa.db.engine import create_engine, create_session_factory
@@ -24,6 +25,7 @@ def create_app(
     )
     application.state.session_factory = create_session_factory(database_engine)
     application.include_router(me_router)
+    application.include_router(workouts_router)
 
     @application.get("/healthz")
     def healthz() -> dict[str, str]:
