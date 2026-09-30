@@ -1,6 +1,5 @@
 """Canonical structured workout evidence models."""
 
-from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
@@ -11,7 +10,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 class StrictModel(BaseModel):
     """Base model for versioned HWA contracts."""
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True)
 
 
 class LoadUnit(StrEnum):
@@ -114,13 +113,12 @@ class CardioPerformance(StrictModel):
         if self.equipment is Equipment.SPIN_BIKE:
             if self.speed_kmh is not None or self.incline_percent is not None:
                 raise ValueError("spin bike cannot contain speed or incline")
-        else:
-            if (
-                self.cadence_rpm_min is not None
-                or self.cadence_rpm_max is not None
-                or self.resistance is not None
-            ):
-                raise ValueError("treadmill cannot contain bike cadence/resistance")
+        elif (
+            self.cadence_rpm_min is not None
+            or self.cadence_rpm_max is not None
+            or self.resistance is not None
+        ):
+            raise ValueError("treadmill cannot contain bike cadence/resistance")
         if (
             self.cadence_rpm_min is not None
             and self.cadence_rpm_max is not None
@@ -202,8 +200,10 @@ class WorkoutProvenance(StrictModel):
 class CanonicalWorkoutEventV1(StrictModel):
     """Versioned authoritative HWA workout read model."""
 
-    schema: Literal["home-workout-assistant.workout-event"] = (
-        "home-workout-assistant.workout-event"
+    schema_name: Literal["home-workout-assistant.workout-event"] = Field(
+        default="home-workout-assistant.workout-event",
+        alias="schema",
+        serialization_alias="schema",
     )
     schema_version: Literal[1] = 1
     event_id: str = Field(min_length=1)
@@ -222,17 +222,9 @@ class CanonicalWorkoutEventV1(StrictModel):
 
     @model_validator(mode="after")
     def validate_timing(self) -> "CanonicalWorkoutEventV1":
-        start = self.start_at
-        end = self.end_at
-        if end < start:
+        if self.end_at < self.start_at:
             raise ValueError("end_at cannot precede start_at")
-        elapsed = (end - start).total_seconds()
+        elapsed = (self.end_at - self.start_at).total_seconds()
         if elapsed != self.duration_seconds:
             raise ValueError("duration_seconds must match start_at/end_at")
         return self
-
-
-def ensure_datetime(value: datetime) -> datetime:
-    """Typing helper retained for downstream adapters needing datetime identity."""
-
-    return value
