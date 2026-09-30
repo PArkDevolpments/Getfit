@@ -152,55 +152,69 @@ def import_week_seed(
         )
         session.add(db_day)
 
-        for item in day.strength:
-            item_id = _stable_id(day_id, "strength", item.sequence, item.exercise_id)
+        for strength_item in day.strength:
+            item_id = _stable_id(
+                day_id,
+                "strength",
+                strength_item.sequence,
+                strength_item.exercise_id,
+            )
             db_item = ProgrammeStrengthItem(
                 id=item_id,
                 programme_day_id=day_id,
-                sequence=item.sequence,
-                exercise_id=item.exercise_id,
-                target_type=item.target_type.value,
-                sets_target=item.sets_target,
-                reps_target=item.reps_target,
-                reps_min=item.reps_min,
-                reps_max=item.reps_max,
-                duration_seconds_target=item.duration_seconds_target,
-                duration_seconds_min=item.duration_seconds_min,
-                duration_seconds_max=item.duration_seconds_max,
-                laterality=item.laterality.value,
-                load_value=item.load_value,
-                load_unit=item.load_unit.value if item.load_unit is not None else None,
-                load_mode=item.load_mode.value,
-                load_basis=item.load_basis,
-                rest_seconds_min=item.rest_seconds_min,
-                rest_seconds_max=item.rest_seconds_max,
-                tempo_eccentric_seconds=item.tempo_eccentric_seconds,
-                tempo_concentric_seconds=item.tempo_concentric_seconds,
-                notes=item.notes,
+                sequence=strength_item.sequence,
+                exercise_id=strength_item.exercise_id,
+                target_type=strength_item.target_type.value,
+                sets_target=strength_item.sets_target,
+                reps_target=strength_item.reps_target,
+                reps_min=strength_item.reps_min,
+                reps_max=strength_item.reps_max,
+                duration_seconds_target=strength_item.duration_seconds_target,
+                duration_seconds_min=strength_item.duration_seconds_min,
+                duration_seconds_max=strength_item.duration_seconds_max,
+                laterality=strength_item.laterality.value,
+                load_value=strength_item.load_value,
+                load_unit=(
+                    strength_item.load_unit.value
+                    if strength_item.load_unit is not None
+                    else None
+                ),
+                load_mode=strength_item.load_mode.value,
+                load_basis=strength_item.load_basis,
+                rest_seconds_min=strength_item.rest_seconds_min,
+                rest_seconds_max=strength_item.rest_seconds_max,
+                tempo_eccentric_seconds=strength_item.tempo_eccentric_seconds,
+                tempo_concentric_seconds=strength_item.tempo_concentric_seconds,
+                notes=strength_item.notes,
             )
             session.add(db_item)
-            strength_lookup[(day.day_number, item.exercise_id)] = db_item
+            strength_lookup[(day.day_number, strength_item.exercise_id)] = db_item
             strength_count += 1
 
-        for item in day.cardio:
-            item_id = _stable_id(day_id, "cardio", item.sequence, item.segment_type)
+        for cardio_item in day.cardio:
+            item_id = _stable_id(
+                day_id,
+                "cardio",
+                cardio_item.sequence,
+                cardio_item.segment_type,
+            )
             session.add(
                 ProgrammeCardioItem(
                     id=item_id,
                     programme_day_id=day_id,
-                    sequence=item.sequence,
-                    equipment=item.equipment.value.lower(),
-                    segment_type=item.segment_type,
-                    target_mode=item.target_mode.value,
-                    rounds=item.rounds,
-                    duration_seconds=item.duration_seconds,
-                    speed_kmh=item.speed_kmh,
-                    incline_percent=item.incline_percent,
-                    cadence_rpm_min=item.cadence_rpm_min,
-                    cadence_rpm_max=item.cadence_rpm_max,
-                    resistance=item.resistance,
-                    rpe_min=item.rpe_min,
-                    rpe_max=item.rpe_max,
+                    sequence=cardio_item.sequence,
+                    equipment=cardio_item.equipment.value.lower(),
+                    segment_type=cardio_item.segment_type,
+                    target_mode=cardio_item.target_mode.value,
+                    rounds=cardio_item.rounds,
+                    duration_seconds=cardio_item.duration_seconds,
+                    speed_kmh=cardio_item.speed_kmh,
+                    incline_percent=cardio_item.incline_percent,
+                    cadence_rpm_min=cardio_item.cadence_rpm_min,
+                    cadence_rpm_max=cardio_item.cadence_rpm_max,
+                    resistance=cardio_item.resistance,
+                    rpe_min=cardio_item.rpe_min,
+                    rpe_max=cardio_item.rpe_max,
                 )
             )
             cardio_count += 1
