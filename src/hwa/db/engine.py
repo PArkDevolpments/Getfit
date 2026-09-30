@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from sqlite3 import Connection as SQLiteConnection
 from typing import Any
 
-from sqlalchemy import Engine, create_engine as sqlalchemy_create_engine, event
+from sqlalchemy import Engine, event
+from sqlalchemy import create_engine as sqlalchemy_create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 
