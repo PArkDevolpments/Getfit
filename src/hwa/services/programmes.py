@@ -134,6 +134,7 @@ def import_week_seed(
         created_at_utc=datetime.now(UTC),
     )
     session.add(programme)
+    session.flush()
 
     strength_lookup: dict[tuple[int, str], ProgrammeStrengthItem] = {}
     strength_count = 0
@@ -151,6 +152,7 @@ def import_week_seed(
             block=day.block,
         )
         session.add(db_day)
+        session.flush()
 
         for strength_item in day.strength:
             item_id = _stable_id(
