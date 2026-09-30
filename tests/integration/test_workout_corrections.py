@@ -105,9 +105,8 @@ def _completed(session: Session) -> None:
 
 
 def test_correction_appends_revision_and_preserves_original(tmp_path) -> None:
-    from hwa.services.workout_evidence import correct_workout, get_effective_workout
-
     from hwa.db.models.workout import WorkoutEvent, WorkoutRevision
+    from hwa.services.workout_evidence import correct_workout, get_effective_workout
 
     engine = create_engine(
         DatabaseSettings(database_url=f"sqlite:///{tmp_path / 'correction.db'}")
