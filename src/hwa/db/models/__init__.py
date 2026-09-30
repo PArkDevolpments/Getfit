@@ -9,6 +9,7 @@ from hwa.db.models.programme import (
     ProgrammeDefinition,
     ProgrammeStrengthItem,
 )
+from hwa.db.models.workout import WorkoutDraft
 
 __all__ = [
     "ExternalIdentityMapping",
@@ -19,4 +20,5 @@ __all__ = [
     "ProgrammeDay",
     "ProgrammeDefinition",
     "ProgrammeStrengthItem",
+    "WorkoutDraft",
 ]
