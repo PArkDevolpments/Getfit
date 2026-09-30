@@ -1,10 +1,10 @@
 """Validated programme seed loading and deterministic database import."""
 
+import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from hashlib import sha256
-import json
 from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
