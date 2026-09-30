@@ -28,11 +28,20 @@ def upgrade() -> None:
     op.create_table(
         "external_identity_mappings",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("person_id", sa.String(36), sa.ForeignKey("people.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "person_id",
+            sa.String(36),
+            sa.ForeignKey("people.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("authority", sa.String(64), nullable=False),
         sa.Column("external_subject_id", sa.String(255), nullable=False),
         sa.Column("created_at_utc", sa.DateTime(), nullable=False),
-        sa.UniqueConstraint("authority", "external_subject_id", name="uq_external_authority_subject"),
+        sa.UniqueConstraint(
+            "authority",
+            "external_subject_id",
+            name="uq_external_authority_subject",
+        ),
         sa.UniqueConstraint("person_id", "authority", name="uq_person_authority"),
     )
     op.create_table(
@@ -47,18 +56,33 @@ def upgrade() -> None:
     op.create_table(
         "programme_days",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("programme_id", sa.String(128), sa.ForeignKey("programme_definitions.programme_id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "programme_id",
+            sa.String(128),
+            sa.ForeignKey("programme_definitions.programme_id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("week_number", sa.Integer(), nullable=False),
         sa.Column("day_number", sa.Integer(), nullable=False),
         sa.Column("title", sa.String(255), nullable=False),
         sa.Column("workout_type", sa.String(64), nullable=False),
         sa.Column("block", sa.String(64), nullable=False),
-        sa.UniqueConstraint("programme_id", "week_number", "day_number", name="uq_programme_week_day"),
+        sa.UniqueConstraint(
+            "programme_id",
+            "week_number",
+            "day_number",
+            name="uq_programme_week_day",
+        ),
     )
     op.create_table(
         "programme_strength_items",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("programme_day_id", sa.String(36), sa.ForeignKey("programme_days.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "programme_day_id",
+            sa.String(36),
+            sa.ForeignKey("programme_days.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("sequence", sa.Integer(), nullable=False),
         sa.Column("exercise_id", sa.String(128), nullable=False),
         sa.Column("target_type", sa.String(16), nullable=False),
@@ -79,13 +103,22 @@ def upgrade() -> None:
         sa.Column("tempo_eccentric_seconds", sa.Integer()),
         sa.Column("tempo_concentric_seconds", sa.Integer()),
         sa.Column("notes", sa.Text()),
-        sa.UniqueConstraint("programme_day_id", "sequence", name="uq_strength_day_sequence"),
+        sa.UniqueConstraint(
+            "programme_day_id",
+            "sequence",
+            name="uq_strength_day_sequence",
+        ),
         sa.CheckConstraint("sets_target > 0", name="ck_strength_sets_positive"),
     )
     op.create_table(
         "programme_cardio_items",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("programme_day_id", sa.String(36), sa.ForeignKey("programme_days.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "programme_day_id",
+            sa.String(36),
+            sa.ForeignKey("programme_days.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("sequence", sa.Integer(), nullable=False),
         sa.Column("equipment", sa.String(32), nullable=False),
         sa.Column("segment_type", sa.String(32), nullable=False),
@@ -99,14 +132,31 @@ def upgrade() -> None:
         sa.Column("resistance", sa.String(32)),
         sa.Column("rpe_min", sa.Numeric(3, 1)),
         sa.Column("rpe_max", sa.Numeric(3, 1)),
-        sa.UniqueConstraint("programme_day_id", "sequence", name="uq_cardio_day_sequence"),
-        sa.CheckConstraint("equipment != 'spin_bike' OR incline_percent IS NULL", name="ck_spin_bike_no_incline"),
+        sa.UniqueConstraint(
+            "programme_day_id",
+            "sequence",
+            name="uq_cardio_day_sequence",
+        ),
+        sa.CheckConstraint(
+            "equipment != 'spin_bike' OR incline_percent IS NULL",
+            name="ck_spin_bike_no_incline",
+        ),
     )
     op.create_table(
         "person_programme_assignments",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("person_id", sa.String(36), sa.ForeignKey("people.id"), nullable=False),
-        sa.Column("programme_id", sa.String(128), sa.ForeignKey("programme_definitions.programme_id"), nullable=False),
+        sa.Column(
+            "person_id",
+            sa.String(36),
+            sa.ForeignKey("people.id"),
+            nullable=False,
+        ),
+        sa.Column(
+            "programme_id",
+            sa.String(128),
+            sa.ForeignKey("programme_definitions.programme_id"),
+            nullable=False,
+        ),
         sa.Column("effective_from_utc", sa.DateTime(), nullable=False),
         sa.Column("effective_to_utc", sa.DateTime()),
         sa.Column("status", sa.String(32), nullable=False),
@@ -114,13 +164,27 @@ def upgrade() -> None:
     op.create_table(
         "person_prescription_overrides",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("person_id", sa.String(36), sa.ForeignKey("people.id"), nullable=False),
-        sa.Column("programme_strength_item_id", sa.String(36), sa.ForeignKey("programme_strength_items.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "person_id",
+            sa.String(36),
+            sa.ForeignKey("people.id"),
+            nullable=False,
+        ),
+        sa.Column(
+            "programme_strength_item_id",
+            sa.String(36),
+            sa.ForeignKey("programme_strength_items.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("load_value", sa.Numeric(8, 2)),
         sa.Column("load_unit", sa.String(16)),
         sa.Column("load_mode", sa.String(32)),
         sa.Column("created_at_utc", sa.DateTime(), nullable=False),
-        sa.UniqueConstraint("person_id", "programme_strength_item_id", name="uq_person_strength_override"),
+        sa.UniqueConstraint(
+            "person_id",
+            "programme_strength_item_id",
+            name="uq_person_strength_override",
+        ),
     )
 
 
