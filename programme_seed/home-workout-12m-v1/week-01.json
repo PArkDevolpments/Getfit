@@ -1,0 +1,101 @@
+{
+  "programme_id": "home-workout-12m-v1",
+  "schema_version": 1,
+  "week_number": 1,
+  "days": [
+    {
+      "programme_id": "home-workout-12m-v1",
+      "week_number": 1,
+      "day_number": 1,
+      "title": "Upper Body + Bike",
+      "workout_type": "upper_body_bike",
+      "block": "foundation",
+      "strength": [
+        {"sequence": 1, "exercise_id": "dumbbell_floor_press", "target_type": "REPS", "sets_target": 2, "reps_target": 10, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "EACH_HAND", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 75, "rest_seconds_max": 90, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 2, "exercise_id": "one_arm_dumbbell_row", "target_type": "REPS", "sets_target": 2, "reps_target": 10, "laterality": "EACH_SIDE", "load_unit": "KG", "load_mode": "SINGLE_IMPLEMENT", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 75, "rest_seconds_max": 90, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 3, "exercise_id": "seated_dumbbell_shoulder_press", "target_type": "REPS", "sets_target": 2, "reps_target": 10, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "EACH_HAND", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 75, "rest_seconds_max": 90, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 4, "exercise_id": "dumbbell_biceps_curl", "target_type": "REPS", "sets_target": 2, "reps_target": 12, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "EACH_HAND", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 60, "rest_seconds_max": 60, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 5, "exercise_id": "overhead_triceps_extension", "target_type": "REPS", "sets_target": 2, "reps_target": 12, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "TOTAL_EXTERNAL", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 60, "rest_seconds_max": 60, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1}
+      ],
+      "cardio": [
+        {"sequence": 1, "equipment": "SPIN_BIKE", "segment_type": "WARM_UP", "target_mode": "RANGE", "duration_seconds": 300, "cadence_rpm_min": 75, "cadence_rpm_max": 85, "rpe_min": 3, "rpe_max": 3, "notes": "Easy warm-up; no incline concept applies."},
+        {"sequence": 2, "equipment": "SPIN_BIKE", "segment_type": "CONDITIONING", "target_mode": "RANGE", "duration_seconds": 900, "cadence_rpm_min": 80, "cadence_rpm_max": 90, "resistance": "moderate", "rpe_min": 5, "rpe_max": 5}
+      ]
+    },
+    {
+      "programme_id": "home-workout-12m-v1",
+      "week_number": 1,
+      "day_number": 2,
+      "title": "Lower Body + Core",
+      "workout_type": "lower_body_core",
+      "block": "foundation",
+      "strength": [
+        {"sequence": 1, "exercise_id": "goblet_squat", "target_type": "REPS", "sets_target": 2, "reps_target": 10, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "SINGLE_IMPLEMENT", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 75, "rest_seconds_max": 90, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 2, "exercise_id": "dumbbell_romanian_deadlift", "target_type": "REPS", "sets_target": 2, "reps_target": 10, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "EACH_HAND", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 75, "rest_seconds_max": 90, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 3, "exercise_id": "supported_reverse_lunge", "target_type": "REPS", "sets_target": 2, "reps_target": 8, "laterality": "EACH_SIDE", "load_mode": "BODYWEIGHT", "rest_seconds_min": 60, "rest_seconds_max": 60},
+        {"sequence": 4, "exercise_id": "standing_calf_raise", "target_type": "REPS", "sets_target": 2, "reps_target": 15, "laterality": "BILATERAL", "load_mode": "BODYWEIGHT", "rest_seconds_min": 60, "rest_seconds_max": 60},
+        {"sequence": 5, "exercise_id": "dead_bug", "target_type": "REPS", "sets_target": 2, "reps_target": 8, "laterality": "EACH_SIDE", "load_mode": "BODYWEIGHT", "rest_seconds_min": 60, "rest_seconds_max": 60},
+        {"sequence": 6, "exercise_id": "forearm_plank", "target_type": "DURATION", "sets_target": 2, "duration_seconds_target": 20, "laterality": "BILATERAL", "load_mode": "BODYWEIGHT", "rest_seconds_min": 60, "rest_seconds_max": 60}
+      ],
+      "cardio": [
+        {"sequence": 1, "equipment": "TREADMILL", "segment_type": "WARM_UP", "target_mode": "CALIBRATION", "duration_seconds": 300, "incline_percent": 1, "rpe_min": 3, "rpe_max": 3, "notes": "Calibrate walking speed personally; do not derive it from demographics."},
+        {"sequence": 2, "equipment": "TREADMILL", "segment_type": "STEADY", "target_mode": "CALIBRATION", "duration_seconds": 600, "rpe_min": 5, "rpe_max": 5, "notes": "Calibrate speed/incline to prescribed effort; approved early range is contextual, not a fixed personal setting."},
+        {"sequence": 3, "equipment": "TREADMILL", "segment_type": "COOLDOWN", "target_mode": "CALIBRATION", "duration_seconds": 300, "incline_percent": 0, "rpe_min": 2, "rpe_max": 3}
+      ]
+    },
+    {
+      "programme_id": "home-workout-12m-v1",
+      "week_number": 1,
+      "day_number": 3,
+      "title": "Full Body + Bike",
+      "workout_type": "full_body_bike",
+      "block": "foundation",
+      "strength": [
+        {"sequence": 1, "exercise_id": "dumbbell_floor_press", "target_type": "REPS", "sets_target": 2, "reps_target": 10, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "EACH_HAND", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 75, "rest_seconds_max": 90, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 2, "exercise_id": "goblet_squat", "target_type": "REPS", "sets_target": 2, "reps_target": 10, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "SINGLE_IMPLEMENT", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 75, "rest_seconds_max": 90, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 3, "exercise_id": "one_arm_dumbbell_row", "target_type": "REPS", "sets_target": 2, "reps_target": 10, "laterality": "EACH_SIDE", "load_unit": "KG", "load_mode": "SINGLE_IMPLEMENT", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 75, "rest_seconds_max": 90, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 4, "exercise_id": "dumbbell_romanian_deadlift", "target_type": "REPS", "sets_target": 2, "reps_target": 10, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "EACH_HAND", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 75, "rest_seconds_max": 90, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 5, "exercise_id": "dumbbell_lateral_raise", "target_type": "REPS", "sets_target": 2, "reps_target": 12, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "EACH_HAND", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 60, "rest_seconds_max": 60, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1},
+        {"sequence": 6, "exercise_id": "hammer_curl", "target_type": "REPS", "sets_target": 2, "reps_target": 12, "laterality": "BILATERAL", "load_unit": "KG", "load_mode": "EACH_HAND", "load_basis": "PERSON_OVERRIDE", "rest_seconds_min": 60, "rest_seconds_max": 60, "tempo_eccentric_seconds": 2, "tempo_concentric_seconds": 1}
+      ],
+      "cardio": [
+        {"sequence": 1, "equipment": "SPIN_BIKE", "segment_type": "WARM_UP", "target_mode": "CALIBRATION", "duration_seconds": 300, "rpe_min": 3, "rpe_max": 3, "notes": "Easy bike warm-up; cadence/resistance intentionally not invented."},
+        {"sequence": 2, "equipment": "SPIN_BIKE", "segment_type": "STEADY", "target_mode": "RANGE", "duration_seconds": 600, "cadence_rpm_min": 80, "cadence_rpm_max": 90, "rpe_min": 5, "rpe_max": 5, "notes": "Resistance remains personal/unassigned until calibrated."}
+      ]
+    },
+    {
+      "programme_id": "home-workout-12m-v1",
+      "week_number": 1,
+      "day_number": 4,
+      "title": "Conditioning",
+      "workout_type": "conditioning",
+      "block": "foundation",
+      "strength": [],
+      "cardio": [
+        {"sequence": 1, "equipment": "SPIN_BIKE", "segment_type": "WARM_UP", "target_mode": "CALIBRATION", "duration_seconds": 300, "rpe_min": 3, "rpe_max": 3, "notes": "Easy warm-up."},
+        {"sequence": 2, "equipment": "SPIN_BIKE", "segment_type": "INTERVAL_HARD", "target_mode": "CALIBRATION", "rounds": 5, "duration_seconds": 30, "cadence_rpm_min": 85, "cadence_rpm_max": 100, "rpe_min": 7, "rpe_max": 8, "notes": "Resistance individually calibrated; no incline exists."},
+        {"sequence": 3, "equipment": "SPIN_BIKE", "segment_type": "INTERVAL_RECOVERY", "target_mode": "RANGE", "rounds": 5, "duration_seconds": 90, "cadence_rpm_min": 60, "cadence_rpm_max": 75, "resistance": "light", "rpe_min": 2, "rpe_max": 3},
+        {"sequence": 4, "equipment": "SPIN_BIKE", "segment_type": "RECOVERY_SPIN", "target_mode": "CALIBRATION", "duration_seconds": 300, "rpe_min": 2, "rpe_max": 3},
+        {"sequence": 5, "equipment": "TREADMILL", "segment_type": "STEADY", "target_mode": "CALIBRATION", "duration_seconds": 1200, "rpe_min": 5, "rpe_max": 5, "notes": "Calibrate speed/incline personally; do not derive from sex, bodyweight or height."},
+        {"sequence": 6, "equipment": "TREADMILL", "segment_type": "COOLDOWN", "target_mode": "CALIBRATION", "incline_percent": 0, "rpe_min": 2, "rpe_max": 3, "notes": "Easy cooldown; duration/speed intentionally not fabricated."}
+      ]
+    }
+  ],
+  "person_overrides": {
+    "kris": [
+      {"day_number": 1, "exercise_id": "dumbbell_floor_press", "load_value": 6, "load_unit": "KG", "load_mode": "EACH_HAND"},
+      {"day_number": 1, "exercise_id": "one_arm_dumbbell_row", "load_value": 10, "load_unit": "KG", "load_mode": "SINGLE_IMPLEMENT"},
+      {"day_number": 1, "exercise_id": "seated_dumbbell_shoulder_press", "load_value": 5, "load_unit": "KG", "load_mode": "EACH_HAND"},
+      {"day_number": 1, "exercise_id": "dumbbell_biceps_curl", "load_value": 5, "load_unit": "KG", "load_mode": "EACH_HAND"},
+      {"day_number": 1, "exercise_id": "overhead_triceps_extension", "load_value": 8, "load_unit": "KG", "load_mode": "TOTAL_EXTERNAL"},
+      {"day_number": 2, "exercise_id": "goblet_squat", "load_value": 10, "load_unit": "KG", "load_mode": "SINGLE_IMPLEMENT"},
+      {"day_number": 2, "exercise_id": "dumbbell_romanian_deadlift", "load_value": 8, "load_unit": "KG", "load_mode": "EACH_HAND"},
+      {"day_number": 3, "exercise_id": "dumbbell_floor_press", "load_value": 6, "load_unit": "KG", "load_mode": "EACH_HAND"},
+      {"day_number": 3, "exercise_id": "goblet_squat", "load_value": 10, "load_unit": "KG", "load_mode": "SINGLE_IMPLEMENT"},
+      {"day_number": 3, "exercise_id": "one_arm_dumbbell_row", "load_value": 10, "load_unit": "KG", "load_mode": "SINGLE_IMPLEMENT"},
+      {"day_number": 3, "exercise_id": "dumbbell_romanian_deadlift", "load_value": 8, "load_unit": "KG", "load_mode": "EACH_HAND"},
+      {"day_number": 3, "exercise_id": "dumbbell_lateral_raise", "load_value": 3, "load_unit": "KG", "load_mode": "EACH_HAND"},
+      {"day_number": 3, "exercise_id": "hammer_curl", "load_value": 5, "load_unit": "KG", "load_mode": "EACH_HAND"}
+    ]
+  }
+}
