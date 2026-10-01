@@ -95,7 +95,7 @@ def test_today_resume_draft_takes_precedence(tmp_path) -> None:
                 programme_day_id="week1-day3",
                 status="ACTIVE",
                 version=2,
-                snapshot_json="{}",
+                snapshot_json='{"phase":"WORKOUT_READY","state_data":{}}',
                 started_at_utc=datetime.now(UTC),
                 updated_at_utc=datetime.now(UTC),
             )
