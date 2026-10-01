@@ -1,12 +1,13 @@
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
+
 from hwa.domain.equipment import (
     EquipmentCapability,
     EquipmentKind,
     InstallationEquipmentProfile,
 )
-from pydantic import ValidationError
 
 
 def test_treadmill_can_declare_speed_and_twenty_percent_incline_capability() -> None:
