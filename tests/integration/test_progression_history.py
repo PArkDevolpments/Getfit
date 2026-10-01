@@ -106,16 +106,19 @@ def _session() -> tuple[Session, Engine]:
                 active=True,
                 seed_checksum="seed",
             ),
-            ProgrammeDay(
-                id="week1-day1",
-                programme_id="home-workout-12m-v1",
-                week_number=1,
-                day_number=1,
-                title="Day 1",
-                workout_type="strength",
-                block="foundation",
-            ),
         ]
+    )
+    session.flush()
+    session.add(
+        ProgrammeDay(
+            id="week1-day1",
+            programme_id="home-workout-12m-v1",
+            week_number=1,
+            day_number=1,
+            title="Day 1",
+            workout_type="strength",
+            block="foundation",
+        )
     )
     session.flush()
 
