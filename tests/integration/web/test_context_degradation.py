@@ -203,7 +203,12 @@ def test_default_app_degrades_without_configured_external_readers(tmp_path) -> N
                 )
             )
         session.commit()
-    client = TestClient(create_app(principal_provider=StaticPrincipalProvider("ha-kris"), engine=engine))
+    client = TestClient(
+        create_app(
+            principal_provider=StaticPrincipalProvider("ha-kris"),
+            engine=engine,
+        )
+    )
     try:
         response = client.get("/")
         assert response.status_code == 200
