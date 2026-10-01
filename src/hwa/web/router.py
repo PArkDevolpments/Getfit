@@ -16,6 +16,7 @@ from hwa.services.today import get_today_view
 from hwa.services.workout_drafts import get_active_draft
 from hwa.web.context import build_page_context
 from hwa.web.library import get_exercise, list_exercises
+from hwa.web.progress import build_progress_context
 from hwa.web.workout import build_player_context
 
 router = APIRouter(tags=["product-web"])
@@ -138,8 +139,19 @@ def workout(
 def progress(
     request: Request,
     person: Annotated[PersonContext, Depends(resolve_person_context)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> HTMLResponse:
-    return _render_surface(request, person, active_nav="progress", title="Progress")
+    """Render descriptive training progress for only the resolved person."""
+
+    return templates.TemplateResponse(
+        request=request,
+        name="progress.html",
+        context={
+            "page": build_page_context(person, "progress"),
+            "person": person,
+            "progress": build_progress_context(session, person.hwa_person_id),
+        },
+    )
 
 
 @router.get(
