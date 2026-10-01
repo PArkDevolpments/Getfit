@@ -15,6 +15,16 @@ from hwa.domain.equipment import (
 from hwa.main import create_app
 
 
+class ConfiguredPepReader:
+    async def read(self, person):  # pragma: no cover - Settings checks presence only
+        raise AssertionError("Settings must not call the Pep reader")
+
+
+class ConfiguredMenuReader:
+    async def read(self, person, *, start=None, end=None):  # pragma: no cover
+        raise AssertionError("Settings must not call the Menu reader")
+
+
 def _equipment_profile() -> InstallationEquipmentProfile:
     return InstallationEquipmentProfile(
         equipment=(
@@ -96,13 +106,12 @@ def _client(tmp_path, subject: str, *, integrations_configured: bool = True):
     with Session(engine) as session:
         _seed_people(session)
 
-    marker = object() if integrations_configured else None
     app = create_app(
         principal_provider=StaticPrincipalProvider(subject),
         engine=engine,
         equipment_profile=_equipment_profile(),
-        pep_health_reader=marker,
-        menu_nutrition_reader=marker,
+        pep_health_reader=ConfiguredPepReader() if integrations_configured else None,
+        menu_nutrition_reader=ConfiguredMenuReader() if integrations_configured else None,
     )
     return TestClient(app), engine
 
