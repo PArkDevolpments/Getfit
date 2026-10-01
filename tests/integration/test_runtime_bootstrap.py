@@ -61,7 +61,9 @@ def test_bootstrap_replay_preserves_existing_draft_and_completed_revision(tmp_pa
     try:
         config = ProductionBootstrapConfig.from_raw("ha-user-kris", None)
         bootstrap_production(session, config, MANIFEST, WEEK, now=NOW)
-        day = session.scalar(select(ProgrammeDay).order_by(ProgrammeDay.week_number, ProgrammeDay.day_number))
+        day = session.scalar(
+            select(ProgrammeDay).order_by(ProgrammeDay.week_number, ProgrammeDay.day_number)
+        )
         assert day is not None
 
         draft = WorkoutDraft(
