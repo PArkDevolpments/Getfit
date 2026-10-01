@@ -73,7 +73,8 @@ def test_home_assistant_app_package_declares_ingress_and_persistent_runtime() ->
 
     assert "cd /data" in run_script
     assert "alembic -c /app/alembic.ini upgrade head" in run_script
-    assert "uvicorn hwa.runtime:app" in run_script
+    assert "uvicorn hwa.runtime:build_production_app" in run_script
+    assert "--factory" in run_script
     assert "--port 8099" in run_script
     assert "%(here)s/migrations" in alembic
 

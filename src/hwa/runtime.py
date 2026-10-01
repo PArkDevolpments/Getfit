@@ -4,13 +4,22 @@ from __future__ import annotations
 
 import os
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 
+from fastapi import FastAPI
+from sqlalchemy.orm import Session
+
+from hwa.db.engine import create_engine
 from hwa.domain.equipment import (
     EquipmentCapability,
     EquipmentKind,
     InstallationEquipmentProfile,
 )
 from hwa.main import create_app
+from hwa.services.production_bootstrap import (
+    ProductionBootstrapConfig,
+    bootstrap_production,
+)
 
 
 def _bool_env(name: str, default: bool) -> bool:
@@ -72,4 +81,44 @@ def build_installation_equipment_profile() -> InstallationEquipmentProfile:
     )
 
 
-app = create_app(equipment_profile=build_installation_equipment_profile())
+def build_production_bootstrap_config() -> ProductionBootstrapConfig:
+    """Read admin-owned Home Assistant identity mappings from runtime configuration."""
+
+    return ProductionBootstrapConfig.from_raw(
+        os.getenv("HWA_KRIS_HA_USER_ID"),
+        os.getenv("HWA_KIRSTY_HA_USER_ID"),
+    )
+
+
+def _programme_seed_root() -> Path:
+    configured = os.getenv("HWA_PROGRAMME_SEED_ROOT")
+    if configured is not None and configured.strip():
+        return Path(configured.strip())
+
+    container_root = Path("/app/programme_seed")
+    if container_root.is_dir():
+        return container_root
+
+    return Path(__file__).resolve().parents[2] / "programme_seed"
+
+
+def build_production_app() -> FastAPI:
+    """Bootstrap the migrated production database, then construct the serving app."""
+
+    engine = create_engine()
+    seed_root = _programme_seed_root() / "home-workout-12m-v1"
+    try:
+        with Session(engine) as session:
+            bootstrap_production(
+                session,
+                build_production_bootstrap_config(),
+                seed_root / "programme.json",
+                seed_root / "week-01.json",
+            )
+        return create_app(
+            engine=engine,
+            equipment_profile=build_installation_equipment_profile(),
+        )
+    except Exception:
+        engine.dispose()
+        raise

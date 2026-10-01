@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Getfit setup required</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="card">
+      <p class="eyebrow">GETFIT</p>
+      <h1>Getfit setup required</h1>
+      <p>This Home Assistant user is authenticated, but it has not been mapped to a Getfit person yet.</p>
+      <p>Your Home Assistant user ID is:</p>
+      <p><code id="ha-user-id">{{ subject_id }}</code></p>
+      <p>
+        Open Home Assistant → Settings → Apps → Getfit → Configuration. Paste this exact value into
+        <code>kris_ha_user_id</code> or <code>kirsty_ha_user_id</code> for the correct person, save the
+        configuration, then restart Getfit.
+      </p>
+      <p class="muted">Use only the ID shown for the person currently signed in.</p>
+    </section>
+  </main>
+</body>
+</html>
