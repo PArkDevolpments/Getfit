@@ -60,8 +60,6 @@ def _view_for_day(
 
 
 def _active_programme(session: Session) -> ProgrammeDefinition | None:
-    """Return the deterministic active approved programme currently imported."""
-
     return session.scalar(
         select(ProgrammeDefinition)
         .where(ProgrammeDefinition.active.is_(True))
@@ -70,13 +68,39 @@ def _active_programme(session: Session) -> ProgrammeDefinition | None:
     )
 
 
-def get_today_view(session: Session, person_id: str) -> TodayView:
-    """Resolve resume/start position from server-owned person-scoped evidence.
+def _programme_days(session: Session, programme_id: str) -> tuple[ProgrammeDay, ...]:
+    return tuple(
+        session.scalars(
+            select(ProgrammeDay)
+            .where(ProgrammeDay.programme_id == programme_id)
+            .order_by(ProgrammeDay.week_number, ProgrammeDay.day_number)
+        ).all()
+    )
 
-    An active draft always wins. Otherwise the first approved programme day
-    without a completed WorkoutEvent is next. Exhausting imported approved
-    content reports programme_complete; this service never fabricates later
-    weeks or programme prescriptions.
+
+def _completed_day_ids(
+    session: Session,
+    person_id: str,
+    days: tuple[ProgrammeDay, ...],
+) -> set[str]:
+    if not days:
+        return set()
+    return set(
+        session.scalars(
+            select(WorkoutEvent.programme_day_id).where(
+                WorkoutEvent.person_id == person_id,
+                WorkoutEvent.programme_day_id.in_([day.id for day in days]),
+            )
+        ).all()
+    )
+
+
+def get_today_view(session: Session, person_id: str) -> TodayView:
+    """Resolve Today from approved content and person-scoped workout evidence.
+
+    An active draft always wins. Otherwise the first imported approved day
+    without a completed WorkoutEvent is next. Exhausting imported content
+    reports programme_complete; this service never fabricates later weeks.
     """
 
     active_draft = get_active_draft(session, person_id)
@@ -85,29 +109,8 @@ def get_today_view(session: Session, person_id: str) -> TodayView:
         if day is not None:
             programme = session.get(ProgrammeDefinition, day.programme_id)
             if programme is not None and programme.active:
-                available_count = session.scalar(
-                    select(ProgrammeDay)
-                    .where(ProgrammeDay.programme_id == programme.programme_id)
-                    .count()
-                )
-                # SQLAlchemy Select has no portable count() helper; below is
-                # replaced after the main programme query when needed.
-                del available_count
-                days = tuple(
-                    session.scalars(
-                        select(ProgrammeDay)
-                        .where(ProgrammeDay.programme_id == programme.programme_id)
-                        .order_by(ProgrammeDay.week_number, ProgrammeDay.day_number)
-                    ).all()
-                )
-                completed_ids = set(
-                    session.scalars(
-                        select(WorkoutEvent.programme_day_id).where(
-                            WorkoutEvent.person_id == person_id,
-                            WorkoutEvent.programme_day_id.in_([item.id for item in days]),
-                        )
-                    ).all()
-                )
+                days = _programme_days(session, programme.programme_id)
+                completed_ids = _completed_day_ids(session, person_id, days)
                 return _view_for_day(
                     programme,
                     day,
@@ -132,13 +135,7 @@ def get_today_view(session: Session, person_id: str) -> TodayView:
             primary_action="unavailable",
         )
 
-    days = tuple(
-        session.scalars(
-            select(ProgrammeDay)
-            .where(ProgrammeDay.programme_id == programme.programme_id)
-            .order_by(ProgrammeDay.week_number, ProgrammeDay.day_number)
-        ).all()
-    )
+    days = _programme_days(session, programme.programme_id)
     if not days:
         return TodayView(
             programme_id=programme.programme_id,
@@ -152,15 +149,7 @@ def get_today_view(session: Session, person_id: str) -> TodayView:
             primary_action="unavailable",
         )
 
-    day_ids = [day.id for day in days]
-    completed_ids = set(
-        session.scalars(
-            select(WorkoutEvent.programme_day_id).where(
-                WorkoutEvent.person_id == person_id,
-                WorkoutEvent.programme_day_id.in_(day_ids),
-            )
-        ).all()
-    )
+    completed_ids = _completed_day_ids(session, person_id, days)
     next_day = next((day for day in days if day.id not in completed_ids), None)
     if next_day is None:
         return TodayView(
