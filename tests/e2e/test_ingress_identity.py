@@ -78,6 +78,14 @@ def test_home_assistant_app_package_declares_ingress_and_persistent_runtime() ->
     assert "%(here)s/migrations" in alembic
 
 
+def test_production_runtime_preserves_raw_supervisor_peer_for_ingress_auth() -> None:
+    run_script = (_ROOT / "run.sh").read_text(encoding="utf-8")
+
+    assert "--no-proxy-headers" in run_script
+    assert "--proxy-headers" not in run_script
+    assert "--forwarded-allow-ips" not in run_script
+
+
 def test_direct_spoofed_ingress_header_remains_rejected(tmp_path) -> None:
     engine = _engine(tmp_path)
     client = TestClient(create_app(engine=engine))

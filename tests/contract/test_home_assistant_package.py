@@ -31,4 +31,5 @@ def test_production_container_keeps_persistent_state_in_data_and_runs_migrations
     assert "cd /data" in run_script
     assert "alembic -c /app/alembic.ini upgrade head" in run_script
     assert "uvicorn hwa.runtime:app" in run_script
-    assert 'forwarded-allow-ips "172.30.32.2"' in run_script
+    assert "--no-proxy-headers" in run_script
+    assert "--forwarded-allow-ips" not in run_script
