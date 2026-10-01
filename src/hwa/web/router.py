@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from hwa.api.dependencies import get_session, resolve_person_context
 from hwa.db.models.programme import ProgrammeDay
 from hwa.domain.identity import PersonContext
-from hwa.services.workout_drafts import get_active_draft
+from hwa.services.today import get_today_view
 from hwa.web.context import build_page_context
 
 router = APIRouter(tags=["product-web"])
@@ -49,28 +49,26 @@ def today(
     person: Annotated[PersonContext, Depends(resolve_person_context)],
     session: Annotated[Session, Depends(get_session)],
 ) -> HTMLResponse:
-    """Render the product shell while preserving Foundation Start/Resume semantics."""
+    """Render the trusted person-scoped Today programme position."""
 
-    days = tuple(
-        session.scalars(
-            select(ProgrammeDay)
-            .where(
-                ProgrammeDay.programme_id == "home-workout-12m-v1",
-                ProgrammeDay.week_number == 1,
-            )
-            .order_by(ProgrammeDay.day_number)
-        ).all()
+    today_view = get_today_view(session, person.hwa_person_id)
+    primary_day = (
+        session.get(ProgrammeDay, today_view.programme_day_id)
+        if today_view.programme_day_id
+        else None
     )
-    active_draft = get_active_draft(session, person.hwa_person_id)
-    if active_draft is not None:
-        primary_action = "resume"
-        primary_day = next((day for day in days if day.id == active_draft.programme_day_id), None)
-    elif days:
-        primary_action = "start"
-        primary_day = days[0]
-    else:
-        primary_action = "unavailable"
-        primary_day = None
+    days: tuple[ProgrammeDay, ...] = ()
+    if today_view.programme_id and today_view.week_number is not None:
+        days = tuple(
+            session.scalars(
+                select(ProgrammeDay)
+                .where(
+                    ProgrammeDay.programme_id == today_view.programme_id,
+                    ProgrammeDay.week_number == today_view.week_number,
+                )
+                .order_by(ProgrammeDay.day_number)
+            ).all()
+        )
 
     return templates.TemplateResponse(
         request=request,
@@ -79,8 +77,8 @@ def today(
             "page": build_page_context(person, "today"),
             "person": person,
             "days": days,
-            "active_draft": active_draft,
-            "primary_action": primary_action,
+            "today_view": today_view,
+            "primary_action": today_view.primary_action,
             "primary_day": primary_day,
         },
     )
