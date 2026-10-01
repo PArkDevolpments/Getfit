@@ -1,9 +1,10 @@
 from copy import deepcopy
 
 import pytest
+from pydantic import ValidationError
+
 from hwa.programmes.schema import ProgrammeWeekDocument
 from hwa.programmes.validator import ProgrammeValidationError, validate_programme_week
-from pydantic import ValidationError
 
 
 def _day(day_number: int) -> dict[str, object]:
