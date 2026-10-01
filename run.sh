@@ -13,7 +13,8 @@ alembic -c /app/alembic.ini upgrade head
 export HWA_KRIS_HA_USER_ID="$(bashio::config 'kris_ha_user_id')"
 export HWA_KIRSTY_HA_USER_ID="$(bashio::config 'kirsty_ha_user_id')"
 
-exec uvicorn hwa.runtime:app \
+exec uvicorn hwa.runtime:build_production_app \
+  --factory \
   --host 0.0.0.0 \
   --port 8099 \
   --no-proxy-headers
