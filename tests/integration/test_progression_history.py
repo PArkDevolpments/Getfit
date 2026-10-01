@@ -122,27 +122,9 @@ def _session() -> tuple[Session, Engine]:
     )
     session.flush()
 
-    kris_v1 = _event(
-        "kris-event",
-        "hwa-kris",
-        reps=8,
-        rpe=Decimal("8.0"),
-        rir=2,
-    )
-    kris_v2 = _event(
-        "kris-event",
-        "hwa-kris",
-        reps=10,
-        rpe=Decimal("8.0"),
-        rir=2,
-    )
-    kirsty = _event(
-        "kirsty-event",
-        "hwa-kirsty",
-        reps=12,
-        rpe=Decimal("6.0"),
-        rir=3,
-    )
+    kris_v1 = _event("kris-event", "hwa-kris", reps=8, rpe=Decimal("8.0"), rir=2)
+    kris_v2 = _event("kris-event", "hwa-kris", reps=10, rpe=Decimal("8.0"), rir=2)
+    kirsty = _event("kirsty-event", "hwa-kirsty", reps=12, rpe=Decimal("6.0"), rir=3)
     session.add_all(
         [
             WorkoutEvent(
@@ -212,7 +194,6 @@ def test_progression_uses_only_effective_person_evidence_without_rewriting_histo
                 load_unit="KG",
             ),
         )
-
         assert decision.action is ProgressionAction.PROPOSE_CHANGE
         assert decision.proposed_load == Decimal("12.0")
         assert len(decision.evidence_refs) == 1
