@@ -70,11 +70,13 @@ def test_me_returns_server_resolved_person_context(tmp_path) -> None:
         engine.dispose()
 
 
-def test_me_unknown_identity_is_forbidden(tmp_path) -> None:
+def test_me_unknown_identity_is_forbidden_as_machine_readable_json(tmp_path) -> None:
     client, engine = _client(tmp_path, "ha-user-unknown")
     try:
         response = client.get("/api/v1/me")
         assert response.status_code == 403
-        assert response.json()["detail"]["code"] == "IDENTITY_NOT_MAPPED"
+        assert response.headers["content-type"].startswith("application/json")
+        assert response.json() == {"detail": {"code": "IDENTITY_NOT_MAPPED"}}
+        assert "Getfit setup required" not in response.text
     finally:
         engine.dispose()
