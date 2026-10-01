@@ -1,7 +1,7 @@
 from pathlib import Path
+
 from hwa.programmes.loader import load_week_file
 from hwa.programmes.validator import validate_programme_week
-
 
 WEEK_1 = Path("programme_seed/home-workout-12m-v1/week-01.json")
 
