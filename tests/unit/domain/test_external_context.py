@@ -1,4 +1,5 @@
 from hwa.domain.external_context import build_external_context
+
 from hwa.integrations.menu.reader import (
     MacroTargets,
     MenuNutritionContext,
