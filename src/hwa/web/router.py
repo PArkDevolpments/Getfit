@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from hwa.api.dependencies import get_session, resolve_person_context
+from hwa.api.dependencies import get_session
 from hwa.db.models.programme import ProgrammeDay
 from hwa.domain.equipment import InstallationEquipmentProfile
 from hwa.domain.external_context import ExternalContext, build_external_context
@@ -19,6 +19,7 @@ from hwa.integrations.pep.health_reader import PepHealthContext, PepHealthReader
 from hwa.services.today import get_today_view
 from hwa.services.workout_drafts import get_active_draft
 from hwa.web.context import build_page_context
+from hwa.web.dependencies import resolve_web_person_context
 from hwa.web.library import get_exercise, list_exercises
 from hwa.web.progress import build_progress_context
 from hwa.web.settings import build_settings_view
@@ -82,7 +83,7 @@ async def _external_context(request: Request, person: PersonContext) -> External
 @router.get("/", response_class=HTMLResponse, dependencies=[Depends(reject_identity_selectors)])
 async def today(
     request: Request,
-    person: Annotated[PersonContext, Depends(resolve_person_context)],
+    person: Annotated[PersonContext, Depends(resolve_web_person_context)],
     session: Annotated[Session, Depends(get_session)],
 ) -> HTMLResponse:
     """Render the trusted person-scoped Today programme position."""
@@ -143,7 +144,7 @@ def _render_surface(
 )
 def workout(
     request: Request,
-    person: Annotated[PersonContext, Depends(resolve_person_context)],
+    person: Annotated[PersonContext, Depends(resolve_web_person_context)],
     session: Annotated[Session, Depends(get_session)],
 ) -> HTMLResponse:
     """Render only the resolved person's active server-owned workout draft."""
@@ -172,7 +173,7 @@ def workout(
 )
 def progress(
     request: Request,
-    person: Annotated[PersonContext, Depends(resolve_person_context)],
+    person: Annotated[PersonContext, Depends(resolve_web_person_context)],
     session: Annotated[Session, Depends(get_session)],
 ) -> HTMLResponse:
     """Render descriptive training progress for only the resolved person."""
@@ -195,7 +196,7 @@ def progress(
 )
 def library(
     request: Request,
-    person: Annotated[PersonContext, Depends(resolve_person_context)],
+    person: Annotated[PersonContext, Depends(resolve_web_person_context)],
     session: Annotated[Session, Depends(get_session)],
 ) -> HTMLResponse:
     return templates.TemplateResponse(
@@ -217,7 +218,7 @@ def library(
 def exercise_detail(
     exercise_id: str,
     request: Request,
-    person: Annotated[PersonContext, Depends(resolve_person_context)],
+    person: Annotated[PersonContext, Depends(resolve_web_person_context)],
     session: Annotated[Session, Depends(get_session)],
 ) -> HTMLResponse:
     exercise = get_exercise(session, exercise_id)
@@ -241,7 +242,7 @@ def exercise_detail(
 )
 def settings(
     request: Request,
-    person: Annotated[PersonContext, Depends(resolve_person_context)],
+    person: Annotated[PersonContext, Depends(resolve_web_person_context)],
 ) -> HTMLResponse:
     profile = cast(
         InstallationEquipmentProfile | None,
