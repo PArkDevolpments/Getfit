@@ -13,7 +13,9 @@ from hwa.api.dependencies import get_session, resolve_person_context
 from hwa.db.models.programme import ProgrammeDay
 from hwa.domain.identity import PersonContext
 from hwa.services.today import get_today_view
+from hwa.services.workout_drafts import get_active_draft
 from hwa.web.context import build_page_context
+from hwa.web.workout import build_player_context
 
 router = APIRouter(tags=["product-web"])
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -106,8 +108,25 @@ def _render_surface(
 def workout(
     request: Request,
     person: Annotated[PersonContext, Depends(resolve_person_context)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> HTMLResponse:
-    return _render_surface(request, person, active_nav="workout", title="Workout")
+    """Render only the resolved person's active server-owned workout draft."""
+
+    active = get_active_draft(session, person.hwa_person_id)
+    player = (
+        build_player_context(session, person.hwa_person_id, active.id)
+        if active is not None
+        else None
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="workout.html",
+        context={
+            "page": build_page_context(person, "workout"),
+            "person": person,
+            "player": player,
+        },
+    )
 
 
 @router.get(

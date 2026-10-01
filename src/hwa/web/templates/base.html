@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Home Workout Assistant{% endblock %}</title>
   <link rel="stylesheet" href="/static/app.css">
+  {% if page.active_nav == "workout" %}<link rel="stylesheet" href="/static/workout.css">{% endif %}
+  {% block styles %}{% endblock %}
 </head>
 <body data-active-nav="{{ page.active_nav }}" data-profile="{{ page.presentation_profile }}">
   <div class="app-shell">
