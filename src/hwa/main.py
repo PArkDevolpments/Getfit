@@ -11,6 +11,7 @@ from hwa.api.routes.workouts import router as workouts_router
 from hwa.auth.ha_ingress import HomeAssistantIngressPrincipalProvider
 from hwa.auth.principal import PrincipalProvider
 from hwa.db.engine import create_engine, create_session_factory
+from hwa.domain.equipment import InstallationEquipmentProfile
 from hwa.integrations.menu.reader import MenuNutritionReader
 from hwa.integrations.pep.health_reader import PepHealthReader
 from hwa.web.router import router as product_web_router
@@ -24,6 +25,7 @@ def create_app(
     engine: Engine | None = None,
     pep_health_reader: PepHealthReader | None = None,
     menu_nutrition_reader: MenuNutritionReader | None = None,
+    equipment_profile: InstallationEquipmentProfile | None = None,
 ) -> FastAPI:
     """Create the HWA application with explicit injectable trust boundaries."""
 
@@ -35,6 +37,7 @@ def create_app(
     application.state.session_factory = create_session_factory(database_engine)
     application.state.pep_health_reader = pep_health_reader
     application.state.menu_nutrition_reader = menu_nutrition_reader
+    application.state.equipment_profile = equipment_profile
     application.mount(
         "/static",
         StaticFiles(directory=str(_WEB_DIR / "static")),
