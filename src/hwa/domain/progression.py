@@ -163,7 +163,10 @@ def decide_strength_progression(
             current_load=current_load,
             current_load_unit=current_load_unit,
             rule_id=rule.rule_id,
-            reason="Progression rule load unit does not match the current target; retain it unchanged.",
+            reason=(
+                "Progression rule load unit does not match the current target; "
+                "retain it unchanged."
+            ),
         )
 
     qualifying = tuple(item for item in evidence if _evidence_meets_rule(item, rule))
