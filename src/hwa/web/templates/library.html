@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Library · Home Workout Assistant{% endblock %}
+
+{% block content %}
+<section class="card">
+  <p class="eyebrow">Exercise library</p>
+  <h2>Technique support</h2>
+  <p class="muted">Exercises come from the approved programme. Media is optional support and never changes your prescribed workout.</p>
+</section>
+{% for exercise in exercises %}
+<section class="card" data-exercise-id="{{ exercise.exercise_id }}">
+  <h3>{{ exercise.display_name }}</h3>
+  <p class="muted"><code>{{ exercise.exercise_id }}</code></p>
+  {% if exercise.media.available %}
+    <p>Technique media available</p>
+  {% else %}
+    <p>Media unavailable</p>
+  {% endif %}
+  <a class="primary-action" href="/library/{{ exercise.exercise_id }}">View exercise</a>
+</section>
+{% else %}
+<section class="card"><p>No programme exercises are available yet.</p></section>
+{% endfor %}
+{% endblock %}
