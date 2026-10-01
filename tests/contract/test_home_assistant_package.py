@@ -31,9 +31,11 @@ def test_repository_is_installable_as_a_home_assistant_app_repository() -> None:
 def test_release_versions_are_aligned_to_0_1_2() -> None:
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     main_module = (ROOT / "src" / "hwa" / "main.py").read_text(encoding="utf-8")
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
 
     assert 'version = "0.1.2"' in pyproject
     assert 'APP_VERSION = "0.1.2"' in main_module
+    assert "ARG BUILD_VERSION=0.1.2" in dockerfile
 
 
 def test_production_container_keeps_persistent_state_and_exports_bootstrap_options() -> None:
