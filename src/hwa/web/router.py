@@ -27,7 +27,6 @@ _IDENTITY_SELECTORS = frozenset(
         "menu_person_id",
     }
 )
-_IDENTITY_GUARD = [Depends(reject_identity_selectors)] if False else None
 
 
 def reject_identity_selectors(request: Request) -> None:
