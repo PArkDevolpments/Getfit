@@ -152,9 +152,9 @@ class PepHealthContext(BaseModel):
     data_quality: str | None = None
     latest_recorded_at: str | None = None
     runtime_version: str | None = None
-    body: dict[str, PepHealthMetric] = {}
-    recovery: dict[str, PepHealthMetric] = {}
-    sleep: dict[str, PepHealthMetric] = {}
+    body: dict[str, PepHealthMetric] = Field(default_factory=dict)
+    recovery: dict[str, PepHealthMetric] = Field(default_factory=dict)
+    sleep: dict[str, PepHealthMetric] = Field(default_factory=dict)
     progress: PepHealthProgress | None = None
 
 
@@ -248,19 +248,16 @@ class PepHealthReader:
         ):
             return self._unavailable(person, "HEALTH_PROFILE_MISMATCH")
 
-        common = {
-            "pep_person_id": person.pep_person_id,
-            "health_profile_id": contract.health_profile_id,
-            "exported_at": contract.exported_at,
-            "source_state": contract.readiness.state,
-            "data_quality": contract.readiness.data_quality,
-            "runtime_version": contract.provenance.runtime_version,
-        }
         if not contract.readiness.ready:
             return PepHealthContext(
                 status="UNAVAILABLE",
                 reason=contract.readiness.reason,
-                **common,
+                pep_person_id=person.pep_person_id,
+                health_profile_id=contract.health_profile_id,
+                exported_at=contract.exported_at,
+                source_state=contract.readiness.state,
+                data_quality=contract.readiness.data_quality,
+                runtime_version=contract.provenance.runtime_version,
             )
         if contract.health_profile_id != person.health_profile_id:
             return self._unavailable(person, "HEALTH_PROFILE_MISMATCH")
@@ -271,12 +268,17 @@ class PepHealthReader:
         return PepHealthContext(
             status="READY",
             reason=contract.readiness.reason,
+            pep_person_id=person.pep_person_id,
+            health_profile_id=contract.health_profile_id,
+            exported_at=contract.exported_at,
+            source_state=contract.readiness.state,
+            data_quality=contract.readiness.data_quality,
             latest_recorded_at=_latest_recorded_at((body, recovery, sleep)),
+            runtime_version=contract.provenance.runtime_version,
             body=body,
             recovery=recovery,
             sleep=sleep,
             progress=contract.progress,
-            **common,
         )
 
     @staticmethod
