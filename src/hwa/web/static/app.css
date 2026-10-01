@@ -18,7 +18,7 @@ button { font: inherit; }
 .person-chip__label { color: #9cb2c5; font-size: .72rem; }
 
 .primary-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .5rem; margin: 1.25rem 0; }
-.primary-nav__item { padding: .8rem .55rem; border-radius: 12px; text-align: center; text-decoration: none; color: #b8cad8; background: #102133; border: 1px solid #1e3549; }
+.primary-nav__item { min-height: 44px; padding: .8rem .55rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; text-decoration: none; color: #b8cad8; background: #102133; border: 1px solid #1e3549; }
 .primary-nav__item:hover, .primary-nav__item:focus-visible { border-color: #527ea1; color: #fff; }
 .primary-nav__item.is-active { color: #fff; border-color: #6799be; background: #183149; }
 
@@ -27,9 +27,9 @@ button { font: inherit; }
 .surface-card h2, .card h2 { margin: .3rem 0 .7rem; }
 .muted { color: #aabfce; }
 .workout-list { margin: .75rem 0 0; padding-left: 1.25rem; }
-.primary-action { width: 100%; padding: 1rem 1.1rem; border: 0; border-radius: 14px; background: #e9f3fa; color: #102133; cursor: pointer; font-weight: 800; }
+.primary-action { width: 100%; min-height: 44px; padding: 1rem 1.1rem; border: 0; border-radius: 14px; background: #e9f3fa; color: #102133; cursor: pointer; font-weight: 800; }
 .primary-action:disabled { opacity: .55; cursor: wait; }
-.resume-card { padding: 1rem; border-radius: 14px; background: #183149; }
+.resume-card { min-height: 44px; padding: 1rem; border-radius: 14px; background: #183149; }
 
 @media (max-width: 700px) {
   .app-shell { padding: .9rem; }
