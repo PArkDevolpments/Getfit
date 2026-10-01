@@ -8,6 +8,7 @@ from hwa.api.routes.workouts import router as workouts_router
 from hwa.auth.ha_ingress import HomeAssistantIngressPrincipalProvider
 from hwa.auth.principal import PrincipalProvider
 from hwa.db.engine import create_engine, create_session_factory
+from hwa.web.foundation import router as foundation_web_router
 
 APP_VERSION = "0.1.0"
 
@@ -26,6 +27,7 @@ def create_app(
     application.state.session_factory = create_session_factory(database_engine)
     application.include_router(me_router)
     application.include_router(workouts_router)
+    application.include_router(foundation_web_router)
 
     @application.get("/healthz")
     def healthz() -> dict[str, str]:
