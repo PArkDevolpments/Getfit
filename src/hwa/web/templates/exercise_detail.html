@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ exercise.display_name }} · Exercise Library{% endblock %}
+
+{% block content %}
+<section class="card" data-media-state="{{ 'available' if exercise.media.available else 'unavailable' }}">
+  <p class="eyebrow">Exercise</p>
+  <h2>{{ exercise.display_name }}</h2>
+  <p class="muted"><code>{{ exercise.exercise_id }}</code></p>
+  {% if exercise.media.local_demo_path %}
+    <div class="exercise-demo" data-local-demo="{{ exercise.media.local_demo_path }}"></div>
+  {% elif exercise.media.approved_external_video_url %}
+    <p><a href="{{ exercise.media.approved_external_video_url }}" rel="noopener noreferrer">Open approved technique video</a></p>
+  {% else %}
+    <h3>Media unavailable</h3>
+    <p>You can still complete this exercise using the approved workout prescription. Missing technique media never changes or blocks the workout.</p>
+  {% endif %}
+  <a class="primary-action" href="/library">Back to Library</a>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="/static/media.js" defer></script>{% endblock %}
