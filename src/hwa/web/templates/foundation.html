@@ -5,15 +5,27 @@
 {% block content %}
 <section class="card">
   <p class="eyebrow">Today</p>
-  <h2>Week 1</h2>
-  {% if days %}
-    <ul class="workout-list">
-    {% for day in days %}
-      <li>Day {{ day.day_number }} — {{ day.title }}</li>
-    {% endfor %}
-    </ul>
+  {% if today_view.week_number is not none and today_view.day_number is not none %}
+    <h2>Week {{ today_view.week_number }} · Day {{ today_view.day_number }}</h2>
+    <p><strong>{{ today_view.title }}</strong></p>
+    <p class="muted">
+      {{ today_view.completed_day_count }} of {{ today_view.available_day_count }} approved workouts completed.
+    </p>
+    {% if days %}
+      <ul class="workout-list">
+      {% for day in days %}
+        <li>Day {{ day.day_number }} — {{ day.title }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% elif primary_action == "programme_complete" %}
+    <h2>Approved programme content complete</h2>
+    <p class="muted">
+      {{ today_view.completed_day_count }} approved workouts are complete. No unapproved future workout has been generated.
+    </p>
   {% else %}
-    <p>Programme unavailable</p>
+    <h2>Programme unavailable</h2>
+    <p class="muted">No approved workout is currently available.</p>
   {% endif %}
 </section>
 
@@ -25,18 +37,23 @@
       data-primary-action="start"
       data-programme-day-id="{{ primary_day.id }}"
       type="button"
-    >Start Week 1 Day 1</button>
+    >Start Week {{ today_view.week_number }} Day {{ today_view.day_number }}</button>
     <p class="muted" id="action-status">Your workout will be saved to the server as you go.</p>
-  {% elif primary_action == "resume" and active_draft %}
+  {% elif primary_action == "resume" and today_view.draft_id %}
     <div
       class="resume-card"
       id="primary-action"
       data-primary-action="resume"
-      data-draft-id="{{ active_draft.id }}"
-      data-draft-version="{{ active_draft.version }}"
+      data-draft-id="{{ today_view.draft_id }}"
+      data-draft-version="{{ today_view.draft_version }}"
     >
-      <strong>Resume workout</strong>
+      <strong>Resume Week {{ today_view.week_number }} Day {{ today_view.day_number }}</strong>
       <p class="muted">A server-saved workout is already in progress.</p>
+    </div>
+  {% elif primary_action == "programme_complete" %}
+    <div id="primary-action" data-primary-action="programme_complete">
+      <strong>Approved programme complete</strong>
+      <p class="muted">Additional weeks will appear only when approved programme material is imported.</p>
     </div>
   {% else %}
     <div id="primary-action" data-primary-action="unavailable">
