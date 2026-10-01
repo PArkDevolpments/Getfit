@@ -13,5 +13,4 @@ alembic -c /app/alembic.ini upgrade head
 exec uvicorn hwa.runtime:app \
   --host 0.0.0.0 \
   --port 8099 \
-  --proxy-headers \
-  --forwarded-allow-ips "172.30.32.2"
+  --no-proxy-headers
