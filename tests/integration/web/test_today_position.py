@@ -93,7 +93,7 @@ def test_today_resume_draft_takes_precedence(tmp_path) -> None:
                 id="draft-1",
                 person_id="hwa-kris",
                 programme_day_id="week1-day3",
-                status="active",
+                status="ACTIVE",
                 version=2,
                 snapshot_json="{}",
                 started_at_utc=datetime.now(UTC),
