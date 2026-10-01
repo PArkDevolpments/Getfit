@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Workout · Home Workout Assistant{% endblock %}
+
+{% block content %}
+{% if player %}
+<section
+  class="card workout-player"
+  id="workout-player"
+  data-workout-state="active"
+  data-draft-id="{{ player.draft_id }}"
+  data-draft-version="{{ player.draft_version }}"
+  data-started-at="{{ player.started_at.isoformat() }}"
+  data-programme-day-id="{{ player.programme_day_id }}"
+  data-programme-week="{{ player.week_number }}"
+  data-programme-day="{{ player.day_number }}"
+  data-workout-type="{{ player.workout_type }}"
+  data-workout-block="{{ player.block }}"
+  data-autosave-url="/api/v1/workouts/drafts/{{ player.draft_id }}"
+  data-complete-url="/api/v1/workouts/drafts/{{ player.draft_id }}/complete"
+>
+  <p class="eyebrow">Workout · Week {{ player.week_number }} · Day {{ player.day_number }}</p>
+  <h2>{{ player.title }}</h2>
+  <p class="muted" id="save-status">Server saved · version {{ player.draft_version }}</p>
+  {% if player.snapshot.state_data %}
+    <p class="muted" id="resume-state">
+      {% for key, value in player.snapshot.state_data.items() %}{{ value }}{% if not loop.last %} · {% endif %}{% endfor %}
+    </p>
+  {% endif %}
+</section>
+
+{% for item in player.strength %}
+<section
+  class="card workout-item strength-item"
+  data-kind="STRENGTH"
+  data-item-id="{{ item.item_id }}"
+  data-sequence="{{ item.sequence }}"
+  data-exercise-id="{{ item.exercise_id }}"
+  data-target-type="{{ item.target_type }}"
+  data-laterality="{{ item.laterality }}"
+  data-load-mode="{{ item.load_mode }}"
+  data-load-unit="{{ item.load_unit or '' }}"
+>
+  <p class="eyebrow">Strength · {{ item.sequence }}</p>
+  <h3>{{ item.exercise_id }}</h3>
+  <p class="muted">
+    {{ item.sets_target }} sets ·
+    {% if item.target_type == "REPS" %}
+      {% if item.reps_min is not none and item.reps_max is not none %}{{ item.reps_min }}–{{ item.reps_max }} reps{% else %}{{ item.reps_target }} reps{% endif %}
+    {% else %}
+      {% if item.duration_seconds_min is not none and item.duration_seconds_max is not none %}{{ item.duration_seconds_min }}–{{ item.duration_seconds_max }} sec{% else %}{{ item.duration_seconds_target }} sec{% endif %}
+    {% endif %}
+    {% if item.load_value is not none %} · {{ item.load_value }} {{ item.load_unit }} · {{ item.load_mode }}{% endif %}
+  </p>
+  {% for set_number in range(1, item.sets_target + 1) %}
+  <fieldset class="set-entry" data-set-number="{{ set_number }}">
+    <legend>Set {{ set_number }}</legend>
+    {% if item.target_type == "REPS" %}
+    <label>Reps
+      <input
+        name="{{ item.item_id }}-set-{{ set_number }}-reps"
+        type="number"
+        min="0"
+        inputmode="numeric"
+        value="{{ item.reps_target or item.reps_min or '' }}"
+      >
+    </label>
+    {% else %}
+    <label>Seconds
+      <input
+        name="{{ item.item_id }}-set-{{ set_number }}-duration"
+        type="number"
+        min="1"
+        inputmode="numeric"
+        value="{{ item.duration_seconds_target or item.duration_seconds_min or '' }}"
+      >
+    </label>
+    {% endif %}
+    {% if item.load_mode not in ["BODYWEIGHT", "NONE"] %}
+    <label>Load {{ item.load_unit or "KG" }}
+      <input
+        name="{{ item.item_id }}-set-{{ set_number }}-load"
+        type="number"
+        min="0"
+        step="0.5"
+        inputmode="decimal"
+        value="{{ item.load_value if item.load_value is not none else '' }}"
+      >
+    </label>
+    {% endif %}
+    <label>RPE
+      <input name="{{ item.item_id }}-set-{{ set_number }}-rpe" type="number" min="1" max="10" step="0.5" inputmode="decimal">
+    </label>
+    <label>RIR
+      <input name="{{ item.item_id }}-set-{{ set_number }}-rir" type="number" min="0" max="5" step="1" inputmode="numeric">
+    </label>
+    <label><input name="{{ item.item_id }}-set-{{ set_number }}-completed" type="checkbox"> Set complete</label>
+    <label><input name="{{ item.item_id }}-set-{{ set_number }}-pain" type="checkbox"> Pain/discomfort flag</label>
+  </fieldset>
+  {% endfor %}
+</section>
+{% endfor %}
+
+{% for item in player.cardio %}
+<section
+  class="card workout-item cardio-item"
+  data-kind="CARDIO"
+  data-item-id="{{ item.item_id }}"
+  data-sequence="{{ item.sequence }}"
+  data-equipment="{{ item.equipment }}"
+>
+  <p class="eyebrow">Cardio · {{ item.sequence }}</p>
+  <h3>{{ item.equipment.replace('_', ' ').title() }}</h3>
+  <label>Duration seconds
+    <input name="{{ item.item_id }}-duration" type="number" min="0" inputmode="numeric" value="{{ item.duration_seconds or 0 }}">
+  </label>
+  {% if item.equipment == "TREADMILL" %}
+  <label>Speed km/h
+    <input name="{{ item.item_id }}-speed" type="number" min="0" step="0.1" inputmode="decimal" value="{{ item.speed_kmh if item.speed_kmh is not none else '' }}">
+  </label>
+  <label>Incline %
+    <input name="{{ item.item_id }}-incline" type="number" min="0" step="0.5" inputmode="decimal" value="{{ item.incline_percent if item.incline_percent is not none else '' }}">
+  </label>
+  {% else %}
+  <label>Cadence min rpm
+    <input name="{{ item.item_id }}-cadence-min" type="number" min="0" inputmode="numeric" value="{{ item.cadence_rpm_min if item.cadence_rpm_min is not none else '' }}">
+  </label>
+  <label>Cadence max rpm
+    <input name="{{ item.item_id }}-cadence-max" type="number" min="0" inputmode="numeric" value="{{ item.cadence_rpm_max if item.cadence_rpm_max is not none else '' }}">
+  </label>
+  <label>Resistance
+    <input name="{{ item.item_id }}-resistance" type="text" value="{{ item.resistance or '' }}">
+  </label>
+  {% endif %}
+  <label>RPE
+    <input name="{{ item.item_id }}-rpe" type="number" min="1" max="10" step="0.5" inputmode="decimal">
+  </label>
+  <label><input name="{{ item.item_id }}-completed" type="checkbox"> Segment complete</label>
+</section>
+{% endfor %}
+
+<section class="card workout-summary-controls">
+  <h3>Finish workout</h3>
+  <label>Session RPE
+    <input id="session-rpe" name="session-rpe" type="number" min="1" max="10" step="0.5" inputmode="decimal">
+  </label>
+  <button class="primary-action" id="complete-workout" type="button">Complete workout</button>
+  <p class="muted" id="completion-status">Completion creates an immutable workout revision.</p>
+</section>
+{% else %}
+<section class="card" data-workout-state="no-active-draft">
+  <p class="eyebrow">Workout</p>
+  <h2>No workout is currently in progress</h2>
+  <p class="muted">Start the next approved workout from Today. Another person's draft will never be shown here.</p>
+  <a class="primary-action" href="/">Go to Today</a>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if player %}<script src="/static/workout.js" defer></script>{% endif %}
+{% endblock %}
