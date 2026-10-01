@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from fastapi.testclient import TestClient
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from hwa.auth.principal import StaticPrincipalProvider
@@ -14,7 +15,12 @@ from hwa.domain.workout import CanonicalWorkoutEventV1
 from hwa.main import create_app
 
 
-def _event(event_id: str, person_id: str, day: int, reps: int) -> CanonicalWorkoutEventV1:
+def _event(
+    event_id: str,
+    person_id: str,
+    day: int,
+    reps: int,
+) -> CanonicalWorkoutEventV1:
     start = datetime(2026, 10, day, 17, 0, tzinfo=UTC)
     end = start + timedelta(minutes=25)
     return CanonicalWorkoutEventV1.model_validate(
@@ -70,7 +76,7 @@ def _event(event_id: str, person_id: str, day: int, reps: int) -> CanonicalWorko
     )
 
 
-def _client(tmp_path) -> tuple[TestClient, object]:
+def _client(tmp_path) -> tuple[TestClient, Engine]:
     engine = create_engine(
         DatabaseSettings(database_url=f"sqlite:///{tmp_path / 'progress.db'}")
     )
@@ -177,7 +183,9 @@ def _client(tmp_path) -> tuple[TestClient, object]:
     )
 
 
-def test_progress_page_renders_only_effective_person_scoped_training_history(tmp_path) -> None:
+def test_progress_page_renders_only_effective_person_scoped_training_history(
+    tmp_path,
+) -> None:
     client, engine = _client(tmp_path)
     try:
         response = client.get("/progress")
