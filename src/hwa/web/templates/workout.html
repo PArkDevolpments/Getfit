@@ -147,6 +147,7 @@
   <button class="primary-action" id="complete-workout" type="button">Complete workout</button>
   <p class="muted" id="completion-status">Completion creates an immutable workout revision.</p>
 </section>
+<script id="draft-state" type="application/json">{{ player.snapshot.state_data | tojson }}</script>
 {% else %}
 <section class="card" data-workout-state="no-active-draft">
   <p class="eyebrow">Workout</p>
