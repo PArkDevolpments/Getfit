@@ -1,5 +1,4 @@
 from pathlib import Path
-
 from hwa.programmes.loader import load_week_file
 from hwa.programmes.validator import validate_programme_week
 
