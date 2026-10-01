@@ -1,7 +1,8 @@
 from decimal import Decimal
 
-from hwa.domain.equipment import EquipmentKind
 from hwa.runtime import build_installation_equipment_profile
+
+from hwa.domain.equipment import EquipmentKind
 
 
 def test_runtime_equipment_profile_uses_explicit_installation_configuration(monkeypatch) -> None:
