@@ -1,6 +1,5 @@
 from datetime import UTC, datetime, timedelta
 
-from hwa.read_models.progress import get_progress_summary
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
@@ -10,6 +9,7 @@ from hwa.db.models.identity import Person
 from hwa.db.models.programme import ProgrammeDay, ProgrammeDefinition
 from hwa.db.models.workout import WorkoutEvent, WorkoutRevision
 from hwa.domain.workout import CanonicalWorkoutEventV1
+from hwa.read_models.progress import get_progress_summary
 
 
 def _event(event_id: str, person_id: str, day: int) -> CanonicalWorkoutEventV1:
