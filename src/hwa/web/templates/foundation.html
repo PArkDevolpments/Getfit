@@ -62,6 +62,45 @@
     </div>
   {% endif %}
 </section>
+
+<section class="card" id="external-health-context">
+  <p class="eyebrow">Health context</p>
+  {% if external_context.health.status == "READY" %}
+    {% if external_context.health.body_mass %}
+      <p><strong>{{ external_context.health.body_mass.value }} {{ external_context.health.body_mass.unit }}</strong> latest body mass</p>
+    {% endif %}
+    {% if external_context.health.sleep_duration %}
+      <p><strong>{{ external_context.health.sleep_duration.value }} {{ external_context.health.sleep_duration.unit }} sleep</strong></p>
+    {% endif %}
+    {% if not external_context.health.body_mass and not external_context.health.sleep_duration %}
+      <p class="muted">Health context is available, with no supported summary values to show.</p>
+    {% endif %}
+  {% else %}
+    <p class="muted">Health context unavailable</p>
+  {% endif %}
+</section>
+
+<section class="card" id="external-nutrition-context">
+  <p class="eyebrow">Nutrition context</p>
+  {% if external_context.nutrition.status == "READY" %}
+    {% if external_context.nutrition.current_target %}
+      <p><strong>{{ external_context.nutrition.current_target.calories_kcal|int }} kcal target</strong></p>
+      <p class="muted">
+        {{ external_context.nutrition.current_target.protein_g|int }} g protein ·
+        {{ external_context.nutrition.current_target.carbohydrate_g|int }} g carbohydrate ·
+        {{ external_context.nutrition.current_target.fat_g|int }} g fat
+      </p>
+    {% endif %}
+    {% if external_context.nutrition.latest_day and external_context.nutrition.latest_day.energy_consumed_kcal is not none %}
+      <p>{{ external_context.nutrition.latest_day.energy_consumed_kcal|int }} kcal logged on {{ external_context.nutrition.latest_day.date }}</p>
+    {% endif %}
+    {% if not external_context.nutrition.current_target and not external_context.nutrition.latest_day %}
+      <p class="muted">Nutrition context is available, with no supported summary values to show.</p>
+    {% endif %}
+  {% else %}
+    <p class="muted">Nutrition context unavailable</p>
+  {% endif %}
+</section>
 {% endblock %}
 
 {% block scripts %}
