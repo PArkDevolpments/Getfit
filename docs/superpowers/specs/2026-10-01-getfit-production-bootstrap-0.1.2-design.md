@@ -1,6 +1,6 @@
 # Getfit 0.1.2 Production Bootstrap Design
 
-**Status:** Awaiting written-spec review  
+**Status:** Approved  
 **Repository:** `ktgregson93-collab/Getfit`  
 **Base:** `main` at `5851dc9165871a0df7315e4aed6791e8a7d2b399`  
 **Trigger:** Live Home Assistant Ingress reached Getfit successfully on 0.1.1 but returned `IDENTITY_NOT_MAPPED`.
