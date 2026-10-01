@@ -15,6 +15,7 @@ from hwa.domain.identity import PersonContext
 from hwa.services.today import get_today_view
 from hwa.services.workout_drafts import get_active_draft
 from hwa.web.context import build_page_context
+from hwa.web.library import get_exercise, list_exercises
 from hwa.web.workout import build_player_context
 
 router = APIRouter(tags=["product-web"])
@@ -149,8 +150,42 @@ def progress(
 def library(
     request: Request,
     person: Annotated[PersonContext, Depends(resolve_person_context)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> HTMLResponse:
-    return _render_surface(request, person, active_nav="library", title="Library")
+    return templates.TemplateResponse(
+        request=request,
+        name="library.html",
+        context={
+            "page": build_page_context(person, "library"),
+            "person": person,
+            "exercises": list_exercises(session),
+        },
+    )
+
+
+@router.get(
+    "/library/{exercise_id}",
+    response_class=HTMLResponse,
+    dependencies=[Depends(reject_identity_selectors)],
+)
+def exercise_detail(
+    exercise_id: str,
+    request: Request,
+    person: Annotated[PersonContext, Depends(resolve_person_context)],
+    session: Annotated[Session, Depends(get_session)],
+) -> HTMLResponse:
+    exercise = get_exercise(session, exercise_id)
+    if exercise is None:
+        raise HTTPException(status_code=404, detail="EXERCISE_NOT_FOUND")
+    return templates.TemplateResponse(
+        request=request,
+        name="exercise_detail.html",
+        context={
+            "page": build_page_context(person, "library"),
+            "person": person,
+            "exercise": exercise,
+        },
+    )
 
 
 @router.get(
