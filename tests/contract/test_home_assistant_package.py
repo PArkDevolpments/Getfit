@@ -45,6 +45,7 @@ def test_production_container_keeps_persistent_state_and_exports_bootstrap_optio
     assert "alembic -c /app/alembic.ini upgrade head" in run_script
     assert 'export HWA_KRIS_HA_USER_ID="$(bashio::config \'kris_ha_user_id\')"' in run_script
     assert 'export HWA_KIRSTY_HA_USER_ID="$(bashio::config \'kirsty_ha_user_id\')"' in run_script
-    assert "uvicorn hwa.runtime:app" in run_script
+    assert "uvicorn hwa.runtime:build_production_app" in run_script
+    assert "--factory" in run_script
     assert "--no-proxy-headers" in run_script
     assert "--forwarded-allow-ips" not in run_script
