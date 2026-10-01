@@ -1,7 +1,7 @@
 from decimal import Decimal
 
+import hwa.runtime as runtime
 from hwa.domain.equipment import EquipmentKind
-from hwa.runtime import build_installation_equipment_profile
 
 
 def test_runtime_equipment_profile_uses_explicit_installation_configuration(monkeypatch) -> None:
@@ -10,7 +10,7 @@ def test_runtime_equipment_profile_uses_explicit_installation_configuration(monk
     monkeypatch.setenv("HWA_SPIN_BIKE_AVAILABLE", "true")
     monkeypatch.setenv("HWA_ADJUSTABLE_DUMBBELLS_AVAILABLE", "true")
 
-    profile = build_installation_equipment_profile()
+    profile = runtime.build_installation_equipment_profile()
     by_kind = {item.kind: item for item in profile.equipment}
 
     treadmill = by_kind[EquipmentKind.TREADMILL]
@@ -34,8 +34,30 @@ def test_runtime_rejects_invalid_boolean_configuration(monkeypatch) -> None:
     monkeypatch.setenv("HWA_TREADMILL_AVAILABLE", "maybe")
 
     try:
-        build_installation_equipment_profile()
+        runtime.build_installation_equipment_profile()
     except ValueError as exc:
         assert "HWA_TREADMILL_AVAILABLE" in str(exc)
     else:
         raise AssertionError("invalid boolean configuration must fail closed")
+
+
+def test_runtime_bootstrap_config_normalizes_optional_home_assistant_ids(monkeypatch) -> None:
+    monkeypatch.setenv("HWA_KRIS_HA_USER_ID", "  ha-user-kris  ")
+    monkeypatch.setenv("HWA_KIRSTY_HA_USER_ID", "   ")
+
+    config = runtime.build_production_bootstrap_config()
+
+    assert config.kris_ha_user_id == "ha-user-kris"
+    assert config.kirsty_ha_user_id is None
+
+
+def test_runtime_bootstrap_config_allows_both_home_assistant_ids_to_be_unconfigured(
+    monkeypatch,
+) -> None:
+    monkeypatch.delenv("HWA_KRIS_HA_USER_ID", raising=False)
+    monkeypatch.delenv("HWA_KIRSTY_HA_USER_ID", raising=False)
+
+    config = runtime.build_production_bootstrap_config()
+
+    assert config.kris_ha_user_id is None
+    assert config.kirsty_ha_user_id is None
