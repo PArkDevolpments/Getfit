@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from hwa.web.workout import build_player_context
 from sqlalchemy.orm import Session
 
 from hwa.db.base import Base
@@ -15,7 +16,6 @@ from hwa.db.models.programme import (
 )
 from hwa.domain.draft import DraftPhase, WorkoutDraftSnapshot
 from hwa.services.workout_drafts import create_draft
-from hwa.web.workout import build_player_context
 
 
 def _session(tmp_path) -> tuple[Session, object]:
