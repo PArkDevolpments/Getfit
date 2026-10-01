@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from hwa.db.base import Base
 from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import ExternalIdentityMapping, Person
+from hwa.db.models.programme import ProgrammeDay, ProgrammeDefinition
 from hwa.db.models.workout import WorkoutEvent, WorkoutRevision
 from hwa.domain.workout import CanonicalWorkoutEventV1
 
@@ -23,7 +24,12 @@ def _event(*, reps: int, rpe: Decimal) -> CanonicalWorkoutEventV1:
             "end_at": end,
             "duration_seconds": 1200,
             "workout_type": "strength",
-            "programme": None,
+            "programme": {
+                "programme_id": "home-workout-12m-v1",
+                "programme_week": 1,
+                "programme_day": 1,
+                "block": "foundation",
+            },
             "effort": {"session_rpe": rpe},
             "heart_rate_response": {"status": "UNAVAILABLE"},
             "training_load": {"status": "UNAVAILABLE"},
@@ -66,31 +72,52 @@ def _session() -> tuple[Session, Engine]:
     engine = create_engine(DatabaseSettings(database_url="sqlite:///:memory:"))
     Base.metadata.create_all(engine)
     session = Session(engine)
-    session.add(
-        Person(
-            id="hwa-kris",
-            canonical_key="kris",
-            display_name="Kris",
-            presentation_profile="male",
-            active=True,
-        )
+    session.add_all(
+        [
+            Person(
+                id="hwa-kris",
+                canonical_key="kris",
+                display_name="Kris",
+                presentation_profile="male",
+                active=True,
+            ),
+            ProgrammeDefinition(
+                programme_id="home-workout-12m-v1",
+                schema_version=1,
+                title="Home Workout",
+                active=True,
+                seed_checksum="seed",
+            ),
+        ]
     )
     session.flush()
-    session.add(
-        ExternalIdentityMapping(
-            id="kris-pep",
-            person_id="hwa-kris",
-            authority="PEP_SITE",
-            external_subject_id="person_a",
-        )
+    session.add_all(
+        [
+            ExternalIdentityMapping(
+                id="kris-pep",
+                person_id="hwa-kris",
+                authority="PEP_SITE",
+                external_subject_id="person_a",
+            ),
+            ProgrammeDay(
+                id="day-1",
+                programme_id="home-workout-12m-v1",
+                week_number=1,
+                day_number=1,
+                title="Foundation",
+                workout_type="strength",
+                block="foundation",
+            ),
+        ]
     )
+    session.flush()
     v1 = _event(reps=8, rpe=Decimal("8.0"))
     v2 = _event(reps=10, rpe=Decimal("7.0"))
     session.add(
         WorkoutEvent(
             event_id="logical-1",
             person_id="hwa-kris",
-            programme_day_id=None,
+            programme_day_id="day-1",
             effective_revision_number=2,
             created_at_utc=v1.end_at,
         )
