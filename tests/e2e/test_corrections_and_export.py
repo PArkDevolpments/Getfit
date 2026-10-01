@@ -50,19 +50,62 @@ def _event(rpe: int) -> CanonicalWorkoutEventV1:
 
 
 def test_only_effective_revision_is_projected_to_pep(tmp_path) -> None:
-    engine = create_engine(DatabaseSettings(database_url=f"sqlite:///{tmp_path / 'r.db'}"))
+    engine = create_engine(
+        DatabaseSettings(database_url=f"sqlite:///{tmp_path / 'r.db'}")
+    )
     Base.metadata.create_all(engine)
     with Session(engine) as session:
-        session.add(Person(id="hwa-kris", canonical_key="kris", display_name="Kris", presentation_profile="male", active=True))
+        session.add(
+            Person(
+                id="hwa-kris",
+                canonical_key="kris",
+                display_name="Kris",
+                presentation_profile="male",
+                active=True,
+            )
+        )
         session.flush()
-        session.add(ExternalIdentityMapping(id="pep-kris", person_id="hwa-kris", authority="PEP_SITE", external_subject_id="person_a"))
+        session.add(
+            ExternalIdentityMapping(
+                id="pep-kris",
+                person_id="hwa-kris",
+                authority="PEP_SITE",
+                external_subject_id="person_a",
+            )
+        )
         session.commit()
         import_week_seed(session, MANIFEST, WEEK)
-        day = session.scalar(select(ProgrammeDay).where(ProgrammeDay.week_number == 1, ProgrammeDay.day_number == 1))
+        day = session.scalar(
+            select(ProgrammeDay).where(
+                ProgrammeDay.week_number == 1,
+                ProgrammeDay.day_number == 1,
+            )
+        )
         assert day is not None
-        draft = create_draft(session, person_id="hwa-kris", programme_day_id=day.id, snapshot={"phase": "WORKOUT_READY", "state_data": {}}, started_at=datetime(2026, 10, 1, 11, 0, tzinfo=UTC))
-        first = complete_workout(session, person_id="hwa-kris", draft_id=draft.id, idempotency_key="complete", event=_event(6), completed_at=datetime(2026, 10, 1, 11, 35, tzinfo=UTC))
-        second = correct_workout(session, person_id="hwa-kris", event_id=first.event_id, idempotency_key="correct", event=_event(7), reason="Correct effort", corrected_at=datetime(2026, 10, 1, 11, 50, tzinfo=UTC))
+        draft = create_draft(
+            session,
+            person_id="hwa-kris",
+            programme_day_id=day.id,
+            snapshot={"phase": "WORKOUT_READY", "state_data": {}},
+            started_at=datetime(2026, 10, 1, 11, 0, tzinfo=UTC),
+        )
+        first = complete_workout(
+            session,
+            person_id="hwa-kris",
+            draft_id=draft.id,
+            idempotency_key="complete",
+            event=_event(6),
+            completed_at=datetime(2026, 10, 1, 11, 35, tzinfo=UTC),
+        )
+        second = correct_workout(
+            session,
+            person_id="hwa-kris",
+            event_id=first.event_id,
+            idempotency_key="correct",
+            event=_event(7),
+            reason="Correct effort",
+            corrected_at=datetime(2026, 10, 1, 11, 50, tzinfo=UTC),
+        )
         records = PepWorkoutSourceProvider(session).records("person_a")
         assert len(records) == 1
         assert records[0].revision_number == 2
