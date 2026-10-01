@@ -22,6 +22,8 @@ from hwa.db.models.programme import (
 )
 from hwa.domain.programme import ProgrammeDayPrescription
 from hwa.domain.workout import LoadMode, LoadUnit
+from hwa.programmes.loader import load_week_file
+from hwa.programmes.validator import validate_programme_week
 
 
 class SeedModel(BaseModel):
@@ -87,7 +89,8 @@ def load_programme_manifest(path: Path) -> ProgrammeManifest:
 
 
 def load_week_seed(path: Path) -> WeekSeed:
-    return WeekSeed.model_validate(_load_json(path))
+    document = validate_programme_week(load_week_file(path))
+    return WeekSeed.model_validate(document.model_dump(mode="python"))
 
 
 def _stable_id(*parts: object) -> str:
