@@ -1,6 +1,7 @@
 """Descriptive training Progress summaries derived from effective workout evidence."""
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -20,7 +21,7 @@ class ExerciseProgressSummary:
     sessions: int
     latest_total_reps: int
     latest_total_duration_seconds: int
-    latest_max_recorded_load_kg: object | None
+    latest_max_recorded_load_kg: Decimal | None
     latest_completed_sets: int
 
 
