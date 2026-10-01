@@ -1,0 +1,39 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #edf5fb;
+  background: #08121d;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: #08121d; color: #edf5fb; }
+a { color: inherit; }
+button { font: inherit; }
+
+.app-shell { max-width: 980px; margin: 0 auto; padding: 1.25rem; }
+.app-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.app-header h1 { margin: .15rem 0 0; font-size: clamp(1.55rem, 4vw, 2.35rem); }
+.eyebrow { margin: 0; font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #92b7d6; }
+.person-chip { display: grid; gap: .1rem; min-width: 8rem; padding: .7rem .9rem; border: 1px solid #29435a; border-radius: 14px; background: #102133; }
+.person-chip__label { color: #9cb2c5; font-size: .72rem; }
+
+.primary-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .5rem; margin: 1.25rem 0; }
+.primary-nav__item { padding: .8rem .55rem; border-radius: 12px; text-align: center; text-decoration: none; color: #b8cad8; background: #102133; border: 1px solid #1e3549; }
+.primary-nav__item:hover, .primary-nav__item:focus-visible { border-color: #527ea1; color: #fff; }
+.primary-nav__item.is-active { color: #fff; border-color: #6799be; background: #183149; }
+
+.content { display: grid; gap: 1rem; }
+.surface-card, .card { padding: 1.15rem; border: 1px solid #1e3549; border-radius: 18px; background: #102133; }
+.surface-card h2, .card h2 { margin: .3rem 0 .7rem; }
+.muted { color: #aabfce; }
+.workout-list { margin: .75rem 0 0; padding-left: 1.25rem; }
+.primary-action { width: 100%; padding: 1rem 1.1rem; border: 0; border-radius: 14px; background: #e9f3fa; color: #102133; cursor: pointer; font-weight: 800; }
+.primary-action:disabled { opacity: .55; cursor: wait; }
+.resume-card { padding: 1rem; border-radius: 14px; background: #183149; }
+
+@media (max-width: 700px) {
+  .app-shell { padding: .9rem; }
+  .app-header { align-items: flex-start; }
+  .person-chip { min-width: auto; }
+  .primary-nav { overflow-x: auto; grid-template-columns: repeat(5, minmax(6rem, 1fr)); padding-bottom: .2rem; }
+}
