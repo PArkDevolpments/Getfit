@@ -1,17 +1,17 @@
 from decimal import Decimal
 
 from fastapi.testclient import TestClient
+from hwa.domain.equipment import (
+    EquipmentCapability,
+    EquipmentKind,
+    InstallationEquipmentProfile,
+)
 from sqlalchemy.orm import Session
 
 from hwa.auth.principal import StaticPrincipalProvider
 from hwa.db.base import Base
 from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import ExternalIdentityMapping, Person
-from hwa.domain.equipment import (
-    EquipmentCapability,
-    EquipmentKind,
-    InstallationEquipmentProfile,
-)
 from hwa.main import create_app
 
 
@@ -164,7 +164,9 @@ def test_settings_rejects_client_selected_identity(tmp_path) -> None:
         engine.dispose()
 
 
-def test_settings_reports_unconfigured_integrations_without_exposing_connection_details(tmp_path) -> None:
+def test_settings_reports_unconfigured_integrations_without_exposing_connection_details(
+    tmp_path,
+) -> None:
     client, engine = _client(tmp_path, "ha-kris", integrations_configured=False)
     try:
         response = client.get("/settings")
