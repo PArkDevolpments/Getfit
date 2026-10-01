@@ -1,7 +1,7 @@
 """Person-scoped Getfit product shell routes."""
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -11,7 +11,10 @@ from sqlalchemy.orm import Session
 
 from hwa.api.dependencies import get_session, resolve_person_context
 from hwa.db.models.programme import ProgrammeDay
+from hwa.domain.external_context import ExternalContext, build_external_context
 from hwa.domain.identity import PersonContext
+from hwa.integrations.menu.reader import MenuNutritionContext, MenuNutritionReader
+from hwa.integrations.pep.health_reader import PepHealthContext, PepHealthReader
 from hwa.services.today import get_today_view
 from hwa.services.workout_drafts import get_active_draft
 from hwa.web.context import build_page_context
@@ -47,8 +50,35 @@ def _surface_context(person: PersonContext, active_nav: str, title: str) -> dict
     }
 
 
+async def _external_context(request: Request, person: PersonContext) -> ExternalContext:
+    """Read optional external authorities independently and fail closed when unconfigured."""
+
+    pep_reader = cast(PepHealthReader | None, request.app.state.pep_health_reader)
+    menu_reader = cast(MenuNutritionReader | None, request.app.state.menu_nutrition_reader)
+
+    pep = (
+        await pep_reader.read(person)
+        if pep_reader is not None
+        else PepHealthContext(
+            status="UNAVAILABLE",
+            reason="PEP_HEALTH_NOT_CONFIGURED",
+            pep_person_id=person.pep_person_id,
+        )
+    )
+    menu = (
+        await menu_reader.read(person)
+        if menu_reader is not None
+        else MenuNutritionContext(
+            status="UNAVAILABLE",
+            reason="MENU_NUTRITION_NOT_CONFIGURED",
+            menu_person_id=person.menu_person_id,
+        )
+    )
+    return build_external_context(pep, menu)
+
+
 @router.get("/", response_class=HTMLResponse, dependencies=[Depends(reject_identity_selectors)])
-def today(
+async def today(
     request: Request,
     person: Annotated[PersonContext, Depends(resolve_person_context)],
     session: Annotated[Session, Depends(get_session)],
@@ -74,6 +104,7 @@ def today(
             ).all()
         )
 
+    external_context = await _external_context(request, person)
     return templates.TemplateResponse(
         request=request,
         name="foundation.html",
@@ -84,6 +115,7 @@ def today(
             "today_view": today_view,
             "primary_action": today_view.primary_action,
             "primary_day": primary_day,
+            "external_context": external_context,
         },
     )
 
