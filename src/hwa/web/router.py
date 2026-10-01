@@ -27,6 +27,7 @@ _IDENTITY_SELECTORS = frozenset(
         "menu_person_id",
     }
 )
+_IDENTITY_GUARD = [Depends(reject_identity_selectors)] if False else None
 
 
 def reject_identity_selectors(request: Request) -> None:
@@ -100,7 +101,11 @@ def _render_surface(
     )
 
 
-@router.get("/workout", response_class=HTMLResponse, dependencies=[Depends(reject_identity_selectors)])
+@router.get(
+    "/workout",
+    response_class=HTMLResponse,
+    dependencies=[Depends(reject_identity_selectors)],
+)
 def workout(
     request: Request,
     person: Annotated[PersonContext, Depends(resolve_person_context)],
@@ -108,7 +113,11 @@ def workout(
     return _render_surface(request, person, active_nav="workout", title="Workout")
 
 
-@router.get("/progress", response_class=HTMLResponse, dependencies=[Depends(reject_identity_selectors)])
+@router.get(
+    "/progress",
+    response_class=HTMLResponse,
+    dependencies=[Depends(reject_identity_selectors)],
+)
 def progress(
     request: Request,
     person: Annotated[PersonContext, Depends(resolve_person_context)],
@@ -116,7 +125,11 @@ def progress(
     return _render_surface(request, person, active_nav="progress", title="Progress")
 
 
-@router.get("/library", response_class=HTMLResponse, dependencies=[Depends(reject_identity_selectors)])
+@router.get(
+    "/library",
+    response_class=HTMLResponse,
+    dependencies=[Depends(reject_identity_selectors)],
+)
 def library(
     request: Request,
     person: Annotated[PersonContext, Depends(resolve_person_context)],
@@ -124,7 +137,11 @@ def library(
     return _render_surface(request, person, active_nav="library", title="Library")
 
 
-@router.get("/settings", response_class=HTMLResponse, dependencies=[Depends(reject_identity_selectors)])
+@router.get(
+    "/settings",
+    response_class=HTMLResponse,
+    dependencies=[Depends(reject_identity_selectors)],
+)
 def settings(
     request: Request,
     person: Annotated[PersonContext, Depends(resolve_person_context)],
