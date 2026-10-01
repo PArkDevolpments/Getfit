@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions: {}
+
+env:
+  ARCHITECTURES: '["amd64", "aarch64"]'
+  IMAGE_NAME: getfit
+  REGISTRY_PREFIX: ghcr.io/ktgregson93-collab
+  PUBLIC_IMAGE: ghcr.io/ktgregson93-collab/getfit
+
+jobs:
+  init:
+    name: Initialize release
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Validate release version
+        id: version
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import tomllib
+          from pathlib import Path
+
+          config = Path("getfit/config.yaml").read_text(encoding="utf-8")
+          match = re.search(r'^version:\s*"([^"]+)"\s*$', config, re.MULTILINE)
+          if match is None:
+              raise SystemExit("getfit/config.yaml version is missing")
+          app_version = match.group(1)
+          with Path("pyproject.toml").open("rb") as handle:
+              project_version = tomllib.load(handle)["project"]["version"]
+          if app_version != project_version:
+              raise SystemExit(
+                  f"release version mismatch: app={app_version} project={project_version}"
+              )
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
+              output.write(f"version={app_version}\n")
+          PY
+
+      - name: Prepare Home Assistant build matrix
+        id: matrix
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@7412f0023ea9b6e58e8bb5059f1660f51376f49a
+        with:
+          architectures: ${{ env.ARCHITECTURES }}
+          image-name: ${{ env.IMAGE_NAME }}
+          registry-prefix: ${{ env.REGISTRY_PREFIX }}
+
+  build:
+    name: Build ${{ matrix.arch }} production image
+    needs: init
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.init.outputs.matrix) }}
+    steps:
+      - name: Checkout exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Build and publish architecture image
+        uses: home-assistant/builder/actions/build-image@7412f0023ea9b6e58e8bb5059f1660f51376f49a
+        with:
+          arch: ${{ matrix.arch }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          image: ${{ matrix.image }}
+          image-tags: |
+            ${{ needs.init.outputs.version }}
+            latest
+          push: "true"
+          skip-existing: ${{ needs.init.outputs.version }}
+          version: ${{ needs.init.outputs.version }}
+
+  manifest:
+    name: Publish production multi-arch manifest
+    needs: [init, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+      id-token: write
+    steps:
+      - name: Publish Home Assistant multi-arch manifest
+        uses: home-assistant/builder/actions/publish-multi-arch-manifest@7412f0023ea9b6e58e8bb5059f1660f51376f49a
+        with:
+          architectures: ${{ env.ARCHITECTURES }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ env.IMAGE_NAME }}
+          image-tags: |
+            ${{ needs.init.outputs.version }}
+            latest
+          registry-prefix: ${{ env.REGISTRY_PREFIX }}
+          skip-existing: ${{ needs.init.outputs.version }}
+
+  verify:
+    name: Verify public production image
+    needs: [init, manifest]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Inspect anonymous multi-arch manifest
+        shell: bash
+        run: |
+          docker manifest inspect "${PUBLIC_IMAGE}:${{ needs.init.outputs.version }}"
+
+      - name: Prove anonymous pulls for supported architectures
+        shell: bash
+        run: |
+          docker pull --platform linux/amd64 "${PUBLIC_IMAGE}:${{ needs.init.outputs.version }}"
+          docker pull --platform linux/arm64 "${PUBLIC_IMAGE}:${{ needs.init.outputs.version }}"
