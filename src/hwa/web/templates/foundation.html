@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home Workout Assistant</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #0b1724; color: #eef5fb; }
+    main { max-width: 760px; margin: 0 auto; padding: 2rem 1rem; }
+    .card { background: #14263a; border-radius: 14px; padding: 1rem; margin: 1rem 0; }
+    button { font: inherit; padding: .8rem 1rem; border: 0; border-radius: 10px; cursor: pointer; }
+    ul { padding-left: 1.25rem; }
+    .muted { color: #b5c7d8; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Home Workout Assistant</h1>
+    <p class="muted">Signed in as {{ person.display_name }}</p>
+  </header>
+
+  <section class="card">
+    <h2>Week 1</h2>
+    {% if days %}
+      <ul>
+      {% for day in days %}
+        <li>Day {{ day.day_number }} — {{ day.title }}</li>
+      {% endfor %}
+      </ul>
+    {% else %}
+      <p>Programme unavailable</p>
+    {% endif %}
+  </section>
+
+  <section class="card" id="foundation-primary">
+    {% if primary_action == "start" and primary_day %}
+      <button
+        id="primary-action"
+        data-primary-action="start"
+        data-programme-day-id="{{ primary_day.id }}"
+        type="button"
+      >Start Week 1 Day 1</button>
+      <p class="muted" id="action-status">Your workout will be saved to the server as you go.</p>
+    {% elif primary_action == "resume" and active_draft %}
+      <div
+        id="primary-action"
+        data-primary-action="resume"
+        data-draft-id="{{ active_draft.id }}"
+        data-draft-version="{{ active_draft.version }}"
+      >
+        <strong>Resume workout</strong>
+        <p class="muted">A server-saved workout is already in progress.</p>
+      </div>
+    {% else %}
+      <div id="primary-action" data-primary-action="unavailable">
+        <strong>Programme unavailable</strong>
+        <p class="muted">No workout can be started until an approved programme is loaded.</p>
+      </div>
+    {% endif %}
+  </section>
+</main>
+
+{% if primary_action == "start" and primary_day %}
+<script>
+(() => {
+  const button = document.getElementById('primary-action');
+  const status = document.getElementById('action-status');
+  if (!button || !status) return;
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    status.textContent = 'Starting workout…';
+    try {
+      const response = await fetch('/api/v1/workouts/drafts', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          programme_day_id: button.dataset.programmeDayId,
+          snapshot: {phase: 'WORKOUT_READY', state_data: {}},
+          started_at: new Date().toISOString()
+        })
+      });
+      if (!response.ok) throw new Error('WORKOUT_START_FAILED');
+      window.location.reload();
+    } catch (_) {
+      status.textContent = 'Workout could not be started. Your existing data was not changed.';
+      button.disabled = false;
+    }
+  });
+})();
+</script>
+{% endif %}
+</body>
+</html>
