@@ -1,6 +1,6 @@
 FROM ghcr.io/home-assistant/base-python:3.12-alpine3.24
 
-ARG BUILD_VERSION=0.1.0
+ARG BUILD_VERSION=0.1.2
 ARG BUILD_ARCH=amd64
 
 LABEL \
