@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from hwa.db.base import Base
 from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import ExternalIdentityMapping, Person
+from hwa.db.models.programme import ProgrammeDay, ProgrammeDefinition
 from hwa.db.models.workout import WorkoutEvent, WorkoutRevision
 from hwa.domain.workout import CanonicalWorkoutEventV1
 
@@ -71,6 +72,13 @@ def _session() -> tuple[Session, Engine]:
                 presentation_profile="female",
                 active=True,
             ),
+            ProgrammeDefinition(
+                programme_id="home-workout-12m-v1",
+                schema_version=1,
+                title="Home Workout",
+                active=True,
+                seed_checksum="seed",
+            ),
         ]
     )
     session.flush()
@@ -88,14 +96,24 @@ def _session() -> tuple[Session, Engine]:
                 authority="PEP_SITE",
                 external_subject_id="person_b",
             ),
+            ProgrammeDay(
+                id="day-1",
+                programme_id="home-workout-12m-v1",
+                week_number=1,
+                day_number=1,
+                title="Foundation",
+                workout_type="mixed",
+                block="foundation",
+            ),
         ]
     )
+    session.flush()
     event = _event()
     session.add(
         WorkoutEvent(
             event_id=event.event_id,
             person_id="hwa-kris",
-            programme_day_id=None,
+            programme_day_id="day-1",
             effective_revision_number=1,
             created_at_utc=event.end_at,
         )
