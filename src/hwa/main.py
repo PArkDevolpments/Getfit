@@ -1,6 +1,9 @@
 """Application bootstrap for Home Workout Assistant."""
 
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import Engine
 
 from hwa.api.routes.me import router as me_router
@@ -8,9 +11,10 @@ from hwa.api.routes.workouts import router as workouts_router
 from hwa.auth.ha_ingress import HomeAssistantIngressPrincipalProvider
 from hwa.auth.principal import PrincipalProvider
 from hwa.db.engine import create_engine, create_session_factory
-from hwa.web.foundation import router as foundation_web_router
+from hwa.web.router import router as product_web_router
 
 APP_VERSION = "0.1.0"
+_WEB_DIR = Path(__file__).parent / "web"
 
 
 def create_app(
@@ -25,9 +29,14 @@ def create_app(
         principal_provider or HomeAssistantIngressPrincipalProvider()
     )
     application.state.session_factory = create_session_factory(database_engine)
+    application.mount(
+        "/static",
+        StaticFiles(directory=str(_WEB_DIR / "static")),
+        name="static",
+    )
     application.include_router(me_router)
     application.include_router(workouts_router)
-    application.include_router(foundation_web_router)
+    application.include_router(product_web_router)
 
     @application.get("/healthz")
     def healthz() -> dict[str, str]:
