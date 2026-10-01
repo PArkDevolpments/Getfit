@@ -1,6 +1,7 @@
 """Guided workout player projection over approved programme and draft authority."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -66,6 +67,7 @@ class WorkoutPlayerContext:
     presentation_profile: str
     draft_id: str
     draft_version: int
+    started_at: datetime
     snapshot: WorkoutDraftSnapshot
     programme_day_id: str
     week_number: int
@@ -203,6 +205,7 @@ def build_player_context(
         presentation_profile=person.presentation_profile,
         draft_id=draft.id,
         draft_version=draft.version,
+        started_at=draft.started_at,
         snapshot=draft.snapshot,
         programme_day_id=day.id,
         week_number=day.week_number,
