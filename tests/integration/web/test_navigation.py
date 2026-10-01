@@ -1,7 +1,8 @@
 from dataclasses import replace
 
-from hwa.domain.identity import PersonContext
 from hwa.web.context import NAV_ITEMS, build_page_context
+
+from hwa.domain.identity import PersonContext
 
 
 def _person() -> PersonContext:
@@ -51,7 +52,12 @@ def test_page_context_rejects_unknown_navigation_key() -> None:
 
 def test_page_context_changes_only_from_resolved_person() -> None:
     kris = _person()
-    kirsty = replace(kris, hwa_person_id="hwa-kirsty", display_name="Kirsty", presentation_profile="female")
+    kirsty = replace(
+        kris,
+        hwa_person_id="hwa-kirsty",
+        display_name="Kirsty",
+        presentation_profile="female",
+    )
 
     assert build_page_context(kris, "today").display_name == "Kris"
     assert build_page_context(kirsty, "today").display_name == "Kirsty"
