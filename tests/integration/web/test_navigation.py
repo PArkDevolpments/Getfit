@@ -1,8 +1,7 @@
 from dataclasses import replace
 
-from hwa.web.context import NAV_ITEMS, build_page_context
-
 from hwa.domain.identity import PersonContext
+from hwa.web.context import NAV_ITEMS, build_page_context
 
 
 def _person() -> PersonContext:
