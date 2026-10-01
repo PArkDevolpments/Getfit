@@ -1,6 +1,5 @@
 from datetime import UTC, datetime
 
-from hwa.services.today import get_today_view
 from sqlalchemy.orm import Session
 
 from hwa.db.base import Base
@@ -8,6 +7,7 @@ from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import Person
 from hwa.db.models.programme import ProgrammeDay, ProgrammeDefinition
 from hwa.db.models.workout import WorkoutDraft, WorkoutEvent
+from hwa.services.today import get_today_view
 
 
 def _session(tmp_path) -> tuple[Session, object]:
