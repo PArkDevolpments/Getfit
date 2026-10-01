@@ -1,17 +1,17 @@
 from decimal import Decimal
 
 from fastapi.testclient import TestClient
-from hwa.domain.equipment import (
-    EquipmentCapability,
-    EquipmentKind,
-    InstallationEquipmentProfile,
-)
 from sqlalchemy.orm import Session
 
 from hwa.auth.principal import StaticPrincipalProvider
 from hwa.db.base import Base
 from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import ExternalIdentityMapping, Person
+from hwa.domain.equipment import (
+    EquipmentCapability,
+    EquipmentKind,
+    InstallationEquipmentProfile,
+)
 from hwa.main import create_app
 
 
