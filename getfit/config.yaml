@@ -1,0 +1,29 @@
+name: "Getfit"
+version: "0.1.0"
+slug: "getfit"
+description: "Local-first Home Workout Assistant"
+url: "https://github.com/ktgregson93-collab/Getfit"
+startup: application
+boot: auto
+init: false
+stage: stable
+arch:
+  - amd64
+  - aarch64
+ingress: true
+ingress_port: 8099
+panel_icon: "mdi:dumbbell"
+panel_title: "Getfit"
+panel_admin: false
+backup: cold
+image: "ghcr.io/ktgregson93-collab/getfit"
+options:
+  treadmill_available: true
+  treadmill_max_incline_percent: 20
+  spin_bike_available: true
+  adjustable_dumbbells_available: true
+schema:
+  treadmill_available: bool
+  treadmill_max_incline_percent: "int(0,20)"
+  spin_bike_available: bool
+  adjustable_dumbbells_available: bool
