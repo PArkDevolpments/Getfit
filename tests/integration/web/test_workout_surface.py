@@ -51,18 +51,30 @@ def _client(tmp_path, subject: str = "ha-kris") -> tuple[TestClient, object]:
             ]
         )
         session.flush()
-        for person_id, ha_subject in (
-            ("hwa-kris", "ha-kris"),
-            ("hwa-kirsty", "ha-kirsty"),
-        ):
-            session.add(
-                ExternalIdentityMapping(
-                    id=f"{person_id}-ha",
-                    person_id=person_id,
-                    authority="HOME_ASSISTANT",
-                    external_subject_id=ha_subject,
+        mappings = {
+            "hwa-kris": {
+                "HOME_ASSISTANT": "ha-kris",
+                "PEP_SITE": "person_a",
+                "HEALTH_PROFILE": "kris",
+                "MENU_NUTRITION": "person_1",
+            },
+            "hwa-kirsty": {
+                "HOME_ASSISTANT": "ha-kirsty",
+                "PEP_SITE": "person_b",
+                "HEALTH_PROFILE": "kirsty",
+                "MENU_NUTRITION": "person_2",
+            },
+        }
+        for person_id, subjects in mappings.items():
+            for authority, external_subject_id in subjects.items():
+                session.add(
+                    ExternalIdentityMapping(
+                        id=f"{person_id}-{authority}",
+                        person_id=person_id,
+                        authority=authority,
+                        external_subject_id=external_subject_id,
+                    )
                 )
-            )
         session.add(
             ProgrammeDay(
                 id="week1-day1",
