@@ -40,6 +40,7 @@ def _session(tmp_path) -> tuple[Session, object]:
             ),
         ]
     )
+    session.commit()
     for day in range(1, 5):
         session.add(
             ProgrammeDay(
