@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Home Workout Assistant{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body data-active-nav="{{ page.active_nav }}" data-profile="{{ page.presentation_profile }}">
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">GETFIT</p>
+        <h1>Home Workout Assistant</h1>
+      </div>
+      <div class="person-chip" aria-label="Signed-in person">
+        <span class="person-chip__label">Signed in as</span>
+        <strong>{{ page.display_name }}</strong>
+      </div>
+    </header>
+
+    <nav class="primary-nav" aria-label="Primary navigation">
+      {% for item in page.navigation %}
+        <a
+          href="{{ item.path }}"
+          class="primary-nav__item{% if item.active %} is-active{% endif %}"
+          {% if item.active %}aria-current="page"{% endif %}
+        >{{ item.label }}</a>
+      {% endfor %}
+    </nav>
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
