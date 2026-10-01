@@ -12,27 +12,27 @@
 
 ## Global Constraints
 
-- Release version is exactly `0.1.2` in Home Assistant metadata, Python package metadata, and application-reported version.
-- Home Assistant identity is trusted only through the existing Supervisor Ingress provider; no client-selected identity and no display-name matching.
-- HA user IDs are explicit admin-owned configuration values `kris_ha_user_id` and `kirsty_ha_user_id`; empty means unmapped.
-- Approved fixed mappings remain Kris → Pep `person_a`, Health `kris`, Menu `person_1`; Kirsty → Pep `person_b`, Health `kirsty`, Menu `person_2`.
-- Never fall back from Kirsty to Kris or vice versa.
-- Reuse only `programme_seed/home-workout-12m-v1/programme.json` and `programme_seed/home-workout-12m-v1/week-01.json`; do not invent later weeks.
-- Preserve `/data` and the existing SQLite DB; no table recreation, history rewrite, or evidence deletion.
-- Production Uvicorn must retain `--no-proxy-headers` so `request.client.host` remains the Supervisor socket peer.
-- Pep Health activation and Menu mutation remain out of scope.
+- Release version is exactly `0.1.2` in `getfit/config.yaml`, `pyproject.toml`, and `src/hwa/main.py`.
+- Trust Home Assistant identity only through the existing Supervisor Ingress provider; never from query parameters, display names, or arbitrary client headers.
+- `kris_ha_user_id` and `kirsty_ha_user_id` are explicit admin-owned options; empty/whitespace means unmapped.
+- Approved mappings remain Kris → Pep `person_a`, Health `kris`, Menu `person_1`; Kirsty → Pep `person_b`, Health `kirsty`, Menu `person_2`.
+- No cross-person fallback.
+- Bootstrap only the existing approved `home-workout-12m-v1` Week 1 seed; do not invent Weeks 2–52.
+- Preserve `/data` and existing workout/draft/history rows.
+- Retain `uvicorn --no-proxy-headers` in production.
+- No Pep Health activation and no Menu mutation.
 
 ## Review Focus
 
-- **Whitespace/empty HA option values:** treat `""` or whitespace-only IDs as unconfigured; never create an empty HOME_ASSISTANT mapping. Covered in Task 1 and Task 2 tests.
-- **Duplicate HA subject configured for both people:** fail startup with `BootstrapConflictError`; never let uniqueness errors partially choose a person. Covered in Task 2.
-- **Existing person or authority mapping with conflicting approved identity:** fail closed before silent reassignment. Covered in Task 2.
-- **Existing same-seed programme plus historical workouts/drafts:** bootstrap must add only missing assignment/mappings and leave historical rows unchanged. Covered in Task 4.
-- **Authenticated unmapped browser request to any product route:** render only that principal's own HA subject on setup HTML while `/api/*` remains JSON 403. Covered in Task 5.
+- Empty/whitespace HA option values must create no HOME_ASSISTANT mapping.
+- The same HA subject configured for both people must fail with `BootstrapConflictError` before ambiguous identity is stored.
+- Existing conflicting person metadata or authority mappings must fail closed, never be silently rewritten.
+- Existing same-seed programme plus workout/draft history must survive replay unchanged.
+- Any authenticated unmapped browser route must show only that principal's own HA subject, while `/api/*` stays JSON 403.
 
 ---
 
-### Task 1: Home Assistant bootstrap configuration and version alignment
+### Task 1: Home Assistant options and 0.1.2 version contract
 
 **Files:**
 - Modify: `getfit/config.yaml`
@@ -40,202 +40,62 @@
 - Modify: `pyproject.toml`
 - Modify: `src/hwa/main.py`
 - Modify: `tests/contract/test_home_assistant_package.py`
-- Test: `tests/unit/test_runtime.py`
 
 **Interfaces:**
-- Consumes: existing Home Assistant app options and `bashio::config` runtime export pattern.
-- Produces: environment values `HWA_KRIS_HA_USER_ID` and `HWA_KIRSTY_HA_USER_ID`; application/package/app version `0.1.2`.
+- Produces environment values `HWA_KRIS_HA_USER_ID` and `HWA_KIRSTY_HA_USER_ID` for the Python runtime.
 
-- [ ] **Step 1: Extend the package contract tests for 0.1.2 and identity options**
-
-Add assertions that `getfit/config.yaml` has version `0.1.2`, options `kris_ha_user_id: ""` and `kirsty_ha_user_id: ""`, matching string schema entries, and that `run.sh` exports both values before starting Uvicorn while retaining `--no-proxy-headers`.
-
-- [ ] **Step 2: Run the focused contract test and verify RED**
-
-Run: `pytest tests/contract/test_home_assistant_package.py -q`
-
-Expected: FAIL because version/options/runtime exports are still 0.1.1/missing.
-
-- [ ] **Step 3: Add runtime parsing tests for optional IDs**
-
-In `tests/unit/test_runtime.py`, add tests for `build_production_bootstrap_config()` asserting:
-
-```python
-assert config.kris_ha_user_id == "ha-user-kris"
-assert config.kirsty_ha_user_id is None
-```
-
-and whitespace-only input normalizes to `None`.
-
-- [ ] **Step 4: Implement configuration/version changes**
-
-In `getfit/config.yaml`, add the two empty string options/schema entries and set version to `0.1.2`.
-
-In `run.sh`, export:
-
-```bash
-HWA_KRIS_HA_USER_ID
-HWA_KIRSTY_HA_USER_ID
-```
-
-from `bashio::config`, without changing database location or the existing Uvicorn trust flags.
-
-In `src/hwa/main.py`, set `APP_VERSION = "0.1.2"`.
-
-In `pyproject.toml`, set project version to `0.1.2`.
-
-- [ ] **Step 5: Add `build_production_bootstrap_config() -> ProductionBootstrapConfig` to `src/hwa/runtime.py`**
-
-It reads only the two `HWA_*_HA_USER_ID` environment variables and normalizes missing/whitespace-only values to `None`. The `ProductionBootstrapConfig` type is introduced in Task 2; for RED→GREEN sequencing, Task 1 may temporarily import the not-yet-implemented type only after Task 2 begins, or Task 1 and Task 2 may be committed together if required by import collection.
-
-- [ ] **Step 6: Verify focused tests GREEN**
-
-Run: `pytest tests/contract/test_home_assistant_package.py tests/unit/test_runtime.py -q`
-
-Expected: PASS.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add getfit/config.yaml run.sh pyproject.toml src/hwa/main.py src/hwa/runtime.py tests/contract/test_home_assistant_package.py tests/unit/test_runtime.py
-git commit -m "feat: add Getfit bootstrap configuration"
-```
+- [ ] **Write RED package tests** asserting app/package/API version `0.1.2`, two empty string HA-ID options with string schemas, two `run.sh` exports, and continued `--no-proxy-headers`.
+- [ ] **Run:** `pytest tests/contract/test_home_assistant_package.py -q` → expected FAIL on missing options/version.
+- [ ] **Implement** the two options and exports; set `getfit/config.yaml`, `pyproject.toml`, and `APP_VERSION` to `0.1.2`. Read HA options after Alembic migration and before Uvicorn starts.
+- [ ] **Run:** `pytest tests/contract/test_home_assistant_package.py -q` → PASS.
+- [ ] **Commit:** `feat: add Getfit bootstrap configuration`.
 
 ---
 
-### Task 2: Stable people and external identity bootstrap
+### Task 2: Stable person and authority bootstrap
 
 **Files:**
 - Create: `src/hwa/services/production_bootstrap.py`
 - Create: `tests/unit/services/test_production_bootstrap.py`
 
 **Interfaces:**
-- Produces:
-  - `ProductionBootstrapConfig(kris_ha_user_id: str | None, kirsty_ha_user_id: str | None)`
-  - `BootstrapConflictError(RuntimeError)`
-  - `BootstrapResult(people_created: int, mappings_created: int, assignments_created: int, programme_changed: bool)`
-  - `bootstrap_production(session: Session, config: ProductionBootstrapConfig, manifest_path: Path, week_path: Path, *, now: datetime | None = None) -> BootstrapResult`
-- Consumes: `Person`, `ExternalIdentityMapping`, existing SQLAlchemy uniqueness constraints.
+- Produces `ProductionBootstrapConfig.from_raw(kris_ha_user_id: str | None, kirsty_ha_user_id: str | None) -> ProductionBootstrapConfig`.
+- Produces `BootstrapConflictError(RuntimeError)`.
+- Produces `IdentityBootstrapResult(people_created: int, mappings_created: int, configured_person_ids: tuple[str, ...])`.
+- Produces `ensure_production_identities(session: Session, config: ProductionBootstrapConfig) -> IdentityBootstrapResult`.
 
-- [ ] **Step 1: Write RED tests for approved stable people and fixed authority mappings**
-
-Test empty DB + `ProductionBootstrapConfig("ha-kris", None)` eventually creates:
-
-```python
-Person(id="hwa-kris", canonical_key="kris", display_name="Kris", presentation_profile="male")
-Person(id="hwa-kirsty", canonical_key="kirsty", display_name="Kirsty", presentation_profile="female")
-```
-
-with Kris mappings `HOME_ASSISTANT=ha-kris`, `PEP_SITE=person_a`, `HEALTH_PROFILE=kris`, `MENU_NUTRITION=person_1`; Kirsty gets only fixed non-HA mappings when her HA option is unconfigured.
-
-- [ ] **Step 2: Add RED conflict tests**
-
-Cover:
-
-```python
-ProductionBootstrapConfig("same-ha-id", "same-ha-id")
-```
-
-raising `BootstrapConflictError`, plus an existing `hwa-kris` HOME_ASSISTANT mapping to a different subject raising the same error without reassignment.
-
-Also cover an existing `Person` with ID/canonical key but conflicting display/profile data.
-
-- [ ] **Step 3: Run RED**
-
-Run: `pytest tests/unit/services/test_production_bootstrap.py -q`
-
-Expected: FAIL because `hwa.services.production_bootstrap` does not exist.
-
-- [ ] **Step 4: Implement deterministic people/mapping ensure helpers**
-
-In `src/hwa/services/production_bootstrap.py`, keep approved person specs as immutable module constants and implement private helpers that:
-
-- query by stable person ID and canonical key;
-- create when absent;
-- validate exact approved metadata when present;
-- validate both `(person_id, authority)` and `(authority, external_subject_id)` before adding a mapping;
-- never update a conflicting mapping in place;
-- use deterministic mapping IDs derived from stable person + authority.
-
-`BootstrapConflictError` must carry a stable explanatory message without secrets.
-
-- [ ] **Step 5: Verify identity-focused tests GREEN**
-
-Run: `pytest tests/unit/services/test_production_bootstrap.py -q -k "identity or mapping or conflict or duplicate"`
-
-Expected: PASS.
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add src/hwa/services/production_bootstrap.py tests/unit/services/test_production_bootstrap.py
-git commit -m "feat: bootstrap stable Getfit identities"
-```
+- [ ] **Write RED tests** for normalization of empty/whitespace IDs, approved Kris/Kirsty stable person records, fixed Pep/Health/Menu mappings, and optional HA mapping only when configured.
+- [ ] **Write RED conflict tests** for duplicate configured HA subject, existing person metadata mismatch, existing `(person, authority)` with another subject, and an external subject already owned by another person.
+- [ ] **Run:** `pytest tests/unit/services/test_production_bootstrap.py -q` → FAIL because module is absent.
+- [ ] **Implement** immutable approved-person specs, deterministic mapping IDs, exact-metadata validation, and preflight conflict checks before inserts. Never update conflicting identity in place.
+- [ ] **Run:** `pytest tests/unit/services/test_production_bootstrap.py -q` → PASS.
+- [ ] **Commit:** `feat: bootstrap stable Getfit identities`.
 
 ---
 
-### Task 3: Programme import and active assignment bootstrap
+### Task 3: Approved programme import and active assignments
 
 **Files:**
 - Modify: `src/hwa/services/production_bootstrap.py`
 - Modify: `tests/unit/services/test_production_bootstrap.py`
-- Test: `tests/integration/test_production_bootstrap.py`
+- Create: `tests/integration/test_production_bootstrap.py`
 
 **Interfaces:**
-- Consumes: `import_week_seed(session, manifest_path, week_path) -> SeedImportResult`, `ProgrammeDefinition`, `PersonProgrammeAssignment`.
-- Produces: completed `bootstrap_production(...) -> BootstrapResult` contract from Task 2.
+- Consumes `import_week_seed(session, manifest_path, week_path) -> SeedImportResult`.
+- Produces `BootstrapResult(people_created: int, mappings_created: int, assignments_created: int, programme_changed: bool)`.
+- Produces `bootstrap_production(session: Session, config: ProductionBootstrapConfig, manifest_path: Path, week_path: Path, *, now: datetime | None = None) -> BootstrapResult`.
 
-- [ ] **Step 1: Write RED integration test for empty DB cold bootstrap**
-
-Create an empty migrated/test-schema DB, call `bootstrap_production(...)` with Kris configured, and assert:
-
-- programme `home-workout-12m-v1` exists;
-- exactly four Week 1 programme days exist;
-- the existing Kris prescription overrides from `week-01.json` were imported;
-- Kris has exactly one `ACTIVE` assignment;
-- Kirsty has no assignment when her HA ID is unconfigured.
-
-- [ ] **Step 2: Write replay/idempotency RED test**
-
-Call bootstrap twice with the same `now`. Capture counts of `people`, `external_identity_mappings`, `programme_definitions`, `programme_days`, `person_prescription_overrides`, and `person_programme_assignments`; assert the second call leaves counts unchanged and preserves the first assignment's `effective_from_utc`.
-
-- [ ] **Step 3: Write both-configured assignment test**
-
-With both HA IDs configured, assert exactly one active assignment per person to `home-workout-12m-v1`.
-
-- [ ] **Step 4: Run RED**
-
-Run: `pytest tests/integration/test_production_bootstrap.py -q`
-
-Expected: FAIL because programme/assignment orchestration is not yet implemented.
-
-- [ ] **Step 5: Implement programme and assignment orchestration**
-
-After identity validation succeeds, `bootstrap_production(...)` must:
-
-1. call `import_week_seed(session, manifest_path, week_path)` exactly once per bootstrap invocation;
-2. for each person whose HA ID is configured, query active assignment to `home-workout-12m-v1`;
-3. create a deterministic assignment ID only when absent;
-4. set `effective_from_utc` to supplied `now` or `datetime.now(UTC)` only on first creation;
-5. preserve existing active assignment unchanged;
-6. commit assignment additions without modifying workout/draft/history tables.
-
-- [ ] **Step 6: Verify GREEN**
-
-Run: `pytest tests/unit/services/test_production_bootstrap.py tests/integration/test_production_bootstrap.py -q`
-
-Expected: PASS.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add src/hwa/services/production_bootstrap.py tests/unit/services/test_production_bootstrap.py tests/integration/test_production_bootstrap.py
-git commit -m "feat: bootstrap approved programme assignments"
-```
+- [ ] **Write RED cold-bootstrap test:** empty DB + configured Kris produces two approved people, fixed mappings, four Week 1 days, existing Kris overrides, and exactly one active Kris assignment; unconfigured Kirsty gets no HA mapping/assignment.
+- [ ] **Write replay test:** two calls leave counts of people, mappings, programme rows, overrides, and assignments unchanged and preserve the first assignment `effective_from_utc`.
+- [ ] **Write both-configured test:** exactly one active assignment per configured person.
+- [ ] **Run:** `pytest tests/integration/test_production_bootstrap.py -q` → expected FAIL.
+- [ ] **Implement** orchestration: identity preflight/ensure → existing `import_week_seed()` → deterministic assignment ensure for configured people only. Use supplied `now` only when first creating an assignment.
+- [ ] **Run:** `pytest tests/unit/services/test_production_bootstrap.py tests/integration/test_production_bootstrap.py -q` → PASS.
+- [ ] **Commit:** `feat: bootstrap approved programme assignments`.
 
 ---
 
-### Task 4: Explicit production runtime bootstrap and upgrade preservation
+### Task 4: Explicit production runtime wiring and persistence safety
 
 **Files:**
 - Modify: `src/hwa/runtime.py`
@@ -243,57 +103,21 @@ git commit -m "feat: bootstrap approved programme assignments"
 - Create: `tests/integration/test_runtime_bootstrap.py`
 
 **Interfaces:**
-- Consumes: `ProductionBootstrapConfig`, `bootstrap_production(...)`, `create_engine()`, `create_app(engine=...)`.
-- Produces: production ASGI `app` built from the same engine that was bootstrapped.
+- Consumes `ProductionBootstrapConfig.from_raw(...)`, `bootstrap_production(...)`, `create_engine()`, and `create_app(engine=...)`.
+- Produces `build_production_bootstrap_config() -> ProductionBootstrapConfig`.
+- Produces `build_production_app() -> FastAPI` and module-level `app = build_production_app()`.
 
-- [ ] **Step 1: Write RED runtime composition test**
-
-Patch the runtime database/environment to a temporary SQLite DB and assert production composition:
-
-- uses one engine for bootstrap and `create_app`;
-- bootstraps before serving requests;
-- uses the exact seed paths under `/app/programme_seed/home-workout-12m-v1/` in the container/runtime contract;
-- leaves `create_app()` by itself non-seeding.
-
-- [ ] **Step 2: Write existing-data preservation test**
-
-Seed an existing valid person/programme/assignment plus a completed workout event or active draft, run bootstrap, then assert the historical row IDs/revisions/draft payload are byte-for-value equivalent afterward.
-
-- [ ] **Step 3: Run RED**
-
-Run: `pytest tests/unit/test_runtime.py tests/integration/test_runtime_bootstrap.py -q`
-
-Expected: FAIL because runtime does not invoke production bootstrap.
-
-- [ ] **Step 4: Implement runtime composition**
-
-Refactor `src/hwa/runtime.py` to:
-
-```python
-def build_production_app() -> FastAPI: ...
-app = build_production_app()
-```
-
-`build_production_app()` must create one engine, open one bootstrap `Session`, call `bootstrap_production(...)`, then call `create_app(engine=engine, equipment_profile=...)`. Do not modify generic `create_app()` to seed data.
-
-Use paths resolved relative to installed `/app/programme_seed` or an explicit production seed-root constant that tests can override; do not rely on browser working directory.
-
-- [ ] **Step 5: Verify runtime and preservation GREEN**
-
-Run: `pytest tests/unit/test_runtime.py tests/integration/test_runtime_bootstrap.py -q`
-
-Expected: PASS.
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add src/hwa/runtime.py tests/unit/test_runtime.py tests/integration/test_runtime_bootstrap.py
-git commit -m "feat: bootstrap Getfit production runtime"
-```
+- [ ] **Write RED config parsing tests**: env values trim whitespace; missing/blank becomes `None`; no inferred/fallback identity.
+- [ ] **Write RED composition test**: one engine is used for bootstrap and app; bootstrap runs before requests; generic `create_app()` alone does not seed data.
+- [ ] **Write preservation test**: existing valid completed workout/draft/history rows have identical IDs/revision/payload after bootstrap replay.
+- [ ] **Run:** `pytest tests/unit/test_runtime.py tests/integration/test_runtime_bootstrap.py -q` → expected FAIL.
+- [ ] **Implement** `build_production_bootstrap_config()` and `build_production_app()`. Resolve seed paths independently of browser CWD. Open a bootstrap `Session`, call `bootstrap_production`, then pass the same engine to `create_app` with the existing equipment profile.
+- [ ] **Run:** focused runtime tests → PASS.
+- [ ] **Commit:** `feat: bootstrap Getfit production runtime`.
 
 ---
 
-### Task 5: Safe browser setup page for authenticated unmapped users
+### Task 5: Browser setup page without weakening API identity
 
 **Files:**
 - Create: `src/hwa/web/dependencies.py`
@@ -305,166 +129,47 @@ git commit -m "feat: bootstrap Getfit production runtime"
 - Modify: `tests/contract/test_me_api.py`
 
 **Interfaces:**
-- Consumes: existing `PrincipalProvider.resolve(request) -> AuthenticatedPrincipal`, `IdentityService.resolve(principal) -> PersonContext`, `IdentityNotMappedError`.
-- Produces:
-  - `WebIdentitySetupRequired(subject_id: str)`
-  - `resolve_web_person_context(request: Request) -> PersonContext`
-  - `setup_required_exception_handler(request: Request, exc: WebIdentitySetupRequired) -> HTMLResponse`
-- API `resolve_person_context()` in `hwa.api.dependencies` remains unchanged.
+- Produces `WebIdentitySetupRequired(subject_id: str)`.
+- Produces `resolve_web_person_context(request: Request) -> PersonContext`.
+- Produces `setup_required_exception_handler(request: Request, exc: WebIdentitySetupRequired) -> HTMLResponse`.
+- Existing API `resolve_person_context()` stays unchanged.
 
-- [ ] **Step 1: Write RED browser test for unmapped trusted principal**
-
-Using `StaticPrincipalProvider("real-ha-user-id")` with no HOME_ASSISTANT mapping, request `/` and assert:
-
-```python
-assert response.status_code == 403
-assert "Getfit setup required" in response.text
-assert "real-ha-user-id" in response.text
-assert "person_a" not in response.text
-assert "person_b" not in response.text
-assert "person_1" not in response.text
-```
-
-Also request `/settings` and assert the same setup presentation, proving all product routes use the web dependency.
-
-- [ ] **Step 2: Pin API behavior separately**
-
-Extend `tests/contract/test_me_api.py` so `/api/v1/me` with the same unmapped principal remains JSON 403 with `IDENTITY_NOT_MAPPED` and does not render HTML.
-
-- [ ] **Step 3: Run RED**
-
-Run: `pytest tests/integration/web/test_setup_required.py tests/contract/test_me_api.py -q`
-
-Expected: browser test fails with existing JSON 403 while API contract still passes.
-
-- [ ] **Step 4: Implement web-only identity dependency and exception**
-
-`resolve_web_person_context()` performs the same authentication/identity resolution as the API dependency, but on `IdentityNotMappedError` raises `WebIdentitySetupRequired(principal.subject_id)` instead of converting it to API JSON.
-
-Authentication failures must remain 401 and must not reveal a subject.
-
-- [ ] **Step 5: Render setup template and register handler**
-
-`setup_required.html` may show only the authenticated subject ID and these option names:
-
-- `kris_ha_user_id`
-- `kirsty_ha_user_id`
-
-It must instruct the administrator to update the Getfit Home Assistant app configuration and restart. Do not include Pep/Health/Menu IDs, DB IDs, endpoints, or tokens.
-
-Register `setup_required_exception_handler` in `create_app()` and change only web router dependencies to `resolve_web_person_context`; API routers continue using `hwa.api.dependencies.resolve_person_context`.
-
-- [ ] **Step 6: Verify browser/API isolation GREEN**
-
-Run: `pytest tests/integration/web/test_setup_required.py tests/contract/test_me_api.py -q`
-
-Expected: PASS.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add src/hwa/web/dependencies.py src/hwa/web/setup.py src/hwa/web/templates/setup_required.html src/hwa/web/router.py src/hwa/main.py tests/integration/web/test_setup_required.py tests/contract/test_me_api.py
-git commit -m "feat: guide unmapped Home Assistant users safely"
-```
+- [ ] **Write RED browser test** using trusted `StaticPrincipalProvider("real-ha-user-id")` with no mapping. `/` and `/settings` must return setup HTML containing `Getfit setup required` and only `real-ha-user-id`; no Pep/Health/Menu IDs.
+- [ ] **Pin API behavior:** `/api/v1/me` with the same unmapped principal remains JSON 403 `IDENTITY_NOT_MAPPED`.
+- [ ] **Run:** `pytest tests/integration/web/test_setup_required.py tests/contract/test_me_api.py -q` → browser RED/API GREEN.
+- [ ] **Implement** a web-only resolver: authentication failures remain 401; `IdentityNotMappedError` becomes `WebIdentitySetupRequired(principal.subject_id)`.
+- [ ] **Implement template/handler** explaining `kris_ha_user_id` / `kirsty_ha_user_id` configuration and restart. Do not show other IDs, endpoints, tokens, or DB identifiers.
+- [ ] **Switch web router dependencies only** to `resolve_web_person_context`; leave API routers unchanged.
+- [ ] **Run focused tests** → PASS.
+- [ ] **Commit:** `feat: guide unmapped Home Assistant users safely`.
 
 ---
 
-### Task 6: Production cold-start acceptance, release gate, and 0.1.2 publication
+### Task 6: Production cold-start acceptance and release
 
 **Files:**
 - Create: `tests/e2e/test_production_cold_start.py`
 - Modify: `tests/contract/test_home_assistant_package.py`
-- Modify if needed: `tests/contract/test_release_publish_workflow.py`
-- Modify if needed: `.github/workflows/ci.yml`
-- No change expected: `.github/workflows/release.yml` unless the existing version-derivation contract fails for 0.1.2.
+- Modify only if required by existing gate: `tests/contract/test_release_publish_workflow.py`, `.github/workflows/ci.yml`
 
 **Interfaces:**
-- Consumes: all Tasks 1–5, existing workout draft APIs, existing release workflow.
-- Produces: one exact-head release candidate proven from empty DB through restart recovery and Docker build.
+- Consumes Tasks 1–5, existing draft API/browser flow, and existing release workflow.
+- Produces one exact-head candidate that can be published as `ghcr.io/ktgregson93-collab/getfit:0.1.2`.
 
-- [ ] **Step 1: Write the production cold-start E2E test**
+- [ ] **Write E2E cold start:** empty DB → configured Kris bootstrap → trusted Ingress `/` shows Kris Week 1 Day 1/start → start workout → active Kris draft → rebuild app against same DB → `/` shows resume with same draft ID/version → no Kirsty data.
+- [ ] **Write setup-to-config E2E:** boot with no HA IDs → own-subject setup page → rebuild with that exact subject configured for Kris → Today resolves to Kris.
+- [ ] **Run:** `pytest tests/e2e/test_production_cold_start.py -q` and fix only evidence-backed failures.
+- [ ] **Run full exact-head verification:** `ruff check .`, `mypy src`, unit, integration, contract, E2E, Alembic migration smoke, and the same production Docker build used by CI.
+- [ ] **Open PR** titled `Getfit 0.1.2: production cold-start bootstrap`; document the live `IDENTITY_NOT_MAPPED` trigger, no DB wipe, fail-closed mapping, no Pep activation, and exact passing head SHA/checks.
+- [ ] **Merge only the exact GREEN head**, then require `main` CI on the merge SHA to pass.
+- [ ] **Follow release workflow** through amd64 + aarch64 publish, multi-arch manifest, and anonymous pulls; record the immutable 0.1.2 digest.
+- [ ] **Live HA verification:** update to 0.1.2 → open unmapped setup page → copy own HA ID → configure correct person option → restart → verify Today → start/autosave → restart → resume same draft → confirm no cross-person exposure.
+- [ ] Do not call the installation LIVE until those Home Assistant-side smoke checks pass.
 
-The test must use a new temporary DB and production-shaped trusted Ingress principal. Sequence:
+## Self-Review Result
 
-1. migrate/schema-create empty DB;
-2. bootstrap with Kris HA subject configured;
-3. build/start app against that same DB;
-4. GET `/` and assert `Kris`, `Week 1`, `Day 1`, and primary action `start`;
-5. start Week 1 Day 1 through the real draft API/product flow;
-6. assert one Kris-owned active draft exists;
-7. dispose/recreate runtime/app against the same DB to simulate restart;
-8. GET `/` and assert primary action `resume` and same draft ID/version;
-9. assert no Kirsty fallback/data appears.
-
-- [ ] **Step 2: Add setup-to-config acceptance**
-
-In the same E2E module or a second test, first boot with no HA IDs and assert unmapped setup HTML reveals only the current subject; then rebuild runtime with that exact subject configured for Kris and assert Today resolves as Kris.
-
-- [ ] **Step 3: Run E2E RED/GREEN cycle**
-
-Run: `pytest tests/e2e/test_production_cold_start.py -q`
-
-Expected before final fixes: FAIL at whichever cold-start/runtime path remains incomplete. After implementation: PASS.
-
-- [ ] **Step 4: Run full local/repository verification**
-
-Run in this order:
-
-```bash
-ruff check .
-mypy src
-pytest tests/unit -q
-pytest tests/integration -q
-pytest tests/contract -q
-pytest tests/e2e -q
-alembic -c alembic.ini upgrade head
-```
-
-Then build the production image using the same command/action contract used by `.github/workflows/ci.yml`.
-
-Expected: all commands PASS; Docker image builds successfully.
-
-- [ ] **Step 5: Open PR and require exact-head CI GREEN**
-
-PR title: `Getfit 0.1.2: production cold-start bootstrap`
-
-The PR body must call out the live trigger `IDENTITY_NOT_MAPPED`, identity fail-closed guarantees, no DB wipe, no Pep activation, and exact test counts/checks from the successful head.
-
-Do not merge a head whose CI evidence belongs to an earlier SHA.
-
-- [ ] **Step 6: Merge exact GREEN head and follow main CI**
-
-After exact-head verification/review, merge to `main`. Require the `main` CI for the merge SHA to pass before considering release publication eligible.
-
-- [ ] **Step 7: Follow 0.1.2 Release workflow to registry verification**
-
-Require:
-
-- amd64 build/publish success;
-- aarch64 build/publish success;
-- multi-arch manifest success;
-- anonymous pull verification for both architectures.
-
-Record the immutable `ghcr.io/ktgregson93-collab/getfit:0.1.2` manifest digest.
-
-- [ ] **Step 8: Live Home Assistant verification**
-
-User-facing sequence after registry verification:
-
-1. update Home Assistant Getfit to `0.1.2`;
-2. open Getfit unmapped and copy only the displayed current HA stable user ID;
-3. enter it into `kris_ha_user_id` (or `kirsty_ha_user_id` for the relevant account) in App configuration;
-4. restart Getfit;
-5. verify person-scoped Today Week 1 Day 1;
-6. start a workout and confirm autosaved draft;
-7. restart Getfit and confirm Resume returns the same draft;
-8. verify the other person's data is never shown.
-
-The release is not called LIVE until these Home Assistant-side smoke checks succeed.
-
-- [ ] **Step 9: Commit any acceptance-only changes before PR finalization**
-
-```bash
-git add tests/e2e/test_production_cold_start.py tests/contract/test_home_assistant_package.py tests/contract/test_release_publish_workflow.py .github/workflows/ci.yml
-git commit -m "test: gate Getfit production cold start"
-```
+- **Spec coverage:** all approved design sections map to Tasks 1–6; no programme content beyond the approved Week 1 seed is introduced.
+- **Step scan:** each task has a distinct RED→GREEN deliverable; the earlier forward-reference between runtime config and bootstrap types was removed.
+- **Type consistency:** `ProductionBootstrapConfig` is created in Task 2 and consumed by Tasks 3–4; browser setup types are isolated to Task 5.
+- **Review focus:** all five high-risk production inputs have explicit tests in the owning task.
+- **Proportion:** the plan specifies interfaces, assertions, and commands without transcribing function bodies.
