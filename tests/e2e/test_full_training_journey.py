@@ -80,11 +80,14 @@ def _event_payload() -> dict[str, object]:
             "strength": [
                 {
                     "exercise_id": "dumbbell_floor_press",
-                    "sequence": 1,
+                    "completed": True,
                     "sets": [
                         {
                             "set_number": 1,
+                            "laterality": "BILATERAL",
+                            "target_type": "REPS",
                             "completed": True,
+                            "pain_flag": False,
                             "reps": 10,
                             "load_value": 6,
                             "load_unit": "KG",
@@ -98,11 +101,12 @@ def _event_payload() -> dict[str, object]:
             "cardio": [
                 {
                     "equipment": "SPIN_BIKE",
-                    "sequence": 1,
                     "duration_seconds": 900,
-                    "cadence_rpm": 85,
+                    "cadence_rpm_min": 85,
+                    "cadence_rpm_max": 85,
                     "resistance": "moderate",
                     "rpe": 5,
+                    "completed": True,
                 }
             ],
         },
@@ -209,7 +213,8 @@ def test_kris_can_start_interrupt_resume_complete_review_and_export(tmp_path) ->
             assert len(records) == 1
             assert records[0].event_id == "task12-kris-event"
             assert records[0].revision_number == 1
-            assert records[0].duration_seconds == 2520
+            assert records[0].duration == 2520
+            assert str(records[0].effort.session_rpe) == "6"
     finally:
         restarted.close()
         restarted_engine.dispose()
