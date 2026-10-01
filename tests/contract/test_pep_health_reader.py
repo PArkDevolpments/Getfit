@@ -233,7 +233,10 @@ async def test_reader_rejects_cross_person_payload() -> None:
     module = _module()
 
     def handler(_: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json=_ready_payload(person_id="person_b", health_profile_id="kirsty"))
+        return httpx.Response(
+            200,
+            json=_ready_payload(person_id="person_b", health_profile_id="kirsty"),
+        )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         result = await module.PepHealthReader(client).read(_context())
