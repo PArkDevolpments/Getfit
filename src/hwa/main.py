@@ -14,7 +14,9 @@ from hwa.db.engine import create_engine, create_session_factory
 from hwa.domain.equipment import InstallationEquipmentProfile
 from hwa.integrations.menu.reader import MenuNutritionReader
 from hwa.integrations.pep.health_reader import PepHealthReader
+from hwa.web.dependencies import WebIdentitySetupRequired
 from hwa.web.router import router as product_web_router
+from hwa.web.setup import setup_required_exception_handler
 
 APP_VERSION = "0.1.2"
 _WEB_DIR = Path(__file__).parent / "web"
@@ -38,6 +40,10 @@ def create_app(
     application.state.pep_health_reader = pep_health_reader
     application.state.menu_nutrition_reader = menu_nutrition_reader
     application.state.equipment_profile = equipment_profile
+    application.add_exception_handler(
+        WebIdentitySetupRequired,
+        setup_required_exception_handler,
+    )
     application.mount(
         "/static",
         StaticFiles(directory=str(_WEB_DIR / "static")),
