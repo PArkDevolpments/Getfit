@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from hwa.db.base import Base
@@ -42,7 +43,7 @@ def _event(event_id: str, person_id: str, day: int) -> CanonicalWorkoutEventV1:
     )
 
 
-def _session() -> tuple[Session, object]:
+def _session() -> tuple[Session, Engine]:
     engine = create_engine(DatabaseSettings(database_url="sqlite:///:memory:"))
     Base.metadata.create_all(engine)
     session = Session(engine)
