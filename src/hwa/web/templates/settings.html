@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Settings · Home Workout Assistant{% endblock %}
+
+{% block content %}
+<section class="card">
+  <p class="eyebrow">Settings</p>
+  <h2>{{ person.display_name }}</h2>
+  <p class="muted">Workout settings are resolved from trusted identity and installation configuration.</p>
+</section>
+
+<section class="card" id="equipment-settings">
+  <p class="eyebrow">Equipment</p>
+  {% if settings.equipment_configured %}
+    <ul class="workout-list">
+    {% for item in settings.equipment %}
+      <li>
+        <strong>{{ item.label }}</strong>
+        <span class="muted">{{ "Available" if item.available else "Unavailable" }}</span>
+        {% if item.capability_notes %}
+          <div class="muted">{{ item.capability_notes|join(" · ") }}</div>
+        {% endif %}
+      </li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">Equipment configuration unavailable</p>
+  {% endif %}
+</section>
+
+<section class="card" id="calibration-settings">
+  <p class="eyebrow">Calibration</p>
+  <h2>{{ settings.calibration.label }}</h2>
+  <p><strong>{{ settings.calibration.status }}</strong></p>
+  <p class="muted">{{ settings.calibration.detail }}</p>
+</section>
+
+<section class="card" id="integration-settings">
+  <p class="eyebrow">Integrations</p>
+  <ul class="workout-list">
+  {% for integration in settings.integrations %}
+    <li>
+      <strong>{{ integration.label }}</strong>
+      <span class="muted">{{ integration.status }}</span>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endblock %}
