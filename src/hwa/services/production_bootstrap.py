@@ -1,15 +1,22 @@
-"""Fail-closed production bootstrap for stable Getfit identities."""
+"""Fail-closed production bootstrap for stable Getfit identities and programme state."""
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
+from uuid import NAMESPACE_URL, uuid5
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from hwa.db.models.identity import ExternalIdentityMapping, Person
+from hwa.db.models.programme import PersonProgrammeAssignment
+from hwa.services.programmes import import_week_seed
+
+PROGRAMME_ID = "home-workout-12m-v1"
 
 
 class BootstrapConflictError(RuntimeError):
-    """Raised when production bootstrap would make identity authority ambiguous."""
+    """Raised when production bootstrap would make authority ambiguous."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +41,14 @@ class IdentityBootstrapResult:
     people_created: int
     mappings_created: int
     configured_person_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class BootstrapResult:
+    people_created: int
+    mappings_created: int
+    assignments_created: int
+    programme_changed: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +106,10 @@ def _configured_ha_subjects(config: ProductionBootstrapConfig) -> dict[str, str]
 
 def _mapping_id(person_id: str, authority: str) -> str:
     return f"{person_id}-{authority.lower().replace('_', '-')}"
+
+
+def _assignment_id(person_id: str, programme_id: str) -> str:
+    return str(uuid5(NAMESPACE_URL, f"{person_id}:{programme_id}:active-assignment"))
 
 
 def _desired_mappings(
@@ -159,6 +178,34 @@ def _validate_mapping_preflight(
     return by_id
 
 
+def _validate_assignment_preflight(
+    session: Session,
+    configured_person_ids: tuple[str, ...],
+) -> dict[str, PersonProgrammeAssignment | None]:
+    existing: dict[str, PersonProgrammeAssignment | None] = {}
+    for person_id in configured_person_ids:
+        active = session.scalars(
+            select(PersonProgrammeAssignment).where(
+                PersonProgrammeAssignment.person_id == person_id,
+                PersonProgrammeAssignment.status == "ACTIVE",
+            )
+        ).all()
+        if len(active) > 1:
+            raise BootstrapConflictError(f"person {person_id} has multiple active programmes")
+        if active and active[0].programme_id != PROGRAMME_ID:
+            raise BootstrapConflictError(f"person {person_id} has conflicting active programme")
+        if active:
+            existing[person_id] = active[0]
+            continue
+
+        deterministic_id = _assignment_id(person_id, PROGRAMME_ID)
+        by_id = session.get(PersonProgrammeAssignment, deterministic_id)
+        if by_id is not None:
+            raise BootstrapConflictError(f"person {person_id} assignment identity conflict")
+        existing[person_id] = None
+    return existing
+
+
 def ensure_production_identities(
     session: Session,
     config: ProductionBootstrapConfig,
@@ -217,4 +264,50 @@ def ensure_production_identities(
         people_created=people_created,
         mappings_created=mappings_created,
         configured_person_ids=configured_person_ids,
+    )
+
+
+def bootstrap_production(
+    session: Session,
+    config: ProductionBootstrapConfig,
+    manifest_path: Path,
+    week_path: Path,
+    *,
+    now: datetime | None = None,
+) -> BootstrapResult:
+    """Bootstrap approved identity, programme and assignments idempotently."""
+
+    configured_person_ids = tuple(_configured_ha_subjects(config))
+    existing_assignments = _validate_assignment_preflight(session, configured_person_ids)
+
+    try:
+        identity = ensure_production_identities(session, config)
+        programme = import_week_seed(session, manifest_path, week_path)
+
+        effective_from = now or datetime.now(UTC)
+        assignments_created = 0
+        for person_id in identity.configured_person_ids:
+            if existing_assignments[person_id] is not None:
+                continue
+            session.add(
+                PersonProgrammeAssignment(
+                    id=_assignment_id(person_id, PROGRAMME_ID),
+                    person_id=person_id,
+                    programme_id=PROGRAMME_ID,
+                    effective_from_utc=effective_from,
+                    effective_to_utc=None,
+                    status="ACTIVE",
+                )
+            )
+            assignments_created += 1
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
+    return BootstrapResult(
+        people_created=identity.people_created,
+        mappings_created=identity.mappings_created,
+        assignments_created=assignments_created,
+        programme_changed=programme.changed,
     )
