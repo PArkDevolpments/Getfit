@@ -108,7 +108,7 @@ def test_kirsty_never_inherits_kris_draft_identity_or_page_state(tmp_path) -> No
         assert 'data-primary-action="start"' in kirsty_today.text
 
         assert kirsty.get("/api/v1/workouts/drafts/active").status_code == 404
-        spoof = kirsty.get(f"/?person_id=hwa-kris")
+        spoof = kirsty.get("/?person_id=hwa-kris")
         assert spoof.status_code == 400
         assert spoof.json()["detail"] == "IDENTITY_SELECTOR_NOT_ALLOWED"
 
