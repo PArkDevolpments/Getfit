@@ -110,6 +110,6 @@ def test_only_effective_revision_is_projected_to_pep(tmp_path) -> None:
         assert len(records) == 1
         assert records[0].revision_number == 2
         assert records[0].supersedes_revision_number == 1
-        assert str(records[0].session_rpe) == "7"
-        assert records[0].provenance.atomic_evidence_id == second.revision_id
+        assert str(records[0].effort.session_rpe) == "7"
+        assert records[0].atomic_evidence_id == second.revision_id
     engine.dispose()
