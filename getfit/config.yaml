@@ -1,5 +1,5 @@
 name: "Getfit"
-version: "0.1.1"
+version: "0.1.2"
 slug: "getfit"
 description: "Local-first Home Workout Assistant"
 url: "https://github.com/ktgregson93-collab/Getfit"
@@ -22,8 +22,12 @@ options:
   treadmill_max_incline_percent: 20
   spin_bike_available: true
   adjustable_dumbbells_available: true
+  kris_ha_user_id: ""
+  kirsty_ha_user_id: ""
 schema:
   treadmill_available: bool
   treadmill_max_incline_percent: "int(0,20)"
   spin_bike_available: bool
   adjustable_dumbbells_available: bool
+  kris_ha_user_id: str
+  kirsty_ha_user_id: str
