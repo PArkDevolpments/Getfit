@@ -1,7 +1,6 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from hwa.web.workout import build_player_context
 from sqlalchemy.orm import Session
 
 from hwa.db.base import Base
@@ -16,6 +15,7 @@ from hwa.db.models.programme import (
 )
 from hwa.domain.draft import DraftPhase, WorkoutDraftSnapshot
 from hwa.services.workout_drafts import create_draft
+from hwa.web.workout import build_player_context
 
 
 def _session(tmp_path) -> tuple[Session, object]:
@@ -155,7 +155,11 @@ def test_player_projects_approved_targets_and_person_override(tmp_path) -> None:
 def test_spin_bike_projection_never_exposes_incline_or_speed(tmp_path) -> None:
     session, engine = _session(tmp_path)
     try:
-        player = build_player_context(session, "hwa-kris", _draft(session, "hwa-kris"))
+        player = build_player_context(
+            session,
+            "hwa-kris",
+            _draft(session, "hwa-kris"),
+        )
         cardio = player.cardio[0]
         assert cardio.equipment == "SPIN_BIKE"
         assert cardio.speed_kmh is None
@@ -171,7 +175,11 @@ def test_spin_bike_projection_never_exposes_incline_or_speed(tmp_path) -> None:
 def test_player_is_person_scoped_and_does_not_borrow_kris_override(tmp_path) -> None:
     session, engine = _session(tmp_path)
     try:
-        player = build_player_context(session, "hwa-kirsty", _draft(session, "hwa-kirsty"))
+        player = build_player_context(
+            session,
+            "hwa-kirsty",
+            _draft(session, "hwa-kirsty"),
+        )
         assert player.display_name == "Kirsty"
         assert player.strength[0].load_value == Decimal("8.0")
         assert player.strength[0].load_source == "APPROVED_PROGRAMME"
