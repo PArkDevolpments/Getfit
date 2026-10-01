@@ -1,14 +1,14 @@
+from hwa.services.production_bootstrap import (
+    BootstrapConflictError,
+    ProductionBootstrapConfig,
+    ensure_production_identities,
+)
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
 from hwa.db.base import Base
 from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import ExternalIdentityMapping, Person
-from hwa.services.production_bootstrap import (
-    BootstrapConflictError,
-    ProductionBootstrapConfig,
-    ensure_production_identities,
-)
 
 
 def _session() -> tuple[Session, Engine]:
