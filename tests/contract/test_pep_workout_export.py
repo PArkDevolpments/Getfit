@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from hwa.db.base import Base
@@ -50,7 +51,7 @@ def _event(
     )
 
 
-def _session() -> tuple[Session, object]:
+def _session() -> tuple[Session, Engine]:
     engine = create_engine(DatabaseSettings(database_url="sqlite:///:memory:"))
     Base.metadata.create_all(engine)
     session = Session(engine)
@@ -138,10 +139,11 @@ def test_provider_matches_pep_records_and_readiness_interface() -> None:
         assert row["effort"] == {"session_rpe": "6.0"}
         assert row["heart_rate_response"]["status"] == "UNAVAILABLE"
         assert row["training_load"]["status"] == "UNAVAILABLE"
-        assert row["source_authority"] == "HOME_WORKOUT_ASSISTANT"
+        assert row["source_authority"] == "WORKOUT_EVENT_SOURCE"
         assert row["source_instance"] == "getfit-test"
         assert row["atomic_evidence_id"] == "revision-1"
         assert row["revision_number"] == 1
+        assert row["provenance"]["authority"] == "HOME_WORKOUT_ASSISTANT"
         assert row["automatic_action"] is False
     finally:
         session.close()
