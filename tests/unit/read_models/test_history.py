@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
+from hwa.read_models.history import get_exercise_history, get_workout_history
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
@@ -10,7 +11,6 @@ from hwa.db.models.identity import Person
 from hwa.db.models.programme import ProgrammeDay, ProgrammeDefinition
 from hwa.db.models.workout import WorkoutEvent, WorkoutRevision
 from hwa.domain.workout import CanonicalWorkoutEventV1
-from hwa.read_models.history import get_exercise_history, get_workout_history
 
 
 def _event(
