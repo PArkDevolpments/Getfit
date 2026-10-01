@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from hwa.api.dependencies import get_session, resolve_person_context
 from hwa.db.models.programme import ProgrammeDay
+from hwa.domain.equipment import InstallationEquipmentProfile
 from hwa.domain.external_context import ExternalContext, build_external_context
 from hwa.domain.identity import PersonContext
 from hwa.integrations.menu.reader import MenuNutritionContext, MenuNutritionReader
@@ -20,6 +21,7 @@ from hwa.services.workout_drafts import get_active_draft
 from hwa.web.context import build_page_context
 from hwa.web.library import get_exercise, list_exercises
 from hwa.web.progress import build_progress_context
+from hwa.web.settings import build_settings_view
 from hwa.web.workout import build_player_context
 
 router = APIRouter(tags=["product-web"])
@@ -241,4 +243,22 @@ def settings(
     request: Request,
     person: Annotated[PersonContext, Depends(resolve_person_context)],
 ) -> HTMLResponse:
-    return _render_surface(request, person, active_nav="settings", title="Settings")
+    profile = cast(
+        InstallationEquipmentProfile | None,
+        request.app.state.equipment_profile,
+    )
+    settings_view = build_settings_view(
+        person,
+        profile,
+        pep_health_configured=request.app.state.pep_health_reader is not None,
+        menu_nutrition_configured=request.app.state.menu_nutrition_reader is not None,
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="settings.html",
+        context={
+            "page": build_page_context(person, "settings"),
+            "person": person,
+            "settings": settings_view,
+        },
+    )
