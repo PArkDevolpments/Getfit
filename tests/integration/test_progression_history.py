@@ -1,8 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from hwa.domain.progression import ProgressionAction, ProgressionRule
-from hwa.services.progression import evaluate_strength_progression
 from sqlalchemy import func, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
@@ -12,7 +10,9 @@ from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import Person
 from hwa.db.models.programme import ProgrammeDay, ProgrammeDefinition
 from hwa.db.models.workout import WorkoutEvent, WorkoutRevision
+from hwa.domain.progression import ProgressionAction, ProgressionRule
 from hwa.domain.workout import CanonicalWorkoutEventV1
+from hwa.services.progression import evaluate_strength_progression
 
 
 def _event(
