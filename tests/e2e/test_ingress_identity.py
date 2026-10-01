@@ -50,17 +50,21 @@ def _engine(tmp_path):
 
 
 def test_home_assistant_app_package_declares_ingress_and_persistent_runtime() -> None:
-    config = yaml.safe_load((_ROOT / "config.yaml").read_text(encoding="utf-8"))
+    repository = yaml.safe_load((_ROOT / "repository.yaml").read_text(encoding="utf-8"))
+    config = yaml.safe_load((_ROOT / "getfit" / "config.yaml").read_text(encoding="utf-8"))
     dockerfile = (_ROOT / "Dockerfile").read_text(encoding="utf-8")
     run_script = (_ROOT / "run.sh").read_text(encoding="utf-8")
     alembic = (_ROOT / "alembic.ini").read_text(encoding="utf-8")
 
+    assert repository["name"] == "Getfit Home Assistant Apps"
     assert config["name"] == "Getfit"
     assert config["slug"] == "getfit"
     assert config["ingress"] is True
     assert config["ingress_port"] == 8099
     assert config["init"] is False
+    assert config["image"] == "ghcr.io/ktgregson93-collab/getfit"
     assert set(config["arch"]) == {"amd64", "aarch64"}
+    assert config["options"]["treadmill_max_incline_percent"] == 20
 
     assert "FROM ghcr.io/home-assistant/base-python:3.12-alpine3.24" in dockerfile
     assert "ARG BUILD_FROM" not in dockerfile
@@ -69,7 +73,7 @@ def test_home_assistant_app_package_declares_ingress_and_persistent_runtime() ->
 
     assert "cd /data" in run_script
     assert "alembic -c /app/alembic.ini upgrade head" in run_script
-    assert "uvicorn hwa.main:app" in run_script
+    assert "uvicorn hwa.runtime:app" in run_script
     assert "--port 8099" in run_script
     assert "%(here)s/migrations" in alembic
 
