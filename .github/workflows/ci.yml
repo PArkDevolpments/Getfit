@@ -22,3 +22,4 @@ jobs:
       - run: uv run pytest tests/e2e -q
       - run: rm -f hwa.db
       - run: uv run alembic upgrade head
+      - run: docker build -t getfit-ci .
