@@ -16,7 +16,7 @@ from hwa.integrations.menu.reader import MenuNutritionReader
 from hwa.integrations.pep.health_reader import PepHealthReader
 from hwa.web.router import router as product_web_router
 
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.1.2"
 _WEB_DIR = Path(__file__).parent / "web"
 
 
