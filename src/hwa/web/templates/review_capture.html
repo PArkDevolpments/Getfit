@@ -1,3 +1,39 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#061523">
+  <title>UI Review Pack · Home Workout Assistant</title>
+  <link rel="stylesheet" href="{{ ingress_url(request, '/static/review-capture.css') }}">
+</head>
+<body
+  class="review-capture"
+  data-app-version="{{ app_version }}"
+  data-display-name="{{ person.display_name }}"
+  data-presentation-profile="{{ person.presentation_profile }}"
+>
+  <aside class="review-toolbar" id="review-toolbar">
+    <div class="review-toolbar__heading">
+      <div>
+        <p class="review-kicker">Design review</p>
+        <h1>UI Review Pack</h1>
+      </div>
+      <span class="review-version">v{{ app_version }}</span>
+    </div>
+
+    <p class="review-intro">
+      Capture the live Getfit pages into one ZIP so the rendered product can be reviewed against the approved mock-up.
+    </p>
+
+    <div class="review-person">
+      <span class="review-person__avatar" aria-hidden="true">{{ person.display_name[:1] }}</span>
+      <span>
+        <small>Capturing as</small>
+        <strong>{{ person.display_name }}</strong>
+      </span>
+    </div>
+
     <div class="review-instructions">
       <strong>No screen sharing required</strong>
       <span>Getfit captures its own rendered pages directly in the browser and packages them locally into a ZIP.</span>
@@ -46,7 +82,6 @@
     </div>
     <div class="review-stage__label" id="stage-label">Today · current viewport</div>
   </main>
-
 
   <script id="review-targets" type="application/json">{{ capture_targets | tojson }}</script>
   <script src="{{ ingress_url(request, '/static/review-capture.js') }}" defer></script>
