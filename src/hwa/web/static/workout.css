@@ -812,7 +812,25 @@
 }
 
 .set-feedback-options span {
-  font-size: 1.45rem;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #dff5ff;
+  background: rgba(88, 176, 230, .14);
+  font-size: 1.05rem;
+  font-weight: 950;
+}
+
+.set-feedback-options [data-set-feedback="about-right"] span {
+  color: #06291d;
+  background: #57dda5;
+}
+
+.set-feedback-options [data-set-feedback="pain"] span {
+  color: #fff0f3;
+  background: rgba(251, 113, 133, .42);
 }
 
 .set-feedback-options strong {
