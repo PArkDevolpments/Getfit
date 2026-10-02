@@ -1,49 +1,83 @@
 {% extends "base.html" %}
 
-{% block title %}Settings · Home Workout Assistant{% endblock %}
+{% block title %}Settings · Getfit{% endblock %}
 
 {% block content %}
 <section class="card">
-  <p class="eyebrow">Settings</p>
-  <h2>{{ person.display_name }}</h2>
-  <p class="muted">Workout settings are resolved from trusted identity and installation configuration.</p>
+  <div class="settings-identity">
+    <div class="settings-avatar" aria-hidden="true">{{ person.display_name[:1] }}</div>
+    <div>
+      <p class="eyebrow">Settings</p>
+      <h2>{{ person.display_name }}</h2>
+      <p class="muted">Your training profile is resolved from trusted Home Assistant identity. There is no browser person selector.</p>
+    </div>
+  </div>
 </section>
 
-<section class="card" id="equipment-settings">
-  <p class="eyebrow">Equipment</p>
-  {% if settings.equipment_configured %}
-    <ul class="workout-list">
-    {% for item in settings.equipment %}
-      <li>
-        <strong>{{ item.label }}</strong>
-        <span class="muted">{{ "Available" if item.available else "Unavailable" }}</span>
-        {% if item.capability_notes %}
-          <div class="muted">{{ item.capability_notes|join(" · ") }}</div>
-        {% endif %}
-      </li>
+<section class="settings-grid">
+  <article class="card" id="equipment-settings">
+    <p class="eyebrow">Equipment</p>
+    <h2>Home training setup</h2>
+    {% if settings.equipment_configured %}
+      <div class="equipment-grid">
+      {% for item in settings.equipment %}
+        <div class="equipment-card">
+          <div class="equipment-card__row">
+            <strong>{{ item.label }}</strong>
+            <span class="status-pill{% if item.available %} status-pill--ready{% else %} status-pill--quiet{% endif %}">
+              {{ "Available" if item.available else "Unavailable" }}
+            </span>
+          </div>
+          {% if item.capability_notes %}
+            <div class="equipment-card__notes">{{ item.capability_notes|join(" · ") }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">Equipment configuration unavailable</div>
+    {% endif %}
+  </article>
+
+  <article class="card" id="calibration-settings">
+    <p class="eyebrow">Calibration</p>
+    <h2>{{ settings.calibration.label }}</h2>
+    <span class="status-pill">{{ settings.calibration.status }}</span>
+    <p class="muted">{{ settings.calibration.detail }}</p>
+  </article>
+
+  <article class="card" id="integration-settings">
+    <p class="eyebrow">Integrations</p>
+    <h2>Connected context</h2>
+    <div class="integration-grid">
+    {% for integration in settings.integrations %}
+      <div class="integration-card">
+        <span>
+          <strong>{{ integration.label }}</strong>
+          <span class="muted">Read-only context</span>
+        </span>
+        <span class="status-pill{% if integration.status == 'Configured' %} status-pill--ready{% else %} status-pill--quiet{% endif %}">
+          {{ integration.status }}
+        </span>
+      </div>
     {% endfor %}
-    </ul>
-  {% else %}
-    <p class="muted">Equipment configuration unavailable</p>
-  {% endif %}
-</section>
+    </div>
+  </article>
 
-<section class="card" id="calibration-settings">
-  <p class="eyebrow">Calibration</p>
-  <h2>{{ settings.calibration.label }}</h2>
-  <p><strong>{{ settings.calibration.status }}</strong></p>
-  <p class="muted">{{ settings.calibration.detail }}</p>
-</section>
-
-<section class="card" id="integration-settings">
-  <p class="eyebrow">Integrations</p>
-  <ul class="workout-list">
-  {% for integration in settings.integrations %}
-    <li>
-      <strong>{{ integration.label }}</strong>
-      <span class="muted">{{ integration.status }}</span>
-    </li>
-  {% endfor %}
-  </ul>
+  <article class="card">
+    <p class="eyebrow">Training logic</p>
+    <h2>Evidence first.</h2>
+    <p class="muted">Loads and progression come from approved targets and performed evidence, not bodyweight, sex or hidden assumptions.</p>
+    <div class="equipment-grid">
+      <div class="equipment-card">
+        <strong>Treadmill</strong>
+        <div class="equipment-card__notes">Time · speed · incline · RPE</div>
+      </div>
+      <div class="equipment-card">
+        <strong>Spin bike</strong>
+        <div class="equipment-card__notes">Time · cadence · resistance · RPE · no incline</div>
+      </div>
+    </div>
+  </article>
 </section>
 {% endblock %}
