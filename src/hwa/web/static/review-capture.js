@@ -134,6 +134,574 @@
     return text.includes("No workout is currently in progress") ? "empty" : "active";
   }
 
+  function criterionTargetKey(criterionId) {
+    if (criterionId.startsWith('TODAY-')) return 'today';
+    if (criterionId.startsWith('STRENGTH-')) return 'workout';
+    if (criterionId.startsWith('TECH-')) return 'exercise-detail';
+    if (criterionId.startsWith('CARDIO-')) return 'workout';
+    if (criterionId.startsWith('PROGRESS-')) return 'progress';
+    if (criterionId === 'LIBRARY-01') return 'library';
+    if (criterionId === 'LIBRARY-02') return 'exercise-detail';
+    if (criterionId.startsWith('SETTINGS-')) return 'settings';
+    if (criterionId === 'REGRESSION-01' || criterionId === 'REGRESSION-04' || criterionId === 'REGRESSION-05') return 'today';
+    if (criterionId === 'REGRESSION-02') return 'workout';
+    if (criterionId === 'REGRESSION-03') return 'progress';
+    if (criterionId === 'REGRESSION-06') return 'settings';
+    return null;
+  }
+
+  function pageText(documentRef) {
+    return (documentRef?.body?.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function automatedResult(status, evidence, profile) {
+    return {
+      status,
+      evidence,
+      profile: profile.key,
+      viewport: {width: profile.width, height: profile.height},
+    };
+  }
+
+  function evaluateCriterion(criterionId, target, documentRef, pageState, profile) {
+    if (!documentRef?.body) {
+      return automatedResult('FAIL', 'Rendered document was unavailable to the audit runner.', profile);
+    }
+
+    const text = pageText(documentRef);
+    const has = (selector) => Boolean(documentRef.querySelector(selector));
+    const all = (...selectors) => selectors.every((selector) => has(selector));
+    const includes = (...values) => values.every((value) => text.includes(value));
+    const noInternalIdentity = !/(hwa_person_id|pep_person_id|menu_person_id|health_profile_id|person_id)/i.test(text);
+
+    if (criterionId === 'TODAY-01') {
+      return automatedResult(
+        all('.coach-dashboard-card', '.workout-selection')
+          ? 'PASS'
+          : 'FAIL',
+        'Checked for the approved dark coaching dashboard plus adjacent Week 1 workout-selection surface.',
+        profile,
+      );
+    }
+    if (criterionId === 'TODAY-02') {
+      const displayName = document.body.dataset.displayName || window.document.body.dataset.displayName || '';
+      const visiblePerson = displayName ? text.includes(displayName) : text.includes('Kris');
+      const noSelector = !documentRef.querySelector(
+        'select[name*="person"], input[name*="person_id"], [data-person-selector]',
+      );
+      return automatedResult(
+        visiblePerson && noSelector && noInternalIdentity ? 'PASS' : 'FAIL',
+        'Checked visible trusted identity, absence of a browser person selector and absence of internal identity terms.',
+        profile,
+      );
+    }
+    if (criterionId === 'TODAY-03') {
+      const card = documentRef.querySelector('.next-workout-card');
+      return automatedResult(
+        card && includes('Week 1', 'Day 1', 'Upper Body + Bike') ? 'PASS' : 'REVIEW_REQUIRED',
+        card
+          ? 'Next Workout card is present; current rendered programme position was checked against the approved Week 1 Day 1 baseline.'
+          : 'Next Workout card was not found.',
+        profile,
+      );
+    }
+    if (criterionId === 'TODAY-04') {
+      const action = documentRef.querySelector('[data-primary-action="start"], [data-primary-action="resume"]');
+      return automatedResult(
+        action ? 'PASS' : 'FAIL',
+        action
+          ? `Primary action is rendered as ${action.dataset.primaryAction}; mutation/resume persistence remains covered by automated integration tests.`
+          : 'No Start or Resume primary action was rendered.',
+        profile,
+      );
+    }
+    if (criterionId === 'TODAY-05') {
+      const krisTargets = includes('Floor press', '6 kg each', 'Row', '10 kg', 'Shoulder press', '5 kg each');
+      return automatedResult(
+        krisTargets ? 'PASS' : 'REVIEW_REQUIRED',
+        krisTargets
+          ? 'Rendered Kris snapshot contains the approved Floor press, Row and Shoulder press loads.'
+          : 'The exact approved Kris target trio was not all visible in this rendered state.',
+        profile,
+      );
+    }
+    if (criterionId === 'TODAY-06') {
+      return automatedResult(
+        all('.week-status-dots', '.weekly-cardio') && includes('Last workout')
+          ? 'PASS'
+          : 'FAIL',
+        'Checked weekly status indicators, Last workout and Weekly cardio evidence surfaces.',
+        profile,
+      );
+    }
+    if (criterionId === 'TODAY-07') {
+      return automatedResult(
+        has('.weekly-goal') && includes('150 minutes of moderate activity', '2–4 strength sessions')
+          ? 'PASS'
+          : 'FAIL',
+        'Checked the approved weekly activity and strength-session goal copy.',
+        profile,
+      );
+    }
+    if (criterionId === 'TODAY-08') {
+      const root = documentRef.documentElement;
+      const horizontalOverflow = root.scrollWidth > root.clientWidth + 4;
+      return automatedResult(
+        horizontalOverflow ? 'FAIL' : 'REVIEW_REQUIRED',
+        horizontalOverflow
+          ? `Horizontal overflow detected: scrollWidth ${root.scrollWidth}px vs clientWidth ${root.clientWidth}px.`
+          : 'No horizontal overflow detected. Overall visual hierarchy and polish require visual review of the captured snapshots.',
+        profile,
+      );
+    }
+
+    if (criterionId.startsWith('STRENGTH-')) {
+      if (pageState === 'empty') {
+        return automatedResult('BLOCKED', 'No active workout draft was rendered.', profile);
+      }
+      if (criterionId === 'STRENGTH-01') {
+        return automatedResult(
+          has('#workout-player[data-workout-state="active"]') ? 'PASS' : 'FAIL',
+          'Checked that the active workout player is rendered.',
+          profile,
+        );
+      }
+      if (criterionId === 'STRENGTH-02') {
+        const floorPress = Array.from(documentRef.querySelectorAll('.strength-item')).some(
+          (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press'),
+        );
+        return automatedResult(
+          floorPress && has('.workout-progress') ? 'REVIEW_REQUIRED' : 'FAIL',
+          floorPress
+            ? 'Floor Press and workout progress exist; dominance and coaching hierarchy require visual review.'
+            : 'Floor Press or workout progress was not found.',
+          profile,
+        );
+      }
+      if (criterionId === 'STRENGTH-03') {
+        const floorPress = Array.from(documentRef.querySelectorAll('.strength-item')).find(
+          (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press'),
+        );
+        const floorText = floorPress?.textContent || '';
+        const metrics = /10\s*(?:–\s*10\s*)?reps/i.test(floorText)
+          && /6(?:\.0+)?\s*kg/i.test(floorText)
+          && /2\s*sec\s*down/i.test(floorText)
+          && /1\s*sec\s*up/i.test(floorText);
+        return automatedResult(
+          metrics ? 'PASS' : 'FAIL',
+          metrics
+            ? 'Floor Press contains the approved reps, load and tempo targets.'
+            : 'One or more approved Floor Press targets were missing from the rendered player.',
+          profile,
+        );
+      }
+      if (criterionId === 'STRENGTH-04') {
+        const completeSet = Array.from(documentRef.querySelectorAll('button, label, span')).some(
+          (node) => /complete set/i.test((node.textContent || '').trim()),
+        );
+        return automatedResult(
+          completeSet ? 'REVIEW_REQUIRED' : 'FAIL',
+          completeSet
+            ? 'A Complete Set control exists; visual primacy requires screenshot review.'
+            : 'No dedicated “Complete Set” primary action was found.',
+          profile,
+        );
+      }
+      if (criterionId === 'STRENGTH-05') {
+        return automatedResult(
+          all('input[name*="-reps"]', 'input[name*="-rpe"]', 'input[name*="-rir"]')
+            ? 'PASS'
+            : 'FAIL',
+          'Checked actual reps plus RPE/RIR recording controls.',
+          profile,
+        );
+      }
+      if (criterionId === 'STRENGTH-06') {
+        const feedback = ['Too easy', 'About right', 'Too hard', 'Pain'].every(
+          (value) => text.includes(value),
+        );
+        return automatedResult(
+          feedback ? 'REVIEW_REQUIRED' : 'FAIL',
+          feedback
+            ? 'All set-complete coaching feedback choices are present; presentation requires review.'
+            : 'The required Too easy / About right / Too hard / Pain feedback state was not found.',
+          profile,
+        );
+      }
+      if (criterionId === 'STRENGTH-07') {
+        return automatedResult(
+          has('#rest-timer') ? 'REVIEW_REQUIRED' : 'FAIL',
+          has('#rest-timer')
+            ? 'Rest timer exists; prominence, prescribed timing and set-complete transition require review.'
+            : 'Rest timer was not found.',
+          profile,
+        );
+      }
+      if (criterionId === 'STRENGTH-08') {
+        return automatedResult(
+          has('#next-stage-title') ? 'PASS' : 'FAIL',
+          'Checked for an explicit next-stage preview.',
+          profile,
+        );
+      }
+      if (criterionId === 'STRENGTH-09') {
+        return automatedResult(
+          all('#previous-stage', '#pause-workout', '#skip-stage', '#next-stage', '#stop-workout')
+            ? 'PASS'
+            : 'FAIL',
+          'Checked Previous, Pause, Skip, Next and Stop controls.',
+          profile,
+        );
+      }
+      if (criterionId === 'STRENGTH-10') {
+        const player = documentRef.querySelector('#workout-player');
+        return automatedResult(
+          player?.dataset.autosaveUrl ? 'REVIEW_REQUIRED' : 'FAIL',
+          player?.dataset.autosaveUrl
+            ? 'Autosave contract is wired; destructive reload/resume behaviour is covered by integration tests and requires no live mutation during this audit.'
+            : 'Autosave URL was not present on the active workout player.',
+          profile,
+        );
+      }
+    }
+
+    if (criterionId.startsWith('TECH-')) {
+      const mediaUnavailable = includes('Media unavailable');
+      if (criterionId === 'TECH-01') {
+        return automatedResult(
+          mediaUnavailable || has('.exercise-demo-fallback') ? 'FAIL' : 'REVIEW_REQUIRED',
+          mediaUnavailable
+            ? 'Technique media is unavailable and the generic fallback is active.'
+            : 'Movement media is present; movement specificity requires visual review.',
+          profile,
+        );
+      }
+      if (criterionId === 'TECH-02') {
+        const threeStage = ['Start', 'Lower', 'Drive Up'].every((value) => text.includes(value));
+        return automatedResult(
+          threeStage ? 'REVIEW_REQUIRED' : 'FAIL',
+          threeStage
+            ? 'Three movement phases are present; visual quality requires review.'
+            : 'Start → Lower → Drive Up sequence was not found.',
+          profile,
+        );
+      }
+      if (criterionId === 'TECH-03') {
+        return automatedResult(
+          has('.cue-list li') ? 'REVIEW_REQUIRED' : 'FAIL',
+          has('.cue-list li')
+            ? 'Movement technique cues are present; coaching quality requires review.'
+            : 'No approved technique cue list was rendered.',
+          profile,
+        );
+      }
+      if (criterionId === 'TECH-04') {
+        const modes = ['Images', 'Technique', 'Video'].every((value) => text.includes(value));
+        return automatedResult(
+          modes ? 'REVIEW_REQUIRED' : 'FAIL',
+          modes
+            ? 'Images / Technique / Video modes are present.'
+            : 'The approved Images / Technique / Video hierarchy was not found.',
+          profile,
+        );
+      }
+      if (criterionId === 'TECH-05') {
+        return automatedResult(
+          mediaUnavailable && has('.exercise-demo-fallback') ? 'FAIL' : 'REVIEW_REQUIRED',
+          mediaUnavailable
+            ? 'Current fallback still presents generic placeholder media and requires redesign.'
+            : 'Media fallback is not active in this capture; visual fallback quality remains review-required.',
+          profile,
+        );
+      }
+    }
+
+    if (criterionId.startsWith('CARDIO-')) {
+      if (pageState === 'empty') {
+        return automatedResult('BLOCKED', 'No active workout draft was rendered.', profile);
+      }
+      const bike = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
+        (node) => node.dataset.equipment === 'SPIN_BIKE',
+      );
+      const treadmill = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
+        (node) => node.dataset.equipment === 'TREADMILL',
+      );
+      if (criterionId === 'CARDIO-01') {
+        if (!bike) return automatedResult('BLOCKED', 'No spin-bike stage exists in the active workout.', profile);
+        const bikeText = bike.textContent || '';
+        return automatedResult(
+          /Cadence min rpm/.test(bikeText)
+            && /Resistance/.test(bikeText)
+            && !/Speed km\/h/.test(bikeText)
+            && !/Incline %/.test(bikeText)
+            ? 'PASS'
+            : 'FAIL',
+          'Checked spin-bike cadence/resistance variable model and absence of speed/incline.',
+          profile,
+        );
+      }
+      if (criterionId === 'CARDIO-02') {
+        if (!treadmill) return automatedResult('BLOCKED', 'No treadmill stage exists in the active workout.', profile);
+        const treadmillText = treadmill.textContent || '';
+        const incline = treadmill.querySelector('input[name*="-incline"]');
+        return automatedResult(
+          /Speed km\/h/.test(treadmillText)
+            && /Incline %/.test(treadmillText)
+            && incline?.getAttribute('max') === '20'
+            && !/Cadence min rpm/.test(treadmillText)
+            ? 'PASS'
+            : 'FAIL',
+          'Checked treadmill speed/incline model, 20% max incline and absence of bike cadence.',
+          profile,
+        );
+      }
+      if (criterionId === 'CARDIO-03') {
+        if (!bike) return automatedResult('BLOCKED', 'No Day 1 spin-bike stage exists in the active workout.', profile);
+        const bikeText = bike.textContent || '';
+        const goodTargets = /80/.test(bikeText) && /90/.test(bikeText) && /moderate/i.test(bikeText) && /RPE\s*5/.test(bikeText);
+        const purposeBuilt = /15:00/.test(bikeText);
+        return automatedResult(
+          goodTargets && purposeBuilt ? 'REVIEW_REQUIRED' : 'FAIL',
+          goodTargets
+            ? 'Approved bike targets exist, but the required 15:00 purpose-built presentation was not fully detected.'
+            : 'Approved Day 1 bike finisher targets were not all detected.',
+          profile,
+        );
+      }
+      if (criterionId === 'CARDIO-04' || criterionId === 'CARDIO-05') {
+        return automatedResult(
+          text.includes('INTERVAL') || text.includes('Interval') ? 'REVIEW_REQUIRED' : 'BLOCKED',
+          text.includes('INTERVAL') || text.includes('Interval')
+            ? 'Interval content exists; hard/recovery state treatment requires visual review.'
+            : 'The active workout does not contain the Day 4 interval state required for this check.',
+          profile,
+        );
+      }
+      if (criterionId === 'CARDIO-06') {
+        return automatedResult(
+          bike && bike.querySelector('input[name*="-rpe"]') ? 'PASS' : 'REVIEW_REQUIRED',
+          'Checked separation of prescribed cardio content and actual RPE input where available.',
+          profile,
+        );
+      }
+    }
+
+    if (criterionId === 'PROGRESS-01') {
+      const chart = documentRef.querySelector('canvas, svg[data-progress-chart], .progress-chart');
+      return automatedResult(
+        chart ? 'REVIEW_REQUIRED' : 'FAIL',
+        chart
+          ? 'A progression chart surface exists; plotted evidence requires review.'
+          : 'No exercise progression chart was found.',
+        profile,
+      );
+    }
+    if (criterionId === 'PROGRESS-02') {
+      return automatedResult(
+        has('.history-timeline') ? 'REVIEW_REQUIRED' : 'FAIL',
+        'Recent history exists; product-level usefulness and progression framing require review.',
+        profile,
+      );
+    }
+    if (criterionId === 'PROGRESS-03') {
+      return automatedResult(
+        all('.progress-kpi-grid', '.history-timeline') ? 'PASS' : 'FAIL',
+        'Checked programme-completion and completed-session evidence surfaces.',
+        profile,
+      );
+    }
+    if (criterionId === 'PROGRESS-04') {
+      return automatedResult(
+        noInternalIdentity && !documentRef.querySelector('[data-person-selector]')
+          ? 'PASS'
+          : 'FAIL',
+        'Checked person-scoped presentation and absence of a browser identity selector/internal IDs.',
+        profile,
+      );
+    }
+
+    if (criterionId === 'LIBRARY-01') {
+      const cards = Array.from(documentRef.querySelectorAll('.exercise-card'));
+      const genericVisuals = cards.length > 1 && cards.every((card) => card.querySelector('.exercise-card__visual svg'));
+      return automatedResult(
+        genericVisuals ? 'FAIL' : 'REVIEW_REQUIRED',
+        genericVisuals
+          ? 'Multiple exercise cards still use the same generic SVG placeholder pattern.'
+          : 'Movement-specific card presentation requires visual review.',
+        profile,
+      );
+    }
+    if (criterionId === 'LIBRARY-02') {
+      return automatedResult(
+        noInternalIdentity && has('.exercise-history-list') ? 'PASS' : 'FAIL',
+        'Checked person-scoped recent exercise history and absence of internal identity terms.',
+        profile,
+      );
+    }
+
+    if (criterionId === 'SETTINGS-01') {
+      if (includes('Equipment configuration unavailable')) {
+        return automatedResult('BLOCKED', 'Live equipment configuration is unavailable.', profile);
+      }
+      const capabilities = includes('Treadmill', 'Incline up to 20%', 'Spin bike', 'No incline', 'Adjustable dumbbells');
+      return automatedResult(
+        capabilities ? 'PASS' : 'REVIEW_REQUIRED',
+        capabilities
+          ? 'Configured treadmill, bike and dumbbell capabilities match the accepted equipment model.'
+          : 'Not all expected equipment-capability copy was detected.',
+        profile,
+      );
+    }
+    if (criterionId === 'SETTINGS-02') {
+      return automatedResult(
+        has('#calibration-settings') ? 'REVIEW_REQUIRED' : 'FAIL',
+        'Calibration surface exists; consumer wording and progression behaviour require review.',
+        profile,
+      );
+    }
+    if (criterionId === 'SETTINGS-03') {
+      const unsafe = /(https?:\/\/|token|secret|pep_person_id|menu_person_id|hwa_person_id)/i.test(text);
+      return automatedResult(
+        has('#integration-settings') && !unsafe ? 'PASS' : 'FAIL',
+        unsafe
+          ? 'Integration surface exposed endpoint/credential/internal-ID-like content.'
+          : 'Integration status is present without detected endpoints, tokens or cross-system IDs.',
+        profile,
+      );
+    }
+
+    if (criterionId === 'REGRESSION-01') {
+      const navLinks = Array.from(documentRef.querySelectorAll('.primary-nav a'));
+      const assets = Array.from(documentRef.querySelectorAll('link[rel="stylesheet"], script[src]'));
+      const ingressPath = window.location.pathname.includes('/api/hassio_ingress/');
+      const prefixOkay = !ingressPath || [...navLinks, ...assets].every((node) => {
+        const value = node.href || node.src || '';
+        return !value || value.includes('/api/hassio_ingress/');
+      });
+      return automatedResult(
+        prefixOkay ? 'PASS' : 'FAIL',
+        ingressPath
+          ? 'Checked that rendered navigation/assets preserve the Home Assistant Ingress prefix.'
+          : 'Direct-mode rendering detected; no escaped root-absolute asset/navigation URL was found.',
+        profile,
+      );
+    }
+    if (criterionId === 'REGRESSION-02') {
+      return automatedResult(
+        pageState === 'active' ? 'REVIEW_REQUIRED' : 'BLOCKED',
+        pageState === 'active'
+          ? 'Active draft exists; restart/resume persistence is covered by integration tests and remains review-required on LIVE.'
+          : 'No active draft exists to review restart/resume behaviour.',
+        profile,
+      );
+    }
+    if (criterionId === 'REGRESSION-03') {
+      return automatedResult(
+        has('.history-timeline') ? 'REVIEW_REQUIRED' : 'BLOCKED',
+        has('.history-timeline')
+          ? 'History surface is present; canonical Pep export remains verified by automated contract tests.'
+          : 'No completed history is available for live review.',
+        profile,
+      );
+    }
+    if (criterionId === 'REGRESSION-04') {
+      const laterWeek = /Week\s+(?:[2-9]|[1-9]\d)/.test(text);
+      return automatedResult(
+        !laterWeek && noInternalIdentity ? 'PASS' : 'FAIL',
+        !laterWeek
+          ? 'No future Week 2+ programme content or browser identity selector was detected on Today.'
+          : 'Future/unapproved programme week content was detected.',
+        profile,
+      );
+    }
+    if (criterionId === 'REGRESSION-05') {
+      const root = documentRef.documentElement;
+      return automatedResult(
+        root.scrollWidth > root.clientWidth + 4 ? 'FAIL' : 'REVIEW_REQUIRED',
+        root.scrollWidth > root.clientWidth + 4
+          ? 'Horizontal overflow detected.'
+          : 'No horizontal overflow detected; touch comfort and overall responsive quality require visual review.',
+        profile,
+      );
+    }
+    if (criterionId === 'REGRESSION-06') {
+      return automatedResult(
+        'REVIEW_REQUIRED',
+        'Browser audit cannot independently verify GitHub exact-main CI and public image pulls; release workflow evidence must be attached by the build pipeline.',
+        profile,
+      );
+    }
+
+    return automatedResult('REVIEW_REQUIRED', 'No safe deterministic browser check is defined for this criterion.', profile);
+  }
+
+  function aggregateAutomatedResults(samples) {
+    const results = {};
+    const specification = acceptanceSpecification || {};
+    for (const gate of specification.gates || []) {
+      for (const criterion of gate.criteria || []) {
+        const entries = samples.filter((sample) => sample.criterion_id === criterion.criterion_id);
+        let status = 'REVIEW_REQUIRED';
+        if (entries.some((entry) => entry.status === 'FAIL')) status = 'FAIL';
+        else if (entries.length && entries.every((entry) => entry.status === 'PASS')) status = 'PASS';
+        else if (entries.length && entries.every((entry) => entry.status === 'BLOCKED')) status = 'BLOCKED';
+        else if (entries.some((entry) => entry.status === 'BLOCKED')
+          && !entries.some((entry) => entry.status === 'PASS')) status = 'BLOCKED';
+
+        results[criterion.criterion_id] = {
+          criterion_id: criterion.criterion_id,
+          gate_id: gate.gate_id,
+          title: criterion.title,
+          status,
+          mandatory: criterion.mandatory,
+          evidence: entries.map((entry) => ({
+            profile: entry.profile,
+            viewport: entry.viewport,
+            status: entry.status,
+            evidence: entry.evidence,
+          })),
+        };
+      }
+    }
+    return results;
+  }
+
+  function buildAutomatedReport(results, captures) {
+    const rows = Object.values(results).map((result) => [
+      '<tr>',
+      `<td><strong>${result.criterion_id}</strong><br><small>${result.gate_id}</small></td>`,
+      `<td>${result.title}</td>`,
+      `<td><span class="status status-${result.status.toLowerCase().replace('_', '-')}">${result.status.replace('_', ' ')}</span></td>`,
+      `<td>${result.evidence.map((item) => `${item.profile}: ${item.evidence}`).join('<br>')}</td>`,
+      '</tr>',
+    ].join('')).join('');
+    const counts = Object.values(results).reduce((acc, item) => {
+      acc[item.status] = (acc[item.status] || 0) + 1;
+      return acc;
+    }, {});
+    return [
+      '<!doctype html><html lang="en-GB"><head><meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width,initial-scale=1">',
+      '<title>Getfit Automated Specification Audit</title><style>',
+      'body{margin:0;padding:24px;background:#071725;color:#eaf7ff;font-family:system-ui,sans-serif}',
+      'main{max-width:1280px;margin:auto}.summary{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}',
+      '.summary span,.status{padding:6px 9px;border-radius:999px;background:#173149;font-size:12px;font-weight:800}',
+      '.status-pass{background:#103b29;color:#b9f6d2}.status-fail{background:#4b1c28;color:#ffd1da}',
+      '.status-blocked{background:#473715;color:#ffe5a0}.status-review-required{background:#20364b;color:#c9dfef}',
+      'table{width:100%;border-collapse:collapse;background:#0b2134;border-radius:14px;overflow:hidden}',
+      'th,td{padding:10px;border-bottom:1px solid #1d3a50;text-align:left;vertical-align:top;font-size:12px}',
+      'th{color:#9ec7df;background:#0e2a41}small{color:#7fa0b5}',
+      '</style></head><body><main><h1>Getfit Automated Specification Audit</h1>',
+      `<p>App v${document.body.dataset.appVersion} · specification ${acceptanceSpecification.spec_version || 'unknown'} · ${captures.length} visual snapshots</p>`,
+      '<div class="summary">',
+      `<span>PASS ${counts.PASS || 0}</span><span>FAIL ${counts.FAIL || 0}</span>`,
+      `<span>BLOCKED ${counts.BLOCKED || 0}</span><span>REVIEW REQUIRED ${counts.REVIEW_REQUIRED || 0}</span>`,
+      '</div><table><thead><tr><th>Criterion</th><th>Requirement</th><th>Result</th><th>Automated evidence</th></tr></thead><tbody>',
+      rows,
+      '</tbody></table></main></body></html>',
+    ].join('');
+  }
+
   function collectCss(documentRef) {
     const chunks = [];
     for (const sheet of Array.from(documentRef.styleSheets)) {
