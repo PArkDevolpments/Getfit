@@ -61,7 +61,7 @@ def test_automated_audit_tracks_current_workout_dom_contracts() -> None:
     assert "data-main-rest-panel" in workout
     assert "querySelector('[data-main-rest-panel]')" in script
     assert "Dedicated 01:30 rest state" in script
-    assert "mainRest && /01:30/.test(restText) ? 'PASS' : 'FAIL'" in script
+    assert "mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL'" in script
     assert "node.dataset.segmentType === 'CONDITIONING'" in script
     assert r"/RPE\s*7(?:\.0+)?–8(?:\.0+)?/" in script
     assert r"/RPE\s*2(?:\.0+)?–3(?:\.0+)?/" in script
@@ -75,4 +75,17 @@ def test_automated_audit_measures_core_touch_targets_across_product_states() -> 
     assert "'strength-feedback'" in script
     assert "'interval-hard'" in script
     assert "'exercise-detail'" in script
+    assert "'.exercise-media-tab'" in script
+    assert "'.exercise-card__open'" in script
+    assert "'.coach-dashboard-card__settings'" in script
     assert "touchAudit.failures.length ? 'FAIL' : 'PASS'" in script
+
+
+def test_strength_feedback_and_rest_audit_require_phone_viewport_visibility() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "function fullyVisible" in script
+    assert "const feedbackPanel = documentRef.querySelector('[data-set-feedback-panel]')" in script
+    assert "feedbackVisible && feedbackButtons.length === 4" in script
+    assert "const restVisible = fullyVisible(mainRest, documentRef, profile)" in script
+    assert "mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL'" in script

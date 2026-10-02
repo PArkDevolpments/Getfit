@@ -812,7 +812,25 @@
 }
 
 .set-feedback-options span {
-  font-size: 1.45rem;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #dff5ff;
+  background: rgba(88, 176, 230, .14);
+  font-size: 1.05rem;
+  font-weight: 950;
+}
+
+.set-feedback-options [data-set-feedback="about-right"] span {
+  color: #06291d;
+  background: #57dda5;
+}
+
+.set-feedback-options [data-set-feedback="pain"] span {
+  color: #fff0f3;
+  background: rgba(251, 113, 133, .42);
 }
 
 .set-feedback-options strong {
@@ -1139,5 +1157,70 @@
 
   .cardio-prescription-grid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+
+.main-rest-actions {
+  width: min(100%, 360px);
+  margin: .85rem auto 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+}
+
+.main-rest-actions button {
+  width: 100%;
+  min-height: 48px;
+}
+
+/* Mobile dedicated feedback/rest state */
+@media (max-width: 700px) {
+  .workout-sidebar {
+    display: none;
+  }
+
+  .workout-player.is-set-feedback .strength-item .strength-coach-grid,
+  .workout-player.is-resting .strength-item .strength-coach-grid {
+    display: none;
+  }
+
+  .workout-player.is-set-feedback .strength-item,
+  .workout-player.is-resting .strength-item {
+    padding: .7rem;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(72, 203, 255, .09), transparent 19rem),
+      rgba(7, 23, 38, .94);
+  }
+
+  .workout-player.is-set-feedback .set-feedback-panel,
+  .workout-player.is-resting .main-rest-panel {
+    min-height: 410px;
+    margin-top: 0;
+    display: grid;
+    align-content: center;
+  }
+
+  .workout-player.is-set-feedback .workout-command-bar,
+  .workout-player.is-resting .workout-command-bar {
+    display: none;
+  }
+
+  .workout-player.is-set-feedback,
+  .workout-player.is-resting {
+    padding-bottom: 1rem;
+  }
+
+  .set-feedback-options button {
+    min-height: 88px;
+  }
+
+  .main-rest-ring {
+    width: 170px;
+    height: 170px;
+  }
+
+  .main-rest-ring strong {
+    font-size: 2.55rem;
   }
 }

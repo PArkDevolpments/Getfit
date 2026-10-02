@@ -317,6 +317,11 @@
     for (const display of restDisplays) display.textContent = formatSeconds(restRemaining);
   }
 
+  function addRestTime() {
+    restRemaining += 15;
+    renderRestTimer();
+  }
+
   function startRestTimer(seconds = null) {
     const requested = seconds === null
       ? Number(restStartButton?.dataset.restSeconds || restSeconds || 60)
@@ -605,6 +610,9 @@
     else startRestTimer();
   });
   restResetButton?.addEventListener('click', resetRestTimer);
+  for (const button of document.querySelectorAll('[data-add-rest]')) {
+    button.addEventListener('click', addRestTime);
+  }
   for (const button of document.querySelectorAll('[data-end-rest]')) {
     button.addEventListener('click', endRest);
   }
