@@ -15,7 +15,7 @@ def test_repository_is_installable_as_a_home_assistant_app_repository() -> None:
     config_text = app_config.read_text(encoding="utf-8")
 
     assert "name: \"Getfit Home Assistant Apps\"" in repository_text
-    assert 'version: "0.1.5"' in config_text
+    assert 'version: "0.1.6"' in config_text
     assert "ingress: true" in config_text
     assert "ingress_port: 8099" in config_text
     assert 'image: "ghcr.io/ktgregson93-collab/getfit"' in config_text
@@ -28,14 +28,14 @@ def test_repository_is_installable_as_a_home_assistant_app_repository() -> None:
     assert "kirsty_ha_user_id: str" in config_text
 
 
-def test_release_versions_are_aligned_to_0_1_5() -> None:
+def test_release_versions_are_aligned_to_0_1_6() -> None:
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     main_module = (ROOT / "src" / "hwa" / "main.py").read_text(encoding="utf-8")
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
 
-    assert 'version = "0.1.5"' in pyproject
-    assert 'APP_VERSION = "0.1.5"' in main_module
-    assert "ARG BUILD_VERSION=0.1.5" in dockerfile
+    assert 'version = "0.1.6"' in pyproject
+    assert 'APP_VERSION = "0.1.6"' in main_module
+    assert "ARG BUILD_VERSION=0.1.6" in dockerfile
 
 
 def test_production_container_keeps_persistent_state_and_exports_bootstrap_options() -> None:

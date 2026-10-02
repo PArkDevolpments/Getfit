@@ -8,10 +8,8 @@
   const cancelButton = document.getElementById('cancel-capture');
   const progressBar = document.getElementById('progress-bar');
   const progressMessage = document.getElementById('progress-message');
-  const video = document.getElementById('capture-video');
-  const frameNotice = document.getElementById('frame-notice');
 
-  if (!targetsNode || !frame || !frameShell || !video) return;
+  if (!targetsNode || !frame || !frameShell) return;
 
   const targets = JSON.parse(targetsNode.textContent || '[]');
   const fullProfiles = [
@@ -20,7 +18,6 @@
     {key: 'desktop', label: 'Desktop', width: 1440, height: 1000},
   ];
 
-  let captureStream = null;
   let cancelled = false;
 
   const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -50,18 +47,6 @@
     for (const target of targets) setTargetState(target.key, 'waiting', 'Waiting');
   }
 
-  function isFramed() {
-    try {
-      return window.top !== window.self;
-    } catch (_) {
-      return true;
-    }
-  }
-
-  if (isFramed() && frameNotice) {
-    frameNotice.hidden = false;
-  }
-
   function currentViewportProfile() {
     return {
       key: `current-${window.innerWidth}x${window.innerHeight}`,
@@ -75,8 +60,10 @@
     frameShell.style.width = `${profile.width}px`;
     frameShell.style.height = `${profile.height}px`;
 
-    const availableWidth = Math.max(220, window.innerWidth - 18);
-    const availableHeight = Math.max(320, window.innerHeight - 18);
+    const toolbar = document.getElementById('review-toolbar');
+    const toolbarWidth = toolbar && window.innerWidth > 700 ? toolbar.offsetWidth + 42 : 18;
+    const availableWidth = Math.max(220, window.innerWidth - toolbarWidth);
+    const availableHeight = Math.max(320, window.innerHeight - 28);
     const scale = Math.min(
       1,
       availableWidth / profile.width,
@@ -86,123 +73,234 @@
     if (stageLabel) stageLabel.textContent = profile.label;
   }
 
-  async function loadTarget(target) {
-    if (frame.src === new URL(target.url, window.location.href).href) {
-      try {
-        frame.contentWindow?.location.reload();
-      } catch (_) {
-        frame.src = target.url;
-      }
-    } else {
-      frame.src = target.url;
-    }
+  async function loadTarget(target, profile) {
+    applyProfile(profile);
+    const wanted = new URL(target.url, window.location.href).href;
 
     await new Promise((resolve, reject) => {
       const timeout = window.setTimeout(
         () => reject(new Error(`Timed out loading ${target.label}`)),
-        12000,
+        15000,
       );
       frame.onload = () => {
         window.clearTimeout(timeout);
         resolve();
       };
+
+      if (frame.src === wanted) {
+        try {
+          frame.contentWindow?.location.reload();
+        } catch (_) {
+          frame.src = target.url;
+        }
+      } else {
+        frame.src = target.url;
+      }
     });
-    await sleep(650);
+
+    await nextFrame();
+    await sleep(500);
   }
 
-  async function startScreenCapture() {
-    if (!navigator.mediaDevices?.getDisplayMedia) {
-      throw new Error(
-        'This browser does not support tab capture. Open this page in current Chrome or Edge on desktop.',
-      );
+  function collectCss(documentRef) {
+    const chunks = [];
+    for (const sheet of Array.from(documentRef.styleSheets)) {
+      try {
+        for (const rule of Array.from(sheet.cssRules || [])) {
+          chunks.push(rule.cssText);
+        }
+      } catch (_) {
+        // A cross-origin stylesheet is intentionally ignored. Getfit production
+        // assets are same-origin; this prevents an optional external resource
+        // from breaking the review pack.
+      }
     }
+    return chunks.join('\n');
+  }
 
-    const options = {
-      video: true,
-      audio: false,
-      preferCurrentTab: true,
-      selfBrowserSurface: 'include',
-      surfaceSwitching: 'exclude',
-      monitorTypeSurfaces: 'exclude',
-    };
+  function syncFormState(originalRoot, clonedRoot) {
+    const originals = originalRoot.querySelectorAll('input, textarea, select, details');
+    const clones = clonedRoot.querySelectorAll('input, textarea, select, details');
 
-    const stream = await navigator.mediaDevices.getDisplayMedia(options);
-    const track = stream.getVideoTracks()[0];
-    const displaySurface = track?.getSettings?.().displaySurface;
-    if (displaySurface && displaySurface !== 'browser') {
-      for (const item of stream.getTracks()) item.stop();
-      throw new Error('Choose “This Tab” in the browser sharing prompt, not Window or Entire Screen.');
-    }
+    originals.forEach((original, index) => {
+      const clone = clones[index];
+      if (!clone) return;
 
-    captureStream = stream;
-    video.srcObject = stream;
-    await new Promise((resolve) => {
-      if (video.readyState >= 1) resolve();
-      else video.addEventListener('loadedmetadata', resolve, {once: true});
-    });
-    await video.play();
-
-    track?.addEventListener('ended', () => {
-      if (!cancelled) {
-        cancelled = true;
-        setMessage('Tab sharing stopped. Capture cancelled.');
+      const tag = original.tagName;
+      if (tag === 'INPUT' && clone.tagName === 'INPUT') {
+        clone.value = original.value;
+        clone.setAttribute('value', original.value);
+        if (original.checked) clone.setAttribute('checked', '');
+        else clone.removeAttribute('checked');
+      } else if (tag === 'TEXTAREA' && clone.tagName === 'TEXTAREA') {
+        clone.value = original.value;
+        clone.textContent = original.value;
+      } else if (tag === 'SELECT' && clone.tagName === 'SELECT') {
+        Array.from(clone.options).forEach((option, optionIndex) => {
+          if (optionIndex === original.selectedIndex) option.setAttribute('selected', '');
+          else option.removeAttribute('selected');
+        });
+      } else if (tag === 'DETAILS' && clone.tagName === 'DETAILS') {
+        if (original.open) clone.setAttribute('open', '');
+        else clone.removeAttribute('open');
       }
     });
   }
 
-  function stopScreenCapture() {
-    if (captureStream) {
-      for (const track of captureStream.getTracks()) track.stop();
-    }
-    captureStream = null;
-    video.srcObject = null;
+  function syncCanvasState(originalRoot, clonedRoot) {
+    const originals = Array.from(originalRoot.querySelectorAll('canvas'));
+    const clones = Array.from(clonedRoot.querySelectorAll('canvas'));
+
+    originals.forEach((original, index) => {
+      const clone = clones[index];
+      if (!clone || clone.tagName !== 'CANVAS') return;
+      try {
+        const image = original.ownerDocument.createElement('img');
+        image.src = original.toDataURL('image/png');
+        image.width = original.width;
+        image.height = original.height;
+        image.setAttribute('style', original.getAttribute('style') || '');
+        clone.replaceWith(image);
+      } catch (_) {
+        // A tainted optional canvas remains blank rather than failing the pack.
+      }
+    });
   }
 
-  async function captureFrame(profile) {
-    document.body.classList.add('is-capturing');
-    applyProfile(profile);
-    await nextFrame();
-    await nextFrame();
-    await sleep(140);
+  async function blobToDataUrl(blob) {
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(reader.error || new Error('Unable to read image asset.'));
+      reader.readAsDataURL(blob);
+    });
+  }
 
-    const rect = frameShell.getBoundingClientRect();
-    if (!video.videoWidth || !video.videoHeight) {
-      throw new Error('The shared tab did not provide a video frame.');
+  async function inlineImages(originalRoot, clonedRoot) {
+    const originals = Array.from(originalRoot.querySelectorAll('img'));
+    const clones = Array.from(clonedRoot.querySelectorAll('img'));
+
+    await Promise.all(originals.map(async (original, index) => {
+      const clone = clones[index];
+      if (!clone || clone.tagName !== 'IMG') return;
+      const source = original.currentSrc || original.src;
+      if (!source || source.startsWith('data:')) return;
+
+      try {
+        const url = new URL(source, original.ownerDocument.baseURI);
+        if (url.origin !== window.location.origin) return;
+        const response = await fetch(url.href, {credentials: 'same-origin'});
+        if (!response.ok) return;
+        clone.src = await blobToDataUrl(await response.blob());
+        clone.removeAttribute('srcset');
+      } catch (_) {
+        // A missing optional media asset must not block the rest of the pack.
+      }
+    }));
+  }
+
+  function removeNonVisualNodes(root) {
+    root.querySelectorAll('script, iframe, video, audio').forEach((node) => node.remove());
+  }
+
+  function copyDocumentAttributes(documentRef, clonedBody) {
+    for (const attribute of Array.from(documentRef.body.attributes)) {
+      clonedBody.setAttribute(attribute.name, attribute.value);
+    }
+  }
+
+  async function renderDocumentToPng(profile) {
+    const documentRef = frame.contentDocument;
+    if (!documentRef?.documentElement || !documentRef.body) {
+      throw new Error('The Getfit page could not be read for capture.');
     }
 
-    const scaleX = video.videoWidth / window.innerWidth;
-    const scaleY = video.videoHeight / window.innerHeight;
-    const sx = Math.max(0, rect.left * scaleX);
-    const sy = Math.max(0, rect.top * scaleY);
-    const sw = Math.min(video.videoWidth - sx, rect.width * scaleX);
-    const sh = Math.min(video.videoHeight - sy, rect.height * scaleY);
+    const clonedBody = documentRef.body.cloneNode(true);
+    if (!clonedBody || clonedBody.nodeType !== Node.ELEMENT_NODE) {
+      throw new Error('The Getfit page could not be cloned for capture.');
+    }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = profile.width;
-    canvas.height = profile.height;
-    const context = canvas.getContext('2d', {alpha: false});
-    if (!context) throw new Error('Canvas rendering is not available.');
+    copyDocumentAttributes(documentRef, clonedBody);
+    syncFormState(documentRef.body, clonedBody);
+    syncCanvasState(documentRef.body, clonedBody);
+    removeNonVisualNodes(clonedBody);
+    await inlineImages(documentRef.body, clonedBody);
 
-    context.drawImage(
-      video,
-      sx,
-      sy,
-      sw,
-      sh,
-      0,
-      0,
-      profile.width,
+    const css = collectCss(documentRef);
+    const fullHeight = Math.max(
       profile.height,
+      documentRef.documentElement.scrollHeight,
+      documentRef.body.scrollHeight,
+    );
+    const fullWidth = profile.width;
+
+    const xhtmlDocument = document.implementation.createHTMLDocument('Getfit capture');
+    const wrapper = xhtmlDocument.createElement('div');
+    wrapper.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    wrapper.style.width = `${fullWidth}px`;
+    wrapper.style.minHeight = `${fullHeight}px`;
+
+    const style = xhtmlDocument.createElement('style');
+    style.textContent = [
+      ':root{color-scheme:normal;}',
+      'html,body{margin:0!important;width:100%!important;min-height:100%!important;}',
+      css,
+    ].join('\n');
+    wrapper.appendChild(style);
+    wrapper.appendChild(xhtmlDocument.importNode(clonedBody, true));
+
+    const serialized = new XMLSerializer().serializeToString(wrapper);
+    const svg = [
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${fullWidth}" height="${fullHeight}" viewBox="0 0 ${fullWidth} ${fullHeight}">`,
+      `<foreignObject x="0" y="0" width="${fullWidth}" height="${fullHeight}">`,
+      serialized,
+      '</foreignObject>',
+      '</svg>',
+    ].join('');
+
+    const svgUrl = URL.createObjectURL(
+      new Blob([svg], {type: 'image/svg+xml;charset=utf-8'}),
     );
 
-    const blob = await new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (value) => value ? resolve(value) : reject(new Error('PNG capture failed.')),
-        'image/png',
-      );
-    });
-    document.body.classList.remove('is-capturing');
-    return blob;
+    try {
+      const image = new Image();
+      await new Promise((resolve, reject) => {
+        const timeout = window.setTimeout(
+          () => reject(new Error('Timed out rendering the page snapshot.')),
+          15000,
+        );
+        image.onload = () => {
+          window.clearTimeout(timeout);
+          resolve();
+        };
+        image.onerror = () => {
+          window.clearTimeout(timeout);
+          reject(new Error('Browser could not rasterise the page snapshot.'));
+        };
+        image.src = svgUrl;
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = fullWidth;
+      canvas.height = fullHeight;
+      const context = canvas.getContext('2d', {alpha: false});
+      if (!context) throw new Error('Canvas rendering is not available.');
+
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, fullWidth, fullHeight);
+      context.drawImage(image, 0, 0, fullWidth, fullHeight);
+
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (value) => value ? resolve(value) : reject(new Error('PNG capture failed.')),
+          'image/png',
+        );
+      });
+
+      return {blob, width: fullWidth, height: fullHeight};
+    } finally {
+      URL.revokeObjectURL(svgUrl);
+    }
   }
 
   function uint16(value) {
@@ -359,12 +457,6 @@
   }
 
   async function runCapture(profiles) {
-    if (isFramed()) {
-      if (frameNotice) frameNotice.hidden = false;
-      setMessage('Open this tool in a new tab before starting automatic capture.');
-      return;
-    }
-
     cancelled = false;
     resetTargetStates();
     captureAllButton.disabled = true;
@@ -372,29 +464,31 @@
     cancelButton.hidden = false;
     setProgress(0, targets.length * profiles.length);
     const files = [];
+    const captures = [];
     let completed = 0;
 
     try {
-      setMessage('Choose “This Tab” in the browser sharing prompt…');
-      await startScreenCapture();
-
       for (const target of targets) {
         if (cancelled) throw new Error('Capture cancelled.');
-        setTargetState(target.key, 'active', 'Loading');
-        setMessage(`Loading ${target.label}…`);
-        await loadTarget(target);
 
         for (const profile of profiles) {
           if (cancelled) throw new Error('Capture cancelled.');
-          applyProfile(profile);
-          if (stageLabel) stageLabel.textContent = `${target.label} · ${profile.label}`;
           setTargetState(target.key, 'active', profile.label);
+          setMessage(`Loading ${target.label} · ${profile.label}…`);
+          await loadTarget(target, profile);
+
           setMessage(`Capturing ${target.label} · ${profile.label}…`);
-          await sleep(360);
-          const image = await captureFrame(profile);
-          files.push({
-            name: `screenshots/${String(completed + 1).padStart(2, '0')}-${slug(target.key)}-${slug(profile.key)}.png`,
-            data: image,
+          const shot = await renderDocumentToPng(profile);
+          const fileName = `screenshots/${String(completed + 1).padStart(2, '0')}-${slug(target.key)}-${slug(profile.key)}.png`;
+          files.push({name: fileName, data: shot.blob});
+          captures.push({
+            page: target.key,
+            page_label: target.label,
+            profile: profile.key,
+            profile_label: profile.label,
+            width: shot.width,
+            height: shot.height,
+            file: fileName,
           });
           completed += 1;
           setProgress(completed, targets.length * profiles.length);
@@ -403,11 +497,9 @@
         setTargetState(target.key, 'done', 'Captured');
       }
 
-      stopScreenCapture();
-      document.body.classList.remove('is-capturing');
-
       const manifest = {
-        format: 'getfit-ui-review-pack-v1',
+        format: 'getfit-ui-review-pack-v2',
+        capture_method: 'same-origin-dom-raster',
         app_version: document.body.dataset.appVersion,
         display_name: document.body.dataset.displayName,
         presentation_profile: document.body.dataset.presentationProfile,
@@ -418,10 +510,10 @@
           height: window.innerHeight,
           device_pixel_ratio: window.devicePixelRatio,
         },
-        profiles: profiles.map(({key, label, width, height}) => ({key, label, width, height})),
-        pages: targets.map(({key, label}) => ({key, label})),
+        captures,
         screenshot_count: files.length,
       };
+
       const encoder = new TextEncoder();
       files.push({
         name: 'review-manifest.json',
@@ -430,7 +522,7 @@
       files.push({
         name: 'README.txt',
         data: encoder.encode(
-          'Getfit UI Review Pack\n\nUpload this ZIP directly into ChatGPT for visual review against the approved Home Workout Assistant design board.\n\nThe pack contains rendered screenshots only plus non-sensitive capture metadata. It does not contain Home Assistant IDs, integration IDs, credentials or application database content.\n',
+          'Getfit UI Review Pack\n\nUpload this ZIP directly into ChatGPT for visual review against the approved Home Workout Assistant design board.\n\nScreenshots are generated from the same-origin rendered Getfit DOM. No screen-sharing permission is required. The pack contains rendered screenshots plus non-sensitive capture metadata. It does not contain Home Assistant IDs, integration IDs, credentials or application database content.\n',
         ),
       });
 
@@ -440,8 +532,6 @@
       setProgress(1, 1);
       setMessage(`Done — ${completed} screenshots downloaded in one ZIP. Upload that ZIP to ChatGPT.`);
     } catch (error) {
-      stopScreenCapture();
-      document.body.classList.remove('is-capturing');
       const message = error instanceof Error ? error.message : 'Capture failed.';
       setMessage(message);
       for (const target of targets) {
@@ -465,16 +555,7 @@
 
   cancelButton?.addEventListener('click', () => {
     cancelled = true;
-    stopScreenCapture();
-    document.body.classList.remove('is-capturing');
-    setMessage('Capture cancelled.');
-  });
-
-  window.addEventListener('resize', () => {
-    const label = stageLabel?.textContent || '';
-    if (!document.body.classList.contains('is-capturing') && label.includes('current viewport')) {
-      applyProfile(currentViewportProfile());
-    }
+    setMessage('Capture will stop after the current page.');
   });
 
   applyProfile(currentViewportProfile());

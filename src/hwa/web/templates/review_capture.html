@@ -34,15 +34,9 @@
       </span>
     </div>
 
-    <div class="review-notice" id="frame-notice" hidden>
-      <strong>Open this tool in a new tab first.</strong>
-      <span>Automatic tab capture can be blocked while Getfit is inside the Home Assistant panel.</span>
-      <a class="review-button review-button--secondary" href="{{ ingress_url(request, '/review-capture') }}" target="_blank" rel="noopener">Open capture tool in new tab</a>
-    </div>
-
     <div class="review-instructions">
-      <strong>One browser prompt</strong>
-      <span>When asked what to share, choose <b>This Tab</b>. The images stay in your browser and are packaged locally.</span>
+      <strong>No screen sharing required</strong>
+      <span>Getfit captures its own rendered pages directly in the browser and packages them locally into a ZIP.</span>
     </div>
 
     <div class="review-actions">
@@ -52,7 +46,7 @@
     </div>
 
     <p class="review-mode-note">
-      <strong>Capture all pages</strong> uses your current viewport. <strong>Full responsive pack</strong> creates Phone, Tablet and Desktop versions of every page.
+      <strong>Capture all pages</strong> uses your current viewport. <strong>Full responsive pack</strong> creates Phone, Tablet and Desktop versions of every page without any browser share prompt.
     </p>
 
     <div class="review-progress" aria-live="polite">
@@ -88,8 +82,6 @@
     </div>
     <div class="review-stage__label" id="stage-label">Today · current viewport</div>
   </main>
-
-  <video id="capture-video" autoplay muted playsinline hidden></video>
 
   <script id="review-targets" type="application/json">{{ capture_targets | tojson }}</script>
   <script src="{{ ingress_url(request, '/static/review-capture.js') }}" defer></script>
