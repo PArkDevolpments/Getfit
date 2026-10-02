@@ -146,6 +146,16 @@ def _strength_targets(
     return tuple(projected)
 
 
+def get_strength_targets(
+    session: Session,
+    person_id: str,
+    programme_day_id: str,
+) -> tuple[StrengthTarget, ...]:
+    """Project approved person-specific strength targets without requiring a draft."""
+
+    return _strength_targets(session, person_id, programme_day_id)
+
+
 def _cardio_targets(
     session: Session,
     programme_day_id: str,
