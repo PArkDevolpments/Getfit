@@ -3,14 +3,12 @@
 {% block title %}Settings · Getfit{% endblock %}
 
 {% block content %}
-<section class="card">
-  <div class="settings-identity">
-    <div class="settings-avatar" aria-hidden="true">{{ person.display_name[:1] }}</div>
-    <div>
-      <p class="eyebrow">Settings</p>
-      <h2>{{ person.display_name }}</h2>
-      <p class="muted">Your training profile is resolved from trusted Home Assistant identity. There is no browser person selector.</p>
-    </div>
+<section class="settings-profile-card">
+  <div class="settings-avatar" aria-hidden="true">{{ person.display_name[:1] }}</div>
+  <div>
+    <p class="eyebrow">Your setup</p>
+    <h2>{{ person.display_name }}</h2>
+    <p class="muted">Getfit automatically uses your signed-in Home Assistant profile, so your workouts, targets and history stay with the right person.</p>
   </div>
 </section>
 
@@ -18,6 +16,7 @@
   <article class="card" id="equipment-settings">
     <p class="eyebrow">Equipment</p>
     <h2>Home training setup</h2>
+    <p class="muted">These capabilities control which workout fields Getfit can safely show.</p>
     {% if settings.equipment_configured %}
       <div class="equipment-grid">
       {% for item in settings.equipment %}
@@ -25,7 +24,7 @@
           <div class="equipment-card__row">
             <strong>{{ item.label }}</strong>
             <span class="status-pill{% if item.available %} status-pill--ready{% else %} status-pill--quiet{% endif %}">
-              {{ "Available" if item.available else "Unavailable" }}
+              {{ "Ready" if item.available else "Unavailable" }}
             </span>
           </div>
           {% if item.capability_notes %}
@@ -40,21 +39,26 @@
   </article>
 
   <article class="card" id="calibration-settings">
-    <p class="eyebrow">Calibration</p>
-    <h2>{{ settings.calibration.label }}</h2>
+    <p class="eyebrow">Training calibration</p>
+    <h2>Adjust targets safely</h2>
     <span class="status-pill">{{ settings.calibration.status }}</span>
     <p class="muted">{{ settings.calibration.detail }}</p>
+    <div class="settings-safety-note">
+      <strong>Suggestions only</strong>
+      <span>Getfit never changes a prescription automatically. Progression is based on approved targets plus what you actually perform.</span>
+    </div>
   </article>
 
   <article class="card" id="integration-settings">
-    <p class="eyebrow">Integrations</p>
-    <h2>Connected context</h2>
+    <p class="eyebrow">Connected services</p>
+    <h2>Extra context</h2>
+    <p class="muted">Optional services can add useful context without becoming workout authority.</p>
     <div class="integration-grid">
     {% for integration in settings.integrations %}
       <div class="integration-card">
         <span>
           <strong>{{ integration.label }}</strong>
-          <span class="muted">Read-only context</span>
+          <span class="muted">Training context</span>
         </span>
         <span class="status-pill{% if integration.status == 'Configured' %} status-pill--ready{% else %} status-pill--quiet{% endif %}">
           {{ integration.status }}
@@ -65,34 +69,47 @@
   </article>
 
   <article class="card">
-    <p class="eyebrow">Training logic</p>
-    <h2>Evidence first.</h2>
-    <p class="muted">Loads and progression come from approved targets and performed evidence, not bodyweight, sex or hidden assumptions.</p>
+    <p class="eyebrow">How your equipment is coached</p>
+    <h2>Right variables for the right machine.</h2>
     <div class="equipment-grid">
       <div class="equipment-card">
         <strong>Treadmill</strong>
-        <div class="equipment-card__notes">Time · speed · incline · RPE</div>
+        <div class="equipment-card__notes">Time · speed · incline · RPE · incline capped at 20%</div>
       </div>
       <div class="equipment-card">
         <strong>Spin bike</strong>
         <div class="equipment-card__notes">Time · cadence · resistance · RPE · no incline</div>
       </div>
+      <div class="equipment-card">
+        <strong>Adjustable dumbbells</strong>
+        <div class="equipment-card__notes">Approved load targets · actual performed load · no demographic guessing</div>
+      </div>
     </div>
   </article>
-
-  <article class="card" id="acceptance-review-settings">
-    <p class="eyebrow">Release acceptance</p>
-    <h2>Specification & Acceptance</h2>
-    <p class="muted">Walk every feature against a versioned specification, record PASS / FAIL / BLOCKED and keep notes tied to this exact release.</p>
-    <a class="primary-action" href="{{ ingress_url(request, '/review-spec') }}">Open Specification & Acceptance</a>
-  </article>
-
-  <article class="card" id="ui-review-settings">
-    <p class="eyebrow">Design review</p>
-    <h2>UI Review Pack</h2>
-    <p class="muted">Capture Today, Workout, Progress, Library, an exercise detail view and Settings into one ZIP for visual review.</p>
-    <p class="muted">No screen-sharing permission is needed. The capture pack is generated locally from Getfit's rendered pages.</p>
-    <a class="primary-action" href="{{ ingress_url(request, '/review-capture') }}">Open UI Review Pack</a>
-  </article>
 </section>
+
+<details class="settings-review-tools">
+  <summary>
+    <span>
+      <strong>Quality & build review tools</strong>
+      <small>Specification audit, responsive captures and release evidence</small>
+    </span>
+    <span aria-hidden="true">⌄</span>
+  </summary>
+  <div class="settings-review-tools__grid">
+    <article class="card" id="ui-review-settings">
+      <p class="eyebrow">Automated review</p>
+      <h2>UI Review Pack</h2>
+      <p class="muted">Run the full specification audit against deterministic review states and export one ZIP with responsive evidence.</p>
+      <a class="primary-action" href="{{ ingress_url(request, '/review-capture') }}">Run review pack</a>
+    </article>
+
+    <article class="card" id="acceptance-review-settings">
+      <p class="eyebrow">Manual override & notes</p>
+      <h2>Specification & Acceptance</h2>
+      <p class="muted">Open individual criteria only when you want to add notes or override a judgement that genuinely needs a human decision.</p>
+      <a class="secondary-action" href="{{ ingress_url(request, '/review-spec') }}">Open Specification & Acceptance</a>
+    </article>
+  </div>
+</details>
 {% endblock %}
