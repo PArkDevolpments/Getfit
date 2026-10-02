@@ -11,7 +11,7 @@ def test_product_shell_has_mobile_viewport_and_touch_sized_controls() -> None:
     assert 'name="viewport" content="width=device-width, initial-scale=1"' in base
     assert "@media (max-width: 700px)" in app_css
     assert "min-height: 44px" in app_css
-    assert "min-height:44px" in workout_css
+    assert "min-height: 48px" in workout_css
 
 
 def test_release_gate_and_ci_container_build_are_permanent_qa() -> None:
