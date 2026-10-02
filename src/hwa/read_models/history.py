@@ -170,3 +170,28 @@ def get_exercise_history(
             )
     rows.sort(key=lambda row: row.performed_at, reverse=True)
     return tuple(rows)
+
+
+def get_weekly_cardio_minutes(
+    session: Session,
+    person_id: str,
+    programme_id: str,
+    week_number: int,
+) -> int:
+    """Return completed cardio minutes for one approved programme week."""
+
+    seconds = 0
+    for item in _effective_workouts(session, person_id):
+        programme = item.event.programme
+        if (
+            programme is None
+            or programme.programme_id != programme_id
+            or programme.programme_week != week_number
+        ):
+            continue
+        seconds += sum(
+            cardio.duration_seconds
+            for cardio in item.event.performance.cardio
+            if cardio.completed
+        )
+    return seconds // 60
