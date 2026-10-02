@@ -41,13 +41,13 @@
     </div>
 
     <div class="review-actions">
-      <button class="review-button review-button--primary" id="capture-all" type="button">Capture all pages</button>
-      <button class="review-button review-button--secondary" id="capture-responsive" type="button">Full responsive pack</button>
+      <button class="review-button review-button--primary" id="run-automated-audit" type="button">Run automated specification audit</button>
+      <button class="review-button review-button--secondary" id="capture-responsive" type="button">Visual pack only</button>
       <button class="review-button review-button--quiet" id="cancel-capture" type="button" hidden>Cancel</button>
     </div>
 
     <p class="review-mode-note">
-      <strong>Capture all pages</strong> uses your current viewport. <strong>Full responsive pack</strong> creates Phone, Tablet and Desktop versions of every page without any browser share prompt.
+      <strong>Automated audit</strong> runs deterministic specification checks, captures Phone, Tablet and Desktop views, builds a results report and downloads one ZIP. No manual pass/fail entry is required before the ZIP is created.
     </p>
 
     <div class="review-progress" aria-live="polite">
@@ -72,8 +72,8 @@
 
     <div class="review-help">
       <strong>Specification evidence</strong>
-      <span>The ZIP also includes the versioned acceptance specification and your saved PASS / FAIL / BLOCKED decisions.</span>
-      <a class="review-button review-button--secondary" href="{{ ingress_url(request, '/review-spec') }}">Open Specification & Acceptance</a>
+      <span>The ZIP includes the versioned specification, automated PASS / FAIL / BLOCKED / REVIEW REQUIRED results and the visual evidence used for review.</span>
+      <a class="review-button review-button--secondary" href="{{ ingress_url(request, '/review-spec') }}">Open manual override / notes</a>
     </div>
 
     <a class="review-back" href="{{ ingress_url(request, '/settings') }}">← Back to Settings</a>
