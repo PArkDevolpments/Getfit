@@ -165,8 +165,9 @@ def test_today_keeps_workout_available_when_both_context_sources_are_unavailable
         assert response.status_code == 200
         html = response.text
         assert 'data-primary-action="start"' in html
-        assert "Health context unavailable" in html
-        assert "Nutrition context unavailable" in html
+        assert "Health context unavailable" not in html
+        assert "Nutrition context unavailable" not in html
+        assert 'class="home-context-rail"' not in html
         assert "DATASET_STALE" not in html
         assert "MENU_NUTRITION_UNAVAILABLE" not in html
     finally:
@@ -212,8 +213,9 @@ def test_default_app_degrades_without_configured_external_readers(tmp_path) -> N
     try:
         response = client.get("/")
         assert response.status_code == 200
-        assert "Health context unavailable" in response.text
-        assert "Nutrition context unavailable" in response.text
+        assert "Health context unavailable" not in response.text
+        assert "Nutrition context unavailable" not in response.text
+        assert 'class="home-context-rail"' not in response.text
     finally:
         client.close()
         engine.dispose()
