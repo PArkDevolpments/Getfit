@@ -7,6 +7,7 @@
   <p class="eyebrow">Progress</p>
   <h2>Your training evidence, made useful.</h2>
   <p class="muted">Built only from completed Getfit workouts. No health outcome or missing performance data is estimated here.</p>
+  <p class="muted">{{ progress.summary.completed_workouts }} of {{ progress.summary.available_programme_workouts }} programme workouts completed.</p>
 
   <div class="progress-kpi-grid">
     <article class="progress-kpi progress-ring-card">
@@ -59,8 +60,8 @@
           {% endif %}
           {% if exercise.latest_total_reps %}
           <div class="mini-metric">
-            <strong>{{ exercise.latest_total_reps }}</strong>
-            <span>latest reps</span>
+            <strong>{{ exercise.latest_total_reps }} reps</strong>
+            <span>latest session</span>
           </div>
           {% endif %}
           {% if exercise.latest_total_duration_seconds %}
