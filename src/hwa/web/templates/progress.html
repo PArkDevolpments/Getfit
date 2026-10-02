@@ -31,7 +31,7 @@
           <p>{{ exercise.latest_max_recorded_load_kg }} kg max recorded external load</p>
         {% endif %}
         <p>{{ exercise.latest_completed_sets }} completed set{% if exercise.latest_completed_sets != 1 %}s{% endif %}</p>
-        <a href="/library/{{ exercise.exercise_id }}">Technique support</a>
+        <a href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">Technique support</a>
       </article>
     {% else %}
       <p class="muted">Complete a strength session to build exercise history.</p>
