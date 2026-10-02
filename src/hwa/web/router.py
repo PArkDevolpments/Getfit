@@ -256,6 +256,47 @@ def exercise_detail(
 
 
 @router.get(
+    "/review-capture",
+    response_class=HTMLResponse,
+    dependencies=[Depends(reject_identity_selectors)],
+)
+def review_capture(
+    request: Request,
+    person: Annotated[PersonContext, Depends(resolve_web_person_context)],
+    session: Annotated[Session, Depends(get_session)],
+) -> HTMLResponse:
+    """Render a person-scoped browser tool that creates a visual review ZIP."""
+
+    targets = [
+        {"key": "today", "label": "Today", "url": ingress_url(request, "/")},
+        {"key": "workout", "label": "Workout", "url": ingress_url(request, "/workout")},
+        {"key": "progress", "label": "Progress", "url": ingress_url(request, "/progress")},
+        {"key": "library", "label": "Library", "url": ingress_url(request, "/library")},
+        {"key": "settings", "label": "Settings", "url": ingress_url(request, "/settings")},
+    ]
+    exercises = list_exercises(session)
+    if exercises:
+        targets.insert(
+            4,
+            {
+                "key": "exercise-detail",
+                "label": f"Exercise detail — {exercises[0].display_name}",
+                "url": ingress_url(request, f"/library/{exercises[0].exercise_id}"),
+            },
+        )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="review_capture.html",
+        context={
+            "person": person,
+            "capture_targets": targets,
+            "app_version": request.app.version,
+        },
+    )
+
+
+@router.get(
     "/settings",
     response_class=HTMLResponse,
     dependencies=[Depends(reject_identity_selectors)],
