@@ -45,6 +45,7 @@ class HomeDashboard:
     prescription_snapshot: tuple[PrescriptionSnapshotItem, ...]
     last_workout: LastWorkoutSummary | None
     weekly_cardio_minutes: int
+    weekly_cardio_percent: int
     weekly_cardio_goal_minutes: int = 150
 
 
@@ -144,15 +145,17 @@ def build_home_dashboard(
         if current_day_number is not None
         else None
     )
+    weekly_cardio_minutes = get_weekly_cardio_minutes(
+        session,
+        person_id,
+        programme_id,
+        week_number,
+    )
     return HomeDashboard(
         sessions=sessions,
         duration_label=duration_label,
         prescription_snapshot=prescription_snapshot,
         last_workout=last_workout,
-        weekly_cardio_minutes=get_weekly_cardio_minutes(
-            session,
-            person_id,
-            programme_id,
-            week_number,
-        ),
+        weekly_cardio_minutes=weekly_cardio_minutes,
+        weekly_cardio_percent=min(100, round((weekly_cardio_minutes / 150) * 100)),
     )
