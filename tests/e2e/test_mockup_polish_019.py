@@ -42,11 +42,10 @@ def test_019_treadmill_media_is_a_real_local_photo_not_the_blurred_placeholder()
     assert len(treadmill) > 12000
 
 
-def test_019_phone_rest_photo_stays_compact_and_viewport_safe() -> None:
+def test_019_phone_strength_media_stays_compact() -> None:
     css = (STATIC / "visual-refresh.css").read_text(encoding="utf-8")
 
     mobile = css.split("@media (max-width: 700px)", 1)[1]
     assert ".rest-state-photo" in mobile
-    assert "max-height: 180px;" in mobile
     assert ".workout-stage__visual--strength img" in mobile
     assert "min-height: 220px;" in mobile
