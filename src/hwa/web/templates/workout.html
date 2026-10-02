@@ -17,7 +17,7 @@
   data-workout-type="{{ player.workout_type }}"
   data-workout-block="{{ player.block }}"
   data-autosave-url="{{ ingress_url(request, '/api/v1/workouts/drafts/' ~ player.draft_id) }}"
-  data-complete-url="{{ ingress_url(request, '/api/v1/workouts/drafts/' ~ player.draft_id ~ '/complete') }}"
+  data-complete-url="{{ ingress_url(request, '/api/v1/workouts/drafts/' ~ player.draft_id ~ '/complete') }}"\n  data-today-url="{{ ingress_url(request, '/') }}"
 >
   <p class="eyebrow">Workout · Week {{ player.week_number }} · Day {{ player.day_number }}</p>
   <h2>{{ player.title }}</h2>
