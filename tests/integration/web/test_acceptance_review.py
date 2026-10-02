@@ -24,14 +24,20 @@ def _client(tmp_path):
             )
         )
         session.flush()
-        session.add(
-            ExternalIdentityMapping(
-                id="acceptance-ha",
-                person_id="hwa-kris",
-                authority="HOME_ASSISTANT",
-                external_subject_id="ha-kris",
+        for authority, subject in {
+            "HOME_ASSISTANT": "ha-kris",
+            "PEP_SITE": "person_a",
+            "HEALTH_PROFILE": "kris",
+            "MENU_NUTRITION": "person_1",
+        }.items():
+            session.add(
+                ExternalIdentityMapping(
+                    id=f"acceptance-{authority}",
+                    person_id="hwa-kris",
+                    authority=authority,
+                    external_subject_id=subject,
+                )
             )
-        )
         session.commit()
 
     client = TestClient(
