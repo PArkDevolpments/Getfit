@@ -130,7 +130,7 @@
       {% endif %}
       {% if external_context.health.body_mass and external_context.health.sleep_duration %}
         <div class="context-stats">
-          <span>Sleep {{ external_context.health.sleep_duration.value }} {{ external_context.health.sleep_duration.unit }}</span>
+          <span>{{ external_context.health.sleep_duration.value }} {{ external_context.health.sleep_duration.unit }} sleep</span>
         </div>
       {% endif %}
     {% else %}
@@ -150,7 +150,7 @@
     </div>
     {% if external_context.nutrition.status == "READY" %}
       {% if external_context.nutrition.current_target %}
-        <p class="context-card__value">{{ external_context.nutrition.current_target.calories_kcal|int }} kcal</p>
+        <p class="context-card__value">{{ external_context.nutrition.current_target.calories_kcal|int }} kcal target</p>
         <div class="context-stats">
           <span>{{ external_context.nutrition.current_target.protein_g|int }} g protein</span>
           <span>{{ external_context.nutrition.current_target.carbohydrate_g|int }} g carbs</span>
