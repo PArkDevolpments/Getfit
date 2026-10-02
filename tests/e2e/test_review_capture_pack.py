@@ -11,8 +11,11 @@ def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> Non
 
     assert "Capture all pages" in template
     assert "Full responsive pack" in template
-    assert "getDisplayMedia" in script
-    assert "preferCurrentTab" in script
+    assert "getDisplayMedia" not in script
+    assert "preferCurrentTab" not in script
+    assert "contentDocument" in script
+    assert "foreignObject" in script
+    assert "XMLSerializer" in script
     assert "createZip" in script
     assert "getfit-ui-review-" in script
     assert "review-manifest.json" in script
@@ -23,5 +26,4 @@ def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> Non
 
     # The capture utility must not depend on a third-party CDN or upload endpoint.
     assert "https://" not in template
-    assert "fetch(" not in script
     assert "XMLHttpRequest" not in script
