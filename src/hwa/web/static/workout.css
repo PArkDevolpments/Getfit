@@ -742,8 +742,9 @@
 }
 
 .complete-set-button {
-  min-height: 50px;
-  flex: 1 1 190px;
+  min-height: 54px;
+  flex: 1 1 auto;
+  width: 100%;
   border: 1px solid rgba(72, 193, 255, .42);
   border-radius: 11px;
   color: #fff;
@@ -753,9 +754,6 @@
   font-weight: 900;
 }
 
-.pain-toggle {
-  flex: 0 1 160px;
-}
 
 .set-feedback-panel,
 .main-rest-panel {
@@ -868,6 +866,16 @@
   z-index: 3;
 }
 
+.workout-player.is-set-feedback .workout-layout,
+.workout-player.is-resting .workout-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.workout-player.is-set-feedback .workout-sidebar,
+.workout-player.is-resting .workout-sidebar {
+  display: none;
+}
+
 .cardio-coach-grid {
   grid-template-columns: minmax(220px, .65fr) minmax(0, 1.35fr);
 }
@@ -959,7 +967,14 @@
 }
 
 .cardio-completion-toggle {
+  width: min(100%, 240px);
   margin-top: .65rem;
+  justify-content: center;
+  color: #06131e;
+  border-color: rgba(72, 193, 255, .44);
+  background: linear-gradient(180deg, #4fcaff, #1498f5);
+  box-shadow: 0 8px 20px rgba(15, 135, 220, .18);
+  font-weight: 900;
 }
 
 .interval-state-banner {
@@ -1116,8 +1131,10 @@
     align-items: stretch;
   }
 
-  .pain-toggle {
-    flex: 1 1 100%;
+  .complete-set-button {
+    min-height: 56px;
+    flex: none;
+    width: 100%;
   }
 
   .cardio-prescription-grid {
