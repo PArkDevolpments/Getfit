@@ -37,7 +37,7 @@ class ExerciseMedia:
 
 def _local(exercise_id: str, *, phases: tuple[str, ...] = ()) -> ExerciseMedia:
     root = "/static/media/exercises"
-    phase_paths = tuple(f"{root}/{exercise_id}-{phase}.svg" for phase in phases)
+    phase_paths = tuple(f"{root}/phases/{exercise_id}-{phase}.svg" for phase in phases)
     phase_labels = tuple(
         {
             "start": "Start",
