@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#071a2d">
+  <meta name="theme-color" content="#0d1713">
   <title>{% block title %}Home Workout Assistant{% endblock %}</title>
   <link rel="stylesheet" href="{{ ingress_url(request, '/static/app.css') }}">
   {% if page.active_nav == "workout" %}<link rel="stylesheet" href="{{ ingress_url(request, '/static/workout.css') }}">{% endif %}
+  <link rel="stylesheet" href="{{ ingress_url(request, '/static/visual-refresh.css') }}">
   {% block styles %}{% endblock %}
 </head>
 <body data-active-nav="{{ page.active_nav }}" data-profile="{{ page.presentation_profile }}">
@@ -20,8 +21,8 @@
           </svg>
         </div>
         <div class="brand-copy">
-          <h1>Home Workout Assistant</h1>
-          <p>Personalised Training. Smarter Living. Stronger Together.</p>
+          <h1>Getfit</h1>
+          <p>Home Workout Assistant · Personalised Training. Smarter Living.</p>
         </div>
       </div>
 
