@@ -104,8 +104,8 @@ def test_library_and_progress_hide_implementation_ids_and_use_product_cards() ->
     assert 'class="exercise-card' in library
     assert 'class="exercise-card__media"' in library
     assert 'class="exercise-media-tabs"' in detail
-    assert "Start" in detail
-    assert "Lower" not in detail  # phase labels are media data, not fabricated template copy
+    assert "exercise.media.phase_demo_paths" in detail
+    assert "exercise.media.phase_labels[loop.index0]" in detail
     assert 'data-media-panel="technique"' in detail
     assert 'data-media-panel="video"' in detail
     assert 'class="progress-kpi-grid' in progress
