@@ -3,6 +3,12 @@
 {% block title %}Progress · Getfit{% endblock %}
 
 {% block content %}
+{% if review_mode|default(false) %}
+<div class="review-sandbox-banner progress-review-banner">
+  <strong>Review sandbox</strong>
+  <span>Illustrative isolated evidence for component testing only · never written to your training history</span>
+</div>
+{% endif %}
 <section class="progress-hero card">
   <div>
     <p class="eyebrow">Progress</p>
