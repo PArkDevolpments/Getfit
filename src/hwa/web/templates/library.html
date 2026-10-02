@@ -17,7 +17,7 @@
   {% else %}
     <p>Media unavailable</p>
   {% endif %}
-  <a class="primary-action" href="/library/{{ exercise.exercise_id }}">View exercise</a>
+  <a class="primary-action" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">View exercise</a>
 </section>
 {% else %}
 <section class="card"><p>No programme exercises are available yet.</p></section>
