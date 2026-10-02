@@ -15,7 +15,7 @@ def test_application_boot_contract() -> None:
     app_version, app = _load_application()
 
     assert app.title == "Home Workout Assistant"
-    assert app.version == app_version == "0.1.7"
+    assert app.version == app_version == "0.1.8"
 
 
 def test_healthz_reports_service_and_version() -> None:
@@ -26,5 +26,5 @@ def test_healthz_reports_service_and_version() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "home-workout-assistant",
-        "version": "0.1.7",
+        "version": "0.1.8",
     }
