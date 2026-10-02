@@ -20,23 +20,23 @@
 
     {% if today_view.week_number is not none and today_view.day_number is not none %}
     <section class="next-workout-card" aria-labelledby="next-workout-title">
+      <div class="next-workout-card__photo" aria-hidden="true">
+        {% if today_view.day_number == 1 %}
+        <img src="{{ ingress_url(request, '/static/media/exercises/dumbbell_floor_press.svg') }}" alt="">
+        {% elif today_view.day_number == 2 %}
+        <img src="{{ ingress_url(request, '/static/media/exercises/goblet_squat.svg') }}" alt="">
+        {% elif today_view.day_number == 3 %}
+        <img src="{{ ingress_url(request, '/static/media/exercises/dumbbell_romanian_deadlift.svg') }}" alt="">
+        {% else %}
+        <img src="{{ ingress_url(request, '/static/media/exercises/seated_dumbbell_shoulder_press.svg') }}" alt="">
+        {% endif %}
+      </div>
       <div class="next-workout-card__copy">
         <p class="card-kicker">Next workout</p>
         <h3 id="next-workout-title">Week {{ today_view.week_number }} · Day {{ today_view.day_number }}</h3>
         <p class="next-workout-card__title">{{ today_view.title }}</p>
         {% if home and home.duration_label %}
         <p class="next-workout-card__duration">{{ home.duration_label }}</p>
-        {% endif %}
-      </div>
-      <div class="next-workout-card__icon" aria-hidden="true">
-        {% if today_view.workout_type == "upper_body_bike" %}
-        <svg viewBox="0 0 64 64"><path d="M9 25v14M16 20v24M48 20v24M55 25v14M16 32h32"/></svg>
-        {% elif today_view.workout_type == "lower_body_core" %}
-        <svg viewBox="0 0 64 64"><circle cx="35" cy="13" r="5"/><path d="m30 20-9 12 11 6 7 14M29 24l13 7 9-3M23 34 10 50"/></svg>
-        {% elif today_view.workout_type == "full_body_bike" %}
-        <svg viewBox="0 0 64 64"><circle cx="19" cy="42" r="11"/><circle cx="47" cy="42" r="11"/><path d="M19 42 29 25h12l6 17M29 25l11 17H19M30 19h11"/></svg>
-        {% else %}
-        <svg viewBox="0 0 64 64"><path d="M11 49V31M20 49V20M29 49V36M38 49V13M47 49V27M56 49V18"/></svg>
         {% endif %}
       </div>
     </section>
@@ -153,15 +153,15 @@
       {% if home %}
       {% for session in home.sessions %}
       <article class="workout-select-row{% if session.current %} is-current{% endif %}{% if session.completed %} is-complete{% endif %}">
-        <div class="workout-select-row__icon workout-select-row__icon--day-{{ session.day_number }}" aria-hidden="true">
+        <div class="workout-select-row__photo" aria-hidden="true">
           {% if session.day_number == 1 %}
-          <svg viewBox="0 0 48 48"><path d="M6 18v12M12 14v20M36 14v20M42 18v12M12 24h24"/></svg>
+          <img src="{{ ingress_url(request, '/static/media/exercises/dumbbell_floor_press.svg') }}" alt="">
           {% elif session.day_number == 2 %}
-          <svg viewBox="0 0 48 48"><circle cx="27" cy="9" r="4"/><path d="m24 15-7 8 8 5 5 9M23 18l9 5 6-2M19 24 10 35"/></svg>
+          <img src="{{ ingress_url(request, '/static/media/exercises/goblet_squat.svg') }}" alt="">
           {% elif session.day_number == 3 %}
-          <svg viewBox="0 0 48 48"><circle cx="13" cy="34" r="8"/><circle cx="36" cy="34" r="8"/><path d="M13 34 21 21h10l5 13M21 21l8 13H13M22 17h7"/></svg>
+          <img src="{{ ingress_url(request, '/static/media/exercises/dumbbell_romanian_deadlift.svg') }}" alt="">
           {% else %}
-          <svg viewBox="0 0 48 48"><path d="M9 38V24M16 38V16M23 38V27M30 38V10M37 38V20"/></svg>
+          <img src="{{ ingress_url(request, '/static/media/exercises/seated_dumbbell_shoulder_press.svg') }}" alt="">
           {% endif %}
         </div>
         <div class="workout-select-row__copy">

@@ -46,18 +46,11 @@
   {% endif %}
 
   <div class="cardio-coach-grid">
-    <div class="cardio-visual-card workout-stage__visual workout-stage__visual--{% if item.equipment == 'SPIN_BIKE' %}bike{% else %}treadmill{% endif %}" aria-hidden="true">
+    <div class="cardio-visual-card workout-stage__visual workout-stage__visual--{% if item.equipment == 'SPIN_BIKE' %}bike{% else %}treadmill{% endif %}">
       {% if item.equipment == "SPIN_BIKE" %}
-      <svg viewBox="0 0 120 120">
-        <circle cx="33" cy="84" r="22"/><circle cx="89" cy="84" r="22"/>
-        <path d="M33 84 50 54h25l14 30M50 54l17 30H33M52 46h18M75 54l7-18h12"/>
-        <circle cx="58" cy="26" r="9"/><path d="M58 35 50 54l15 11 12-17"/>
-      </svg>
+      <img class="cardio-visual-photo" src="{{ ingress_url(request, '/static/media/cardio/spin-bike.svg') }}" alt="Spin bike demonstration">
       {% else %}
-      <svg viewBox="0 0 120 120">
-        <path d="M20 90h78l8 12H30zM86 90 99 28h8M98 43h14"/>
-        <circle cx="56" cy="24" r="9"/><path d="M56 33 51 54l16 13 13 23M51 54 37 70M67 67 55 88"/>
-      </svg>
+      <img class="cardio-visual-photo" src="{{ ingress_url(request, '/static/media/cardio/treadmill.svg') }}" alt="Treadmill demonstration">
       {% endif %}
     </div>
 
@@ -363,7 +356,7 @@
         <section class="set-feedback-panel" data-set-feedback-panel {% if review_state|default('') != 'strength-feedback' %}hidden{% endif %}>
           <div class="set-feedback-panel__check" aria-hidden="true">✓</div>
           <p class="eyebrow">Set Complete</p>
-          <h3>How did that feel?</h3>
+          <h3>Great set. How did that feel?</h3>
           <div class="set-feedback-options">
             <button type="button" data-set-feedback="too-easy"><span aria-hidden="true">↓</span><strong>Too easy</strong></button>
             <button type="button" data-set-feedback="about-right"><span aria-hidden="true">✓</span><strong>About right</strong></button>
