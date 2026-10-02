@@ -73,8 +73,11 @@ def test_home_dashboard_projects_design_board_data_from_real_week1_authority(tmp
         snapshot = {item.exercise_id: item for item in dashboard.prescription_snapshot}
         assert str(snapshot["dumbbell_floor_press"].load_value) == "6.00"
         assert snapshot["dumbbell_floor_press"].load_mode == "EACH_HAND"
+        assert snapshot["dumbbell_floor_press"].display_name == "Floor press"
         assert str(snapshot["one_arm_dumbbell_row"].load_value) == "10.00"
+        assert snapshot["one_arm_dumbbell_row"].display_name == "Row"
         assert str(snapshot["seated_dumbbell_shoulder_press"].load_value) == "5.00"
+        assert snapshot["seated_dumbbell_shoulder_press"].display_name == "Shoulder press"
     finally:
         session.close()
         engine.dispose()
