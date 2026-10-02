@@ -16,6 +16,11 @@ def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> Non
     assert "contentDocument" in script
     assert "foreignObject" in script
     assert "XMLSerializer" in script
+    assert "image/svg+xml" in script
+    assert ".svg" in script
+    assert "review-gallery.html" in script
+    assert "toBlob" not in script
+    assert "getContext(" not in script
     assert "createZip" in script
     assert "getfit-ui-review-" in script
     assert "review-manifest.json" in script
