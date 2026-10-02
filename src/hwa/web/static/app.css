@@ -2888,7 +2888,7 @@ body[data-profile="female"] .home-context-rail__icon {
 }
 
 .exercise-card__open {
-  min-height: 36px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   color: #88d6ff;
@@ -2949,7 +2949,7 @@ body[data-profile="female"] .home-context-rail__icon {
 }
 
 .exercise-media-tab {
-  min-height: 42px;
+  min-height: 46px;
   border: 1px solid transparent;
   border-radius: 10px;
   color: #9db7c9;
@@ -3498,4 +3498,12 @@ body[data-profile="female"] .home-context-rail__icon {
   .app-shell {
     padding-bottom: 7.5rem;
   }
+}
+
+
+/* Touch-safe icon actions */
+.coach-dashboard-card__settings {
+  width: 44px;
+  height: 44px;
+  flex-basis: 44px;
 }
