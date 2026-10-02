@@ -3,12 +3,12 @@
 {% block title %}Progress · Getfit{% endblock %}
 
 {% block content %}
-<section class="card">
-  <p class="eyebrow">Progress</p>
-  <h2>Your training evidence, made useful.</h2>
-  <p class="muted">Built only from completed Getfit workouts. No health outcome or missing performance data is estimated here.</p>
-  <p class="muted">{{ progress.summary.completed_workouts }} of {{ progress.summary.available_programme_workouts }} programme workouts completed.</p>
-
+<section class="progress-hero card">
+  <div>
+    <p class="eyebrow">Progress</p>
+    <h2>Your training, moving forward.</h2>
+    <p class="muted">Built only from completed Getfit workouts. No missing performance data or future progression is invented.</p>
+  </div>
   <div class="progress-kpi-grid">
     <article class="progress-kpi progress-ring-card">
       <div class="progress-ring" style="--progress: {{ progress.summary.completion_percent }}">
@@ -37,50 +37,84 @@
   </div>
 </section>
 
-<section class="card">
-  <div class="section-heading">
-    <div>
-      <p class="eyebrow">Exercise progression</p>
-      <h2>Latest performed evidence</h2>
+<section class="progress-dashboard">
+  <article class="card progress-chart-card">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Exercise progression</p>
+        {% if progress.chart %}
+        <h2>{{ progress.chart.display_name }} progress</h2>
+        <p class="muted">{{ progress.chart.metric_name }} · completed workout evidence only</p>
+        {% else %}
+        <h2>Build your first trend</h2>
+        <p class="muted">Complete the same strength movement in more than one workout to create an evidence-based progression line.</p>
+        {% endif %}
+      </div>
+      {% if progress.chart %}<span class="status-pill status-pill--ready">{{ progress.chart.points|length }} session{% if progress.chart.points|length != 1 %}s{% endif %}</span>{% endif %}
     </div>
-    <span class="status-pill status-pill--quiet">Person-scoped history</span>
-  </div>
 
-  <div class="progress-grid">
-    {% for exercise in progress.summary.exercise_summaries %}
-      <article class="progress-exercise">
-        <p class="metric-caption">{{ exercise.sessions }} session{% if exercise.sessions != 1 %}s{% endif %}</p>
-        <h3>{{ exercise.exercise_id.replace('-', ' ').replace('_', ' ').title() }}</h3>
-        <div class="progress-exercise__metric-row">
-          {% if exercise.latest_max_recorded_load_kg is not none %}
-          <div class="mini-metric">
-            <strong>{{ exercise.latest_max_recorded_load_kg }} kg</strong>
-            <span>latest max load</span>
-          </div>
-          {% endif %}
-          {% if exercise.latest_total_reps %}
-          <div class="mini-metric">
-            <strong>{{ exercise.latest_total_reps }} reps</strong>
-            <span>latest session</span>
-          </div>
-          {% endif %}
-          {% if exercise.latest_total_duration_seconds %}
-          <div class="mini-metric">
-            <strong>{{ exercise.latest_total_duration_seconds }} sec</strong>
-            <span>latest duration</span>
-          </div>
-          {% endif %}
-          <div class="mini-metric">
-            <strong>{{ exercise.latest_completed_sets }}</strong>
-            <span>completed sets</span>
-          </div>
-        </div>
-        <a class="secondary-action" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">Exercise details</a>
-      </article>
+    {% if progress.chart %}
+    <div class="progress-chart-wrap">
+      <svg
+        class="progress-chart"
+        data-progress-chart
+        data-point-count="{{ progress.chart.points|length }}"
+        viewBox="0 0 600 260"
+        role="img"
+        aria-label="{{ progress.chart.display_name }} {{ progress.chart.metric_name }} progression"
+      >
+        <g class="progress-chart__grid">
+          <line x1="50" y1="65" x2="550" y2="65"/>
+          <line x1="50" y1="125" x2="550" y2="125"/>
+          <line x1="50" y1="185" x2="550" y2="185"/>
+        </g>
+        <text x="6" y="69">{{ progress.chart.max_label }}</text>
+        <text x="6" y="189">{{ progress.chart.min_label }}</text>
+        <polyline class="progress-chart__line" points="{{ progress.chart.polyline }}"/>
+        {% for point in progress.chart.points %}
+        <g class="progress-chart__point">
+          <circle cx="{{ point.x }}" cy="{{ point.y }}" r="7"/>
+          <circle cx="{{ point.x }}" cy="{{ point.y }}" r="3"/>
+          <text x="{{ point.x }}" y="238" text-anchor="middle">{{ point.label }}</text>
+          <text x="{{ point.x }}" y="{{ point.y - 14 }}" text-anchor="middle">{{ point.value_label }}</text>
+        </g>
+        {% endfor %}
+      </svg>
+    </div>
     {% else %}
-      <div class="empty-state">Complete a strength session to build per-exercise progression evidence.</div>
-    {% endfor %}
-  </div>
+    <div class="progress-chart-empty">
+      <div class="progress-chart-empty__icon" aria-hidden="true">↗</div>
+      <strong>No synthetic trend points</strong>
+      <span>Your chart appears only when completed workout evidence exists.</span>
+    </div>
+    {% endif %}
+  </article>
+
+  <article class="card recent-progression-card">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Recent progression</p>
+        <h2>Latest exercise evidence</h2>
+      </div>
+    </div>
+
+    <div class="recent-progression-list">
+      {% for exercise in progress.summary.exercise_summaries[:6] %}
+      <a class="recent-progression-row" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">
+        <div>
+          <strong>{{ exercise.exercise_id.replace('-', ' ').replace('_', ' ').title() }}</strong>
+          <span>{{ exercise.sessions }} session{% if exercise.sessions != 1 %}s{% endif %}</span>
+        </div>
+        <div class="recent-progression-row__metrics">
+          {% if exercise.latest_max_recorded_load_kg is not none %}<strong>{{ exercise.latest_max_recorded_load_kg }} kg</strong>{% endif %}
+          {% if exercise.latest_total_reps %}<span>{{ exercise.latest_total_reps }} reps</span>{% elif exercise.latest_total_duration_seconds %}<span>{{ exercise.latest_total_duration_seconds }} sec</span>{% else %}<span>{{ exercise.latest_completed_sets }} sets</span>{% endif %}
+        </div>
+      </a>
+      {% else %}
+      <div class="empty-state">Complete a strength session to build recent progression.</div>
+      {% endfor %}
+    </div>
+  </article>
 </section>
 
 <section class="card">
