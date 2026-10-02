@@ -9,7 +9,11 @@ def test_019_active_strength_does_not_render_rest_panel_before_rest_state() -> N
     workout = (TEMPLATES / "workout.html").read_text(encoding="utf-8")
     css = (STATIC / "visual-refresh.css").read_text(encoding="utf-8")
 
-    assert 'data-main-rest-panel {% if review_state|default(\'\') != \'strength-rest\' %}hidden{% endif %}' in workout
+    expected = (
+        "data-main-rest-panel "
+        "{% if review_state|default('') != 'strength-rest' %}hidden{% endif %}"
+    )
+    assert expected in workout
     assert ".main-rest-panel[hidden]" in css
     hidden_block = css.split(".main-rest-panel[hidden]", 1)[1].split("}", 1)[0]
     assert "display: none !important;" in hidden_block
