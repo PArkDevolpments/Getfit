@@ -86,7 +86,7 @@
         </div>
       </div>
       {% else %}
-      <div class="next-workout-card">
+      <div class="next-workout-card" id="primary-action" data-primary-action="unavailable">
         <div class="next-workout-card__copy">
           <p class="card-kicker">Next workout</p>
           <h3>Programme unavailable</h3>
@@ -134,7 +134,7 @@
 
       <div class="home-context-strip">
         <div id="external-health-context">
-          <p class="card-kicker">Health</p>
+          <p class="card-kicker">Health context</p>
           {% if external_context.health.status == "READY" and external_context.health.body_mass %}
           <strong>{{ external_context.health.body_mass.value }} {{ external_context.health.body_mass.unit }}</strong>
           <span>Latest body mass</span>
@@ -148,7 +148,7 @@
         </div>
 
         <div id="external-nutrition-context">
-          <p class="card-kicker">Nutrition</p>
+          <p class="card-kicker">Nutrition context</p>
           {% if external_context.nutrition.status == "READY" and external_context.nutrition.current_target %}
           <strong>{{ external_context.nutrition.current_target.calories_kcal|int }} kcal</strong>
           <span>{{ external_context.nutrition.current_target.protein_g|int }} g protein target</span>
