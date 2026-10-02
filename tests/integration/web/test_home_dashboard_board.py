@@ -111,14 +111,17 @@ def test_today_template_contains_board_sections_not_generic_dashboard_copy() -> 
 
     for marker in (
         "home-dashboard",
+        "coach-dashboard-card",
         "next-workout-card",
         "This week",
         "Last workout",
-        "Progress snapshot",
+        "Progress Snapshot",
+        "coach-progress-snapshot",
         "Weekly cardio",
         "workout-selection",
         "Weekly Goal",
         "150 minutes of moderate activity",
+        "home-context-rail",
     ):
         assert marker in template
 
