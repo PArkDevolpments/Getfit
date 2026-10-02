@@ -967,17 +967,65 @@ body[data-active-nav="workout"] .primary-action {
   }
 
   .main-rest-panel {
-    display: grid;
+    position: relative;
+    min-height: 430px !important;
+    padding: 1rem;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "eyebrow"
+      "ring"
+      "next"
+      "actions";
+    align-content: center;
+    overflow: hidden;
   }
 
-  .rest-state-photo,
+  .rest-state-photo {
+    position: absolute;
+    inset: 0;
+    min-height: 0;
+    max-height: none;
+    z-index: 0;
+    opacity: .42;
+  }
+
   .rest-state-photo img {
-    min-height: 160px;
-    max-height: 180px;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    object-fit: cover;
+    filter: brightness(.48) saturate(.9);
   }
 
-  .set-feedback-panel,
-  .main-rest-panel {
+  .main-rest-panel > :not(.rest-state-photo) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .main-rest-panel .eyebrow {
+    margin-top: 0;
+  }
+
+  .main-rest-ring {
+    width: 136px;
+    height: 136px;
+    margin: .35rem auto .55rem;
+  }
+
+  .main-rest-ring strong {
+    font-size: 2.2rem;
+  }
+
+  .main-rest-next {
+    margin: .15rem 0 .35rem;
+  }
+
+  .main-rest-actions {
+    margin-top: .35rem;
+  }
+
+  .set-feedback-panel {
     min-height: 0 !important;
   }
 }
