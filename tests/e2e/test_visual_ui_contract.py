@@ -75,8 +75,8 @@ def test_workout_has_guided_stage_hierarchy_and_large_live_controls() -> None:
     assert 'id="workout-progress-bar"' in workout
     assert 'id="rest-timer"' in workout
     assert 'data-complete-set' in workout
-    assert 'id="set-feedback-panel"' in workout
-    assert 'id="main-rest-panel"' in workout
+    assert 'data-set-feedback-panel' in workout
+    assert 'data-main-rest-panel' in workout
     assert "Too easy" in workout
     assert "About right" in workout
     assert "Too hard" in workout
@@ -90,6 +90,8 @@ def test_workout_has_guided_stage_hierarchy_and_large_live_controls() -> None:
     assert "startRestTimer" in js
     assert "showFeedback" in js
     assert "applyFeedback" in js
+    assert "feedbackPanelFor" in js
+    assert "restPanelFor" in js
     assert ".workout-command-bar" in css
     assert "min-height: 48px" in css
 
