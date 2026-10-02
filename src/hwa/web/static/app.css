@@ -2888,9 +2888,12 @@ body[data-profile="female"] .home-context-rail__icon {
 }
 
 .exercise-card__open {
+  min-width: 44px;
   min-height: 44px;
+  padding: 0 .35rem;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   color: #88d6ff;
   font-size: .68rem;
   font-weight: 850;
@@ -3366,13 +3369,29 @@ body[data-profile="female"] .home-context-rail__icon {
 
 @media (max-width: 620px) {
   .progress-chart-wrap {
-    margin-left: -.35rem;
-    margin-right: -.35rem;
+    margin-left: 0;
+    margin-right: 0;
+    padding: .65rem .2rem .15rem;
+    overflow-x: hidden;
     border-radius: 11px;
   }
 
   .progress-chart {
-    min-width: 480px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .progress-chart > text,
+  .progress-chart__point text {
+    font-size: 11px;
+  }
+
+  .progress-chart__point text:last-child {
+    font-size: 10px;
+  }
+
+  .progress-chart__line {
+    stroke-width: 4;
   }
 }
 
