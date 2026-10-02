@@ -3,23 +3,30 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
   <title>Getfit setup required</title>
-  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="{{ ingress_url(request, '/static/app.css') }}">
 </head>
 <body>
-  <main class="app-shell">
+  <main class="setup-shell">
     <section class="card">
-      <p class="eyebrow">GETFIT</p>
-      <h1>Getfit setup required</h1>
-      <p>This Home Assistant user is authenticated, but it has not been mapped to a Getfit person yet.</p>
-      <p>Your Home Assistant user ID is:</p>
-      <p><code id="ha-user-id">{{ subject_id }}</code></p>
-      <p>
+      <div class="app-header__brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48"><path d="M8 19v10M13 16v16M35 16v16M40 19v10M13 24h22"/></svg>
+        </div>
+        <div>
+          <p class="eyebrow">GETFIT</p>
+          <h1>Setup required</h1>
+        </div>
+      </div>
+      <p>This Home Assistant account is authenticated, but it has not yet been mapped to a Getfit person.</p>
+      <p class="metric-caption">Your Home Assistant user ID</p>
+      <p class="setup-code"><code id="ha-user-id">{{ subject_id }}</code></p>
+      <p class="muted">
         Open Home Assistant → Settings → Apps → Getfit → Configuration. Paste this exact value into
-        <code>kris_ha_user_id</code> or <code>kirsty_ha_user_id</code> for the correct person, save the
-        configuration, then restart Getfit.
+        <code>kris_ha_user_id</code> or <code>kirsty_ha_user_id</code> for the correct person, save, then restart Getfit.
       </p>
-      <p class="muted">Use only the ID shown for the person currently signed in.</p>
+      <p class="muted">Only the ID for the account currently signed in is shown here.</p>
     </section>
   </main>
 </body>

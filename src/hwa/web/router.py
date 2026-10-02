@@ -16,6 +16,7 @@ from hwa.domain.external_context import ExternalContext, build_external_context
 from hwa.domain.identity import PersonContext
 from hwa.integrations.menu.reader import MenuNutritionContext, MenuNutritionReader
 from hwa.integrations.pep.health_reader import PepHealthContext, PepHealthReader
+from hwa.read_models.history import get_exercise_history
 from hwa.services.today import get_today_view
 from hwa.services.workout_drafts import get_active_draft
 from hwa.web.context import build_page_context
@@ -23,10 +24,12 @@ from hwa.web.dependencies import resolve_web_person_context
 from hwa.web.library import get_exercise, list_exercises
 from hwa.web.progress import build_progress_context
 from hwa.web.settings import build_settings_view
+from hwa.web.urls import ingress_url
 from hwa.web.workout import build_player_context
 
 router = APIRouter(tags=["product-web"])
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+templates.env.globals["ingress_url"] = ingress_url
 
 _IDENTITY_SELECTORS = frozenset(
     {
@@ -231,6 +234,11 @@ def exercise_detail(
             "page": build_page_context(person, "library"),
             "person": person,
             "exercise": exercise,
+            "exercise_history": get_exercise_history(
+                session,
+                person.hwa_person_id,
+                exercise_id,
+            ),
         },
     )
 

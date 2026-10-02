@@ -203,7 +203,7 @@ def test_kris_can_start_interrupt_resume_complete_review_and_export(tmp_path) ->
         progress = restarted.get("/progress")
         assert progress.status_code == 200
         assert "1 of 4 programme workouts completed" in progress.text
-        assert "task12-kris-event" in progress.text
+        assert "task12-kris-event" not in progress.text
         assert "Dumbbell Floor Press" in progress.text
 
         with Session(restarted_engine) as session:
