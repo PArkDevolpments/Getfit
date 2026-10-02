@@ -48,7 +48,11 @@ _EXERCISE_GUIDANCE: dict[str, tuple[str, str, tuple[str, ...]]] = {
     "goblet_squat": (
         "Quads · glutes · core",
         "Squat",
-        ("Keep the chest up", "Let knees track naturally over feet", "Drive through the whole foot"),
+        (
+            "Keep the chest up",
+            "Let knees track naturally over feet",
+            "Drive through the whole foot",
+        ),
     ),
     "dumbbell_romanian_deadlift": (
         "Posterior chain",
