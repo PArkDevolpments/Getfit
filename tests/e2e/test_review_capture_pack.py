@@ -35,3 +35,20 @@ def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> Non
     # The capture utility must not depend on a third-party CDN or upload endpoint.
     assert "https://" not in template
     assert "XMLHttpRequest" not in script
+
+
+def test_review_pack_runs_automated_spec_checks_before_building_zip() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+    template = (TEMPLATES / "review_capture.html").read_text(encoding="utf-8")
+
+    assert "Run automated specification audit" in template
+    assert "runAutomatedAudit" in script
+    assert "evaluateCriterion" in script
+    assert "automated-acceptance-results.json" in script
+    assert "automated-review-report.html" in script
+    assert "REVIEW_REQUIRED" in script
+    assert "BLOCKED" in script
+    assert "PASS" in script
+    assert "FAIL" in script
+    assert "buildAutomatedReport" in script
+    assert "No manual pass/fail entry is required before the ZIP is created." in template
