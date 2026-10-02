@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f7fbfe"/>
+      <stop offset="1" stop-color="#dcecf7"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" x2="1">
+      <stop offset="0" stop-color="#27a7ff"/>
+      <stop offset="1" stop-color="#0b65a7"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#062033" flood-opacity=".18"/></filter>
+  </defs>
+  <rect width="640" height="420" rx="28" fill="url(#bg)"/>
+  <path d="M45 345H595" stroke="#bdd0dc" stroke-width="8" stroke-linecap="round"/>
+  <g filter="url(#shadow)" stroke-linecap="round" stroke-linejoin="round"><circle cx="320" cy="112" r="34" fill="#efc6a7" stroke="#17344d" stroke-width="7"/><rect x="282" y="148" width="76" height="112" rx="28" fill="url(#shirt)" stroke="#17344d" stroke-width="7"/><path d="M288 175 220 205M352 175l78-20" stroke="#efc6a7" stroke-width="22"/><path d="M304 258 254 332 200 346M345 258l66 62 72 10" stroke="#17344d" stroke-width="24"/><path d="M438 110v232" stroke="#6e899d" stroke-width="12"/></g>
+</svg>
