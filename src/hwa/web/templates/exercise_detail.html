@@ -3,73 +3,111 @@
 {% block title %}{{ exercise.display_name }} · Getfit{% endblock %}
 
 {% block content %}
-<section class="exercise-detail-grid" data-exercise-id="{{ exercise.exercise_id }}">
-  <article class="card" data-media-state="{{ 'available' if exercise.media.available else 'unavailable' }}">
-    <p class="eyebrow">{{ exercise.movement_family }}</p>
-    <h2>{{ exercise.display_name }}</h2>
-    <div class="target-chip-row">
-      <span class="target-chip">{{ exercise.body_area }}</span>
-      {% if exercise.media.available %}
-        <span class="target-chip">Technique media available</span>
-      {% endif %}
+<section class="exercise-detail-shell" data-exercise-id="{{ exercise.exercise_id }}">
+  <header class="exercise-detail-heading">
+    <div>
+      <p class="eyebrow">{{ exercise.movement_family }}</p>
+      <h2>{{ exercise.display_name }}</h2>
+      <p class="muted">{{ exercise.body_area }}</p>
     </div>
+    <a class="ghost-action" href="{{ ingress_url(request, '/library') }}">← Library</a>
+  </header>
 
-    {% if exercise.media.local_demo_path %}
-      <div class="exercise-demo" data-local-demo="{{ ingress_url(request, exercise.media.local_demo_path) }}"></div>
-    {% else %}
-      <div class="exercise-demo-fallback">
-        <div class="exercise-demo-fallback__icon" aria-hidden="true">
-          <svg viewBox="0 0 120 120">
-            <path d="M18 48v24M27 40v40M93 40v40M102 48v24M27 60h66"/>
-            <circle cx="60" cy="27" r="9"/>
-            <path d="M60 36v29M46 48l14 10 14-10M60 65 48 92M60 65l14 27"/>
-          </svg>
+  <div class="exercise-detail-grid">
+    <article class="exercise-media-card" data-media-state="{{ 'available' if exercise.media.available else 'unavailable' }}">
+      <nav class="exercise-media-tabs" aria-label="Exercise guidance modes">
+        <button type="button" class="exercise-media-tab is-active" data-media-tab="images">Images</button>
+        <button type="button" class="exercise-media-tab" data-media-tab="technique">Technique</button>
+        <button type="button" class="exercise-media-tab" data-media-tab="video">Video</button>
+      </nav>
+
+      <section class="exercise-media-panel" data-media-panel="images">
+        {% if exercise.media.phase_demo_paths %}
+        <div class="exercise-phase-grid">
+          {% for path in exercise.media.phase_demo_paths %}
+          <figure class="exercise-phase">
+            <img src="{{ ingress_url(request, path) }}" alt="{{ exercise.display_name }} — {{ exercise.media.phase_labels[loop.index0] }}" loading="eager">
+            <figcaption>
+              <span>{{ loop.index }}.</span>
+              <strong>{{ exercise.media.phase_labels[loop.index0] }}</strong>
+            </figcaption>
+          </figure>
+          {% endfor %}
         </div>
-      </div>
-    {% endif %}
+        {% elif exercise.media.local_demo_path %}
+        <figure class="exercise-single-demo">
+          <img src="{{ ingress_url(request, exercise.media.local_demo_path) }}" alt="{{ exercise.display_name }} visual guide" loading="eager">
+          <figcaption>Use the visual as a positioning guide alongside the approved technique cues.</figcaption>
+        </figure>
+        {% else %}
+        <div class="exercise-media-fallback">
+          <strong>Visual guide not yet approved</strong>
+          <p>The movement remains available in your programme. Technique cues below are still authoritative.</p>
+        </div>
+        {% endif %}
+      </section>
 
-    {% if exercise.media.approved_external_video_url %}
-      <p><a class="secondary-action" href="{{ exercise.media.approved_external_video_url }}" rel="noopener noreferrer">Watch approved technique video ↗</a></p>
-    {% endif %}
+      <section class="exercise-media-panel" data-media-panel="technique" hidden>
+        <div class="exercise-technique-panel">
+          <p class="eyebrow">Technique checklist</p>
+          <h3>Move with control.</h3>
+          {% if exercise.technique_cues %}
+          <ul class="cue-list cue-list--checks">
+            {% for cue in exercise.technique_cues %}<li>{{ cue }}</li>{% endfor %}
+          </ul>
+          {% else %}
+          <p class="muted">No additional coaching cues are approved for this movement yet.</p>
+          {% endif %}
+        </div>
+      </section>
 
-    {% if not exercise.media.available %}
-      <p class="muted"><strong>Media unavailable.</strong> You can still complete this exercise using the approved workout prescription. Missing technique media never changes or blocks the workout.</p>
-    {% endif %}
+      <section class="exercise-media-panel" data-media-panel="video" hidden>
+        <div class="exercise-video-panel">
+          <div class="exercise-video-panel__icon" aria-hidden="true">▶</div>
+          {% if exercise.media.approved_external_video_url %}
+          <h3>Approved technique video</h3>
+          <p class="muted">Opens the approved external coaching source in a new tab.</p>
+          <a class="primary-action" href="{{ exercise.media.approved_external_video_url }}" rel="noopener noreferrer" target="_blank">Watch video ↗</a>
+          {% else %}
+          <h3>No approved external video configured</h3>
+          <p class="muted">The local Images and Technique guidance are available now. Getfit does not invent or silently substitute external links.</p>
+          {% endif %}
+        </div>
+      </section>
+    </article>
 
-    <a class="ghost-action" href="{{ ingress_url(request, '/library') }}">← Back to Library</a>
-  </article>
+    <aside class="exercise-coaching-card">
+      <section>
+        <p class="eyebrow">Technique</p>
+        <h3>Key coaching points</h3>
+        {% if exercise.technique_cues %}
+        <ul class="cue-list cue-list--checks">
+          {% for cue in exercise.technique_cues %}<li>{{ cue }}</li>{% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No additional technique cues are approved for this movement yet.</p>
+        {% endif %}
+      </section>
 
-  <aside class="card">
-    <p class="eyebrow">Technique cues</p>
-    <h2>Move with control.</h2>
-    {% if exercise.technique_cues %}
-      <ul class="cue-list">
-        {% for cue in exercise.technique_cues %}<li>{{ cue }}</li>{% endfor %}
-      </ul>
-    {% else %}
-      <p class="muted">No additional technique cues are approved for this movement yet.</p>
-    {% endif %}
-
-    <div class="section-heading">
-      <div>
+      <section class="exercise-history-section">
         <p class="eyebrow">My history</p>
         <h3>Recent evidence</h3>
-      </div>
-    </div>
-    <div class="exercise-history-list">
-      {% for row in exercise_history[:5] %}
-      <div class="exercise-history-row">
-        <span>{{ row.performed_at.strftime('%d %b %Y') }}</span>
-        <strong>
-          {% if row.max_recorded_load_kg is not none %}{{ row.max_recorded_load_kg }} kg · {% endif %}
-          {% if row.total_reps %}{{ row.total_reps }} reps{% elif row.total_duration_seconds %}{{ row.total_duration_seconds }} sec{% else %}{{ row.completed_sets }} sets{% endif %}
-        </strong>
-      </div>
-      {% else %}
-      <p class="muted">Complete this movement in a workout to build personal history.</p>
-      {% endfor %}
-    </div>
-  </aside>
+        <div class="exercise-history-list">
+          {% for row in exercise_history[:5] %}
+          <div class="exercise-history-row">
+            <span>{{ row.performed_at.strftime('%d %b %Y') }}</span>
+            <strong>
+              {% if row.max_recorded_load_kg is not none %}{{ row.max_recorded_load_kg }} kg · {% endif %}
+              {% if row.total_reps %}{{ row.total_reps }} reps{% elif row.total_duration_seconds %}{{ row.total_duration_seconds }} sec{% else %}{{ row.completed_sets }} sets{% endif %}
+            </strong>
+          </div>
+          {% else %}
+          <p class="muted">Complete this movement in a workout to build personal history.</p>
+          {% endfor %}
+        </div>
+      </section>
+    </aside>
+  </div>
 </section>
 {% endblock %}
 
