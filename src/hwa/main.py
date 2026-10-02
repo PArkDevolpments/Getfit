@@ -18,7 +18,7 @@ from hwa.web.dependencies import WebIdentitySetupRequired
 from hwa.web.router import router as product_web_router
 from hwa.web.setup import setup_required_exception_handler
 
-APP_VERSION = "0.1.19"
+APP_VERSION = "0.1.20"
 _WEB_DIR = Path(__file__).parent / "web"
 
 
