@@ -166,11 +166,24 @@
     if (criterionId === 'LIBRARY-02') return ['exercise-detail'];
     if (criterionId.startsWith('SETTINGS-')) return ['settings'];
 
-    if (
-      criterionId === 'REGRESSION-01'
-      || criterionId === 'REGRESSION-04'
-      || criterionId === 'REGRESSION-05'
-    ) return ['today'];
+    if (criterionId === 'REGRESSION-01' || criterionId === 'REGRESSION-04') {
+      return ['today'];
+    }
+    if (criterionId === 'REGRESSION-05') {
+      return [
+        'today',
+        'strength-active',
+        'strength-feedback',
+        'strength-rest',
+        'bike-finisher',
+        'treadmill',
+        'interval-hard',
+        'interval-recovery',
+        'library',
+        'exercise-detail',
+        'settings',
+      ];
+    }
     if (criterionId === 'REGRESSION-02') return ['strength-active'];
     if (criterionId === 'REGRESSION-03') return ['progress'];
     if (criterionId === 'REGRESSION-06') return ['settings'];
@@ -188,6 +201,47 @@
       profile: profile.key,
       viewport: {width: profile.width, height: profile.height},
     };
+  }
+
+  function auditTouchTargets(documentRef) {
+    const selectors = [
+      '[data-primary-action]',
+      '.complete-set-button',
+      '[data-set-feedback]',
+      '.workout-command-bar button',
+      '.cardio-completion-toggle',
+      '.primary-action',
+      '.secondary-action',
+      '.ghost-action',
+      '.primary-nav__item',
+      '.bottom-nav__item',
+    ];
+    const seen = new Set();
+    const failures = [];
+    let checked = 0;
+
+    for (const node of documentRef.querySelectorAll(selectors.join(','))) {
+      if (seen.has(node)) continue;
+      seen.add(node);
+      const style = documentRef.defaultView?.getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      const visible = style
+        && style.display !== 'none'
+        && style.visibility !== 'hidden'
+        && rect.width > 0
+        && rect.height > 0;
+      if (!visible) continue;
+      checked += 1;
+      if (rect.height < 44 || rect.width < 44) {
+        failures.push({
+          label: (node.textContent || node.getAttribute('aria-label') || node.tagName).trim(),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        });
+      }
+    }
+
+    return {checked, failures};
   }
 
   function evaluateCriterion(criterionId, target, documentRef, pageState, profile) {
@@ -355,12 +409,12 @@
         );
       }
       if (criterionId === 'STRENGTH-07') {
-        const mainRest = documentRef.querySelector('#main-rest-panel');
+        const mainRest = documentRef.querySelector('[data-main-rest-panel]');
         const restText = mainRest?.textContent || '';
         return automatedResult(
-          mainRest && /01:30/.test(restText) ? 'REVIEW_REQUIRED' : 'FAIL',
+          mainRest && /01:30/.test(restText) ? 'PASS' : 'FAIL',
           mainRest && /01:30/.test(restText)
-            ? 'Dedicated set-complete rest state renders the prescribed 01:30 review countdown.'
+            ? 'Dedicated 01:30 rest state is rendered from the prescribed 75–90 second recovery range.'
             : 'Dedicated 01:30 rest state was not found.',
           profile,
         );
@@ -688,11 +742,18 @@
     }
     if (criterionId === 'REGRESSION-05') {
       const root = documentRef.documentElement;
+      const overflow = root.scrollWidth > root.clientWidth + 4;
+      const touchAudit = auditTouchTargets(documentRef);
+      const failures = touchAudit.failures
+        .map((item) => `${item.label || 'control'} ${item.width}×${item.height}px`)
+        .join(', ');
       return automatedResult(
-        root.scrollWidth > root.clientWidth + 4 ? 'FAIL' : 'REVIEW_REQUIRED',
-        root.scrollWidth > root.clientWidth + 4
-          ? 'Horizontal overflow detected.'
-          : 'No horizontal overflow detected; touch comfort and overall responsive quality require visual review.',
+        overflow || touchAudit.failures.length ? 'FAIL' : 'PASS',
+        overflow
+          ? `Horizontal overflow detected: ${root.scrollWidth}px > ${root.clientWidth}px.`
+          : touchAudit.failures.length
+            ? `Touch targets below 44px detected: ${failures}.`
+            : `No horizontal overflow and ${touchAudit.checked} visible core controls meet the 44px touch-target floor.`,
         profile,
       );
     }
