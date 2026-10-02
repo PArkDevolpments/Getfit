@@ -16,6 +16,7 @@ from hwa.domain.external_context import ExternalContext, build_external_context
 from hwa.domain.identity import PersonContext
 from hwa.integrations.menu.reader import MenuNutritionContext, MenuNutritionReader
 from hwa.integrations.pep.health_reader import PepHealthContext, PepHealthReader
+from hwa.read_models.history import get_exercise_history
 from hwa.services.today import get_today_view
 from hwa.services.workout_drafts import get_active_draft
 from hwa.web.context import build_page_context
@@ -233,6 +234,7 @@ def exercise_detail(
             "page": build_page_context(person, "library"),
             "person": person,
             "exercise": exercise,
+            "exercise_history": get_exercise_history(\n                session, person.hwa_person_id, exercise_id\n            ),
         },
     )
 
