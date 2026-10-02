@@ -1056,15 +1056,16 @@
     ].join('');
   }
 
-  async function runCapture(profiles) {
+  async function runCapture(profiles, {automated = false} = {}) {
     cancelled = false;
     resetTargetStates();
-    captureAllButton.disabled = true;
+    if (automatedAuditButton) automatedAuditButton.disabled = true;
     responsiveButton.disabled = true;
     cancelButton.hidden = false;
     setProgress(0, targets.length * profiles.length);
     const files = [];
     const captures = [];
+    const auditSamples = [];
     let completed = 0;
 
     try {
@@ -1078,6 +1079,26 @@
           await loadTarget(target, profile);
 
           const pageState = detectPageState(target);
+          if (automated) {
+            const documentRef = frame.contentDocument;
+            for (const gate of acceptanceSpecification.gates || []) {
+              for (const criterion of gate.criteria || []) {
+                if (criterionTargetKey(criterion.criterion_id) !== target.key) continue;
+                const result = evaluateCriterion(
+                  criterion.criterion_id,
+                  target,
+                  documentRef,
+                  pageState,
+                  profile,
+                );
+                auditSamples.push({
+                  criterion_id: criterion.criterion_id,
+                  gate_id: gate.gate_id,
+                  ...result,
+                });
+              }
+            }
+          }
           setMessage(`Capturing ${target.label} · ${profile.label}…`);
           const shot = await renderDocumentToSvg(profile);
           const fileName = `screenshots/${String(completed + 1).padStart(2, '0')}-${slug(target.key)}-${slug(profile.key)}.svg`;
@@ -1129,10 +1150,10 @@
       };
 
       const encoder = new TextEncoder();
-      const acceptanceSpecification = acceptanceSpecNode
-        ? JSON.parse(acceptanceSpecNode.textContent || '{}')
-        : {};
       const acceptanceResults = getAcceptanceResults();
+      const automatedResults = automated
+        ? aggregateAutomatedResults(auditSamples)
+        : {};
       files.push({
         name: 'acceptance-specification.json',
         data: encoder.encode(JSON.stringify(acceptanceSpecification, null, 2)),
@@ -1141,6 +1162,22 @@
         name: 'acceptance-results.json',
         data: encoder.encode(JSON.stringify(acceptanceResults, null, 2)),
       });
+      if (automated) {
+        files.push({
+          name: 'automated-acceptance-results.json',
+          data: encoder.encode(JSON.stringify({
+            format: 'getfit-automated-acceptance-v1',
+            app_version: document.body.dataset.appVersion,
+            spec_version: acceptanceSpecification.spec_version || null,
+            generated_at: new Date().toISOString(),
+            results: automatedResults,
+          }, null, 2)),
+        });
+        files.push({
+          name: 'automated-review-report.html',
+          data: encoder.encode(buildAutomatedReport(automatedResults, captures)),
+        });
+      }
       files.push({
         name: 'review-manifest.json',
         data: encoder.encode(JSON.stringify(manifest, null, 2)),
@@ -1152,7 +1189,9 @@
       files.push({
         name: 'README.txt',
         data: encoder.encode(
-          'Getfit UI Review Pack\n\nUpload this ZIP directly into ChatGPT for visual review against the approved Home Workout Assistant design board.\n\nThe pack contains self-contained SVG visual snapshots at phone, tablet and desktop sizes, the versioned acceptance specification, saved PASS/FAIL/BLOCKED decisions, non-sensitive capture metadata and a local review gallery. SVG is used deliberately so browser canvas security cannot block export. No screen-sharing permission is required. The pack does not contain Home Assistant IDs, integration IDs, credentials or application database content.\n',
+          automated
+            ? 'Getfit Automated Specification Audit Pack\n\nUpload this ZIP directly into ChatGPT. The pack contains the versioned specification, automated PASS/FAIL/BLOCKED/REVIEW_REQUIRED results, responsive SVG evidence and an automated HTML report. No manual pass/fail entry is required before export. REVIEW_REQUIRED means the check is intentionally left for visual/product judgement from the bundled captures rather than unsafe mutation or guesswork.\n'
+            : 'Getfit UI Review Pack\n\nUpload this ZIP directly into ChatGPT for visual review against the approved Home Workout Assistant design board.\n\nThe pack contains self-contained SVG visual snapshots at phone, tablet and desktop sizes, the versioned acceptance specification, saved manual decisions, non-sensitive capture metadata and a local review gallery.\n',
         ),
       });
 
@@ -1164,9 +1203,11 @@
         (capture) => capture.page === 'workout' && capture.page_state === 'empty',
       );
       setMessage(
-        emptyWorkout
-          ? `Done — ${completed} snapshots downloaded. No active workout was captured; start or resume one before the Gate 2 pack.`
-          : `Done — ${completed} visual snapshots downloaded in one ZIP. Upload that ZIP to ChatGPT.`,
+        automated
+          ? `Done — automated specification audit complete with ${completed} visual snapshots. Upload the ZIP to ChatGPT.`
+          : emptyWorkout
+            ? `Done — ${completed} snapshots downloaded. No active workout was captured; start or resume one before the Gate 2 pack.`
+            : `Done — ${completed} visual snapshots downloaded in one ZIP. Upload that ZIP to ChatGPT.`,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Capture failed.';
@@ -1176,18 +1217,23 @@
         if (row?.classList.contains('is-active')) setTargetState(target.key, 'error', 'Failed');
       }
     } finally {
-      captureAllButton.disabled = false;
+      if (automatedAuditButton) automatedAuditButton.disabled = false;
       responsiveButton.disabled = false;
       cancelButton.hidden = true;
     }
   }
 
-  captureAllButton?.addEventListener('click', () => {
-    void runCapture([currentViewportProfile()]);
+  async function runAutomatedAudit() {
+    setMessage('Starting automated specification audit…');
+    await runCapture(fullProfiles, {automated: true});
+  }
+
+  automatedAuditButton?.addEventListener('click', () => {
+    void runAutomatedAudit();
   });
 
   responsiveButton?.addEventListener('click', () => {
-    void runCapture(fullProfiles);
+    void runCapture(fullProfiles, {automated: false});
   });
 
   cancelButton?.addEventListener('click', () => {
