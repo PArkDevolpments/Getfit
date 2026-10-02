@@ -126,29 +126,21 @@
       const clone = clones[index];
       if (!clone) return;
 
-      if (original instanceof HTMLInputElement && clone instanceof HTMLInputElement) {
+      const tag = original.tagName;
+      if (tag === 'INPUT' && clone.tagName === 'INPUT') {
         clone.value = original.value;
         clone.setAttribute('value', original.value);
         if (original.checked) clone.setAttribute('checked', '');
         else clone.removeAttribute('checked');
-      } else if (
-        original instanceof HTMLTextAreaElement
-        && clone instanceof HTMLTextAreaElement
-      ) {
+      } else if (tag === 'TEXTAREA' && clone.tagName === 'TEXTAREA') {
         clone.value = original.value;
         clone.textContent = original.value;
-      } else if (
-        original instanceof HTMLSelectElement
-        && clone instanceof HTMLSelectElement
-      ) {
+      } else if (tag === 'SELECT' && clone.tagName === 'SELECT') {
         Array.from(clone.options).forEach((option, optionIndex) => {
           if (optionIndex === original.selectedIndex) option.setAttribute('selected', '');
           else option.removeAttribute('selected');
         });
-      } else if (
-        original instanceof HTMLDetailsElement
-        && clone instanceof HTMLDetailsElement
-      ) {
+      } else if (tag === 'DETAILS' && clone.tagName === 'DETAILS') {
         if (original.open) clone.setAttribute('open', '');
         else clone.removeAttribute('open');
       }
@@ -161,7 +153,7 @@
 
     originals.forEach((original, index) => {
       const clone = clones[index];
-      if (!(clone instanceof HTMLCanvasElement)) return;
+      if (!clone || clone.tagName !== 'CANVAS') return;
       try {
         const image = original.ownerDocument.createElement('img');
         image.src = original.toDataURL('image/png');
@@ -190,7 +182,7 @@
 
     await Promise.all(originals.map(async (original, index) => {
       const clone = clones[index];
-      if (!(clone instanceof HTMLImageElement)) return;
+      if (!clone || clone.tagName !== 'IMG') return;
       const source = original.currentSrc || original.src;
       if (!source || source.startsWith('data:')) return;
 
@@ -224,7 +216,7 @@
     }
 
     const clonedBody = documentRef.body.cloneNode(true);
-    if (!(clonedBody instanceof HTMLElement)) {
+    if (!clonedBody || clonedBody.nodeType !== Node.ELEMENT_NODE) {
       throw new Error('The Getfit page could not be cloned for capture.');
     }
 
