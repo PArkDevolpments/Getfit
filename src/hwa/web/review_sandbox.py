@@ -6,7 +6,9 @@ the browser audit can render deterministic states without mutating live training
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Literal
 
+from pydantic import JsonValue
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -68,11 +70,11 @@ def build_review_player(
     day = _day(session, day_number)
     strength = get_strength_targets(session, person_id, day.id)
     cardio = get_cardio_targets(session, day.id)
-    state_data: dict[str, object] = {}
+    state_data: dict[str, JsonValue] = {}
 
-    current_kind = "STRENGTH"
+    current_kind: Literal["STRENGTH", "CARDIO"] = "STRENGTH"
     current_sequence = 1
-    current_set_number = 1
+    current_set_number: int | None = 1
     phase = DraftPhase.ACTIVE_SET
 
     if state in {"strength-feedback", "strength-rest"} and strength:
