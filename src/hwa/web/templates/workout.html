@@ -337,7 +337,7 @@
                       min="0"
                       step="0.5"
                       inputmode="decimal"
-                      value="{{ item.load_value if item.load_value is not none else '' }}"
+                      value="{{ clean_number(item.load_value) if item.load_value is not none else '' }}"
                       placeholder="Enter load"
                     >
                   </label>
@@ -365,10 +365,10 @@
           <p class="eyebrow">Set Complete</p>
           <h3>How did that feel?</h3>
           <div class="set-feedback-options">
-            <button type="button" data-set-feedback="too-easy"><span>🙂</span><strong>Too easy</strong></button>
-            <button type="button" data-set-feedback="about-right"><span>😎</span><strong>About right</strong></button>
-            <button type="button" data-set-feedback="too-hard"><span>😣</span><strong>Too hard</strong></button>
-            <button type="button" data-set-feedback="pain"><span>⛔</span><strong>Pain / Stop</strong></button>
+            <button type="button" data-set-feedback="too-easy"><span aria-hidden="true">↓</span><strong>Too easy</strong></button>
+            <button type="button" data-set-feedback="about-right"><span aria-hidden="true">✓</span><strong>About right</strong></button>
+            <button type="button" data-set-feedback="too-hard"><span aria-hidden="true">↑</span><strong>Too hard</strong></button>
+            <button type="button" data-set-feedback="pain"><span aria-hidden="true">!</span><strong>Pain / Stop</strong></button>
           </div>
         </section>
 
