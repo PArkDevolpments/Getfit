@@ -14,7 +14,7 @@ def test_shared_shell_has_premium_design_tokens_and_responsive_navigation() -> N
     css = _text(STATIC / "app.css")
 
     assert 'class="brand-mark"' in base
-    assert 'class="app-header__identity"' in base
+    assert 'class="app-header__person"' in base
     assert 'class="primary-nav__icon"' in base
     for token in (
         "--colour-bg:",
@@ -31,14 +31,28 @@ def test_shared_shell_has_premium_design_tokens_and_responsive_navigation() -> N
     assert "min-height: 48px" in css
 
 
-def test_today_is_a_product_dashboard_not_a_raw_list() -> None:
+def test_today_matches_design_board_home_and_workout_selection_hierarchy() -> None:
     today = _text(TEMPLATES / "foundation.html")
+    css = _text(STATIC / "app.css")
 
-    assert 'class="today-hero' in today
-    assert 'class="week-progress' in today
-    assert 'class="session-card' in today
-    assert 'class="context-grid' in today
-    assert "<ul class=\"workout-list\">" not in today
+    for marker in (
+        'class="home-dashboard"',
+        'class="next-workout-card"',
+        'class="week-status-dots"',
+        'class="prescription-snapshot"',
+        'class="weekly-cardio"',
+        'class="workout-selection"',
+        'class="weekly-goal"',
+    ):
+        assert marker in today
+
+    assert "Progress snapshot" in today
+    assert "Weekly cardio" in today
+    assert "150 minutes of moderate activity" in today
+    assert "progress-orb" not in today
+    assert "--board-panel:" in css
+    assert "--profile-accent:" in css
+    assert 'body[data-profile="female"]' in css
 
 
 def test_workout_has_guided_stage_hierarchy_and_large_live_controls() -> None:

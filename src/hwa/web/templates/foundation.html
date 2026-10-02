@@ -1,37 +1,38 @@
 {% extends "base.html" %}
 
-{% block title %}Today · Getfit{% endblock %}
+{% block title %}Today · Home Workout Assistant{% endblock %}
 
 {% block content %}
-{% set completion_percent = ((today_view.completed_day_count / today_view.available_day_count) * 100) | round | int if today_view.available_day_count else 0 %}
-<section class="card today-hero">
-  <div class="today-hero__content">
-    <div>
-      <p class="eyebrow">Today</p>
+<section class="home-dashboard" aria-label="Today dashboard">
+  <div class="home-dashboard__overview">
+    <article class="home-panel home-panel--primary">
+      <div class="home-greeting">
+        <div>
+          <p class="home-greeting__line"><span id="day-greeting">Good morning</span>,</p>
+          <h2>{{ page.display_name }} <span aria-hidden="true">👋</span></h2>
+        </div>
+        <span class="profile-badge">{{ page.presentation_profile|title }} profile</span>
+      </div>
+
       {% if today_view.week_number is not none and today_view.day_number is not none %}
-        <h2 class="today-hero__title">{{ today_view.title }}</h2>
-        <p class="today-hero__meta">Week {{ today_view.week_number }} · Day {{ today_view.day_number }}</p>
-      {% elif primary_action == "programme_complete" %}
-        <h2 class="today-hero__title">Week 1 complete.</h2>
-        <p class="today-hero__meta">All currently approved programme content has been completed.</p>
-      {% else %}
-        <h2 class="today-hero__title">Programme unavailable.</h2>
-        <p class="today-hero__meta">No approved workout is currently available.</p>
-      {% endif %}
-    </div>
-
-    <div class="week-progress">
-      <div class="week-progress__row">
-        <span>Weekly progress</span>
-        <span>{{ today_view.completed_day_count }} / {{ today_view.available_day_count }} sessions</span>
+      <div class="next-workout-card">
+        <div class="next-workout-card__copy">
+          <p class="card-kicker">Next workout</p>
+          <h3>Week {{ today_view.week_number }} · Day {{ today_view.day_number }}</h3>
+          <p class="next-workout-card__title">{{ today_view.title }}</p>
+          {% if home and home.duration_label %}
+          <p class="next-workout-card__duration">{{ home.duration_label }}</p>
+          {% endif %}
+        </div>
+        <div class="next-workout-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <path d="M9 25v14M16 20v24M48 20v24M55 25v14M16 32h32"/>
+          </svg>
+        </div>
       </div>
-      <div class="progress-track" aria-label="Weekly programme progress">
-        <div class="progress-track__fill" style="width: {{ completion_percent }}%"></div>
-      </div>
-    </div>
 
-    <div class="today-hero__action" id="foundation-primary">
-      {% if primary_action == "start" and primary_day %}
+      <div id="foundation-primary" class="home-primary-action">
+        {% if primary_action == "start" and primary_day %}
         <button
           class="primary-action"
           id="primary-action"
@@ -39,12 +40,9 @@
           data-programme-day-id="{{ primary_day.id }}"
           data-workout-url="{{ ingress_url(request, '/workout') }}"
           type="button"
-        >
-          Start workout
-          <span aria-hidden="true">→</span>
-        </button>
-        <p class="muted" id="action-status">Autosaves as you train. Your workout stays with your account.</p>
-      {% elif primary_action == "resume" and today_view.draft_id %}
+        >Start Workout</button>
+        <p class="action-status" id="action-status">Your workout saves automatically as you train.</p>
+        {% elif primary_action == "resume" and today_view.draft_id %}
         <a
           class="primary-action"
           id="primary-action"
@@ -52,131 +50,197 @@
           data-primary-action="resume"
           data-draft-id="{{ today_view.draft_id }}"
           data-draft-version="{{ today_view.draft_version }}"
-        >
-          Resume workout
-          <span aria-hidden="true">→</span>
-        </a>
-        <p class="muted">Continue from the latest server-saved set.</p>
-      {% elif primary_action == "programme_complete" %}
-        <div class="resume-card" id="primary-action" data-primary-action="programme_complete">
-          <strong>Approved programme complete</strong>
-          <p class="muted">No future training has been invented. New weeks appear only after approved programme material is added.</p>
-        </div>
-      {% else %}
-        <div class="resume-card" id="primary-action" data-primary-action="unavailable">
-          <strong>Workout unavailable</strong>
-          <p class="muted">Training will become available when approved programme content is loaded.</p>
-        </div>
-      {% endif %}
-    </div>
-  </div>
-
-  <div class="today-hero__visual" aria-label="{{ completion_percent }} percent of approved week complete">
-    <div class="progress-orb" style="--progress: {{ completion_percent }}">
-      <div class="progress-orb__inner">
-        <span class="progress-orb__value">{{ completion_percent }}%</span>
-        <span class="progress-orb__label">complete</span>
+        >Resume Workout</a>
+        <p class="action-status">Continue from your latest saved set.</p>
+        {% endif %}
       </div>
-    </div>
-  </div>
-</section>
 
-{% if days %}
-<section aria-labelledby="week-sessions-heading">
-  <div class="section-heading">
-    <div>
-      <p class="eyebrow">Week {{ today_view.week_number or 1 }}</p>
-      <h2 id="week-sessions-heading">Your sessions</h2>
-    </div>
-    <span class="status-pill status-pill--quiet">4-session training rhythm</span>
-  </div>
-  <div class="session-grid">
-    {% for day in days %}
-      <article class="session-card{% if today_view.day_number == day.day_number %} is-current{% endif %}">
-        <div class="session-card__day">
-          <span class="session-card__number">{{ day.day_number }}</span>
-          {% if today_view.day_number == day.day_number %}
-            <span class="status-pill">Current</span>
+      {% if home %}
+      <div class="home-stat-block">
+        <p class="card-kicker">This week</p>
+        <div class="week-status-dots" aria-label="Week {{ today_view.week_number }} session progress">
+          {% for session in home.sessions %}
+          <span
+            class="week-status-dot{% if session.completed %} is-complete{% elif session.current %} is-current{% endif %}"
+            title="Day {{ session.day_number }}{% if session.completed %} complete{% elif session.current %} current{% endif %}"
+          >{% if session.completed %}✓{% endif %}</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="home-stat-block">
+        <p class="card-kicker">Last workout</p>
+        {% if home.last_workout %}
+        <p class="home-stat-copy">{{ home.last_workout.day_label }} completed {{ home.last_workout.weekday_label }}</p>
+        {% else %}
+        <p class="home-stat-copy home-stat-copy--muted">No completed workout yet</p>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% elif primary_action == "programme_complete" %}
+      <div class="next-workout-card">
+        <div class="next-workout-card__copy">
+          <p class="card-kicker">Current programme</p>
+          <h3>Approved Week 1 complete</h3>
+          <p class="next-workout-card__title">All currently approved training has been completed.</p>
+        </div>
+      </div>
+      {% else %}
+      <div class="next-workout-card" id="primary-action" data-primary-action="unavailable">
+        <div class="next-workout-card__copy">
+          <p class="card-kicker">Next workout</p>
+          <h3>Programme unavailable</h3>
+          <p class="next-workout-card__title">No approved workout is currently available.</p>
+        </div>
+      </div>
+      {% endif %}
+    </article>
+
+    <article class="home-panel home-panel--progress">
+      <div class="home-panel__heading">
+        <div>
+          <p class="card-kicker">Progress snapshot</p>
+          <h2>Current targets</h2>
+        </div>
+        <a class="text-link" href="{{ ingress_url(request, '/progress') }}">View progress</a>
+      </div>
+
+      <div class="prescription-snapshot">
+        {% if home and home.prescription_snapshot %}
+          {% for item in home.prescription_snapshot %}
+          <div class="snapshot-row">
+            <span>{{ item.display_name }}</span>
+            <strong>{{ item.load_label }}</strong>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="empty-copy">Your current strength targets will appear here when an approved session is available.</p>
+        {% endif %}
+      </div>
+
+      <div class="weekly-cardio">
+        <div class="weekly-cardio__heading">
+          <span>Weekly cardio</span>
+          {% if home %}
+          <strong>{{ home.weekly_cardio_minutes }} / {{ home.weekly_cardio_goal_minutes }} min</strong>
           {% else %}
-            <span class="metric-caption">Day {{ day.day_number }}</span>
+          <strong>0 / 150 min</strong>
           {% endif %}
         </div>
-        <h3>{{ day.title }}</h3>
-      </article>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
+        <div class="weekly-cardio__track" aria-label="Weekly cardio progress">
+          <span style="width: {{ home.weekly_cardio_percent if home else 0 }}%"></span>
+        </div>
+      </div>
 
-<section class="context-grid" aria-label="Training context">
-  <article class="card context-card" id="external-health-context">
-    <div class="context-card__top">
-      <p class="eyebrow">Health context</p>
-      {% if external_context.health.status == "READY" %}
-        <span class="status-pill status-pill--ready">Connected</span>
-      {% else %}
-        <span class="status-pill status-pill--quiet">Unavailable</span>
-      {% endif %}
-    </div>
-    {% if external_context.health.status == "READY" %}
-      {% if external_context.health.body_mass %}
-        <p class="context-card__value">{{ external_context.health.body_mass.value }} {{ external_context.health.body_mass.unit }}</p>
-        <p class="muted">Latest body mass from Pep Health</p>
-      {% elif external_context.health.sleep_duration %}
-        <p class="context-card__value">{{ external_context.health.sleep_duration.value }} {{ external_context.health.sleep_duration.unit }}</p>
-        <p class="muted">Latest sleep duration</p>
-      {% else %}
-        <p class="muted">Health context is connected, with no supported summary values to show.</p>
-      {% endif %}
-      {% if external_context.health.body_mass and external_context.health.sleep_duration %}
-        <div class="context-stats">
+      <div class="home-context-strip">
+        <div id="external-health-context">
+          <p class="card-kicker">Health context</p>
+          {% if external_context.health.status == "READY" and external_context.health.body_mass %}
+          <strong>{{ external_context.health.body_mass.value }} {{ external_context.health.body_mass.unit }}</strong>
+          {% if external_context.health.sleep_duration %}
           <span>{{ external_context.health.sleep_duration.value }} {{ external_context.health.sleep_duration.unit }} sleep</span>
+          {% else %}
+          <span>Latest body mass</span>
+          {% endif %}
+          {% elif external_context.health.status == "READY" and external_context.health.sleep_duration %}
+          <strong>{{ external_context.health.sleep_duration.value }} {{ external_context.health.sleep_duration.unit }}</strong>
+          <span>Latest sleep</span>
+          {% else %}
+          <strong>—</strong>
+          <span>Health context unavailable</span>
+          {% endif %}
         </div>
-      {% endif %}
-    {% else %}
-      <p class="context-card__value">—</p>
-      <p class="muted">Health context unavailable. Your workout remains fully usable.</p>
-    {% endif %}
-  </article>
 
-  <article class="card context-card" id="external-nutrition-context">
-    <div class="context-card__top">
-      <p class="eyebrow">Nutrition context</p>
-      {% if external_context.nutrition.status == "READY" %}
-        <span class="status-pill status-pill--ready">Connected</span>
+        <div id="external-nutrition-context">
+          <p class="card-kicker">Nutrition context</p>
+          {% if external_context.nutrition.status == "READY" and external_context.nutrition.current_target %}
+          <strong>{{ external_context.nutrition.current_target.calories_kcal|int }} kcal target</strong>
+          <span>{{ external_context.nutrition.current_target.protein_g|int }} g protein</span>
+          {% elif external_context.nutrition.status == "READY" and external_context.nutrition.latest_day and external_context.nutrition.latest_day.energy_consumed_kcal is not none %}
+          <strong>{{ external_context.nutrition.latest_day.energy_consumed_kcal|int }} kcal</strong>
+          <span>Latest logged intake</span>
+          {% else %}
+          <strong>—</strong>
+          <span>Nutrition context unavailable</span>
+          {% endif %}
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <aside class="workout-selection" aria-labelledby="week-selection-title">
+    <div class="workout-selection__header">
+      <span class="workout-selection__arrow" aria-hidden="true">‹</span>
+      <div>
+        <p class="card-kicker">Workout selection</p>
+        <h2 id="week-selection-title">Week {{ today_view.week_number or 1 }}</h2>
+      </div>
+      <span class="workout-selection__arrow" aria-hidden="true">›</span>
+    </div>
+
+    <div class="workout-selection__list">
+      {% if home %}
+      {% for session in home.sessions %}
+      <article class="workout-select-row{% if session.current %} is-current{% endif %}{% if session.completed %} is-complete{% endif %}">
+        <div class="workout-select-row__icon workout-select-row__icon--day-{{ session.day_number }}" aria-hidden="true">
+          {% if session.day_number == 1 %}
+          <svg viewBox="0 0 48 48"><path d="M6 18v12M12 14v20M36 14v20M42 18v12M12 24h24"/></svg>
+          {% elif session.day_number == 2 %}
+          <svg viewBox="0 0 48 48"><circle cx="27" cy="9" r="4"/><path d="m24 15-7 8 8 5 5 9M23 18l9 5 6-2M19 24 10 35"/></svg>
+          {% elif session.day_number == 3 %}
+          <svg viewBox="0 0 48 48"><circle cx="13" cy="34" r="8"/><circle cx="36" cy="34" r="8"/><path d="M13 34 21 21h10l5 13M21 21l8 13H13M22 17h7"/></svg>
+          {% else %}
+          <svg viewBox="0 0 48 48"><path d="M9 38V24M16 38V16M23 38V27M30 38V10M37 38V20"/></svg>
+          {% endif %}
+        </div>
+        <div class="workout-select-row__copy">
+          <strong>Day {{ session.day_number }}</strong>
+          <span>{{ session.title }}</span>
+          {% if session.duration_label %}<small>{{ session.duration_label }}</small>{% endif %}
+        </div>
+        <div class="workout-select-row__state" aria-hidden="true">
+          {% if session.completed %}✓{% elif session.current %}→{% else %}›{% endif %}
+        </div>
+      </article>
+      {% endfor %}
       {% else %}
-        <span class="status-pill status-pill--quiet">Unavailable</span>
+      <p class="empty-copy">No approved Week 1 sessions are available.</p>
       {% endif %}
     </div>
-    {% if external_context.nutrition.status == "READY" %}
-      {% if external_context.nutrition.current_target %}
-        <p class="context-card__value">{{ external_context.nutrition.current_target.calories_kcal|int }} kcal target</p>
-        <div class="context-stats">
-          <span>{{ external_context.nutrition.current_target.protein_g|int }} g protein</span>
-          <span>{{ external_context.nutrition.current_target.carbohydrate_g|int }} g carbs</span>
-          <span>{{ external_context.nutrition.current_target.fat_g|int }} g fat</span>
+
+    <article class="weekly-goal">
+      <div class="weekly-goal__icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="10"/><path d="m24 24 14-14M34 10h6v6"/></svg>
+      </div>
+      <div class="weekly-goal__copy">
+        <p class="card-kicker">Weekly Goal</p>
+        <strong>150 minutes of moderate activity</strong>
+        <span>+ 2–4 strength sessions</span>
+      </div>
+      <div class="weekly-goal__progress">
+        <div class="weekly-cardio__track">
+          <span style="width: {{ home.weekly_cardio_percent if home else 0 }}%"></span>
         </div>
-      {% elif external_context.nutrition.latest_day and external_context.nutrition.latest_day.energy_consumed_kcal is not none %}
-        <p class="context-card__value">{{ external_context.nutrition.latest_day.energy_consumed_kcal|int }} kcal</p>
-        <p class="muted">Logged on {{ external_context.nutrition.latest_day.date }}</p>
-      {% else %}
-        <p class="muted">Nutrition context is connected, with no supported summary values to show.</p>
-      {% endif %}
-    {% else %}
-      <p class="context-card__value">—</p>
-      <p class="muted">Nutrition context unavailable. Training evidence is unaffected.</p>
-    {% endif %}
-  </article>
+        <strong>{{ home.weekly_cardio_minutes if home else 0 }} / 150 min</strong>
+      </div>
+    </article>
+  </aside>
 </section>
 {% endblock %}
 
 {% block scripts %}
-{% if primary_action == "start" and primary_day %}
 <script>
 (() => {
+  const greeting = document.getElementById('day-greeting');
+  if (greeting) {
+    const hour = new Date().getHours();
+    greeting.textContent = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  }
+
   const button = document.getElementById('primary-action');
   const status = document.getElementById('action-status');
-  if (!button || !status) return;
+  if (!button || button.dataset.primaryAction !== 'start' || !status) return;
+
   button.addEventListener('click', async () => {
     button.disabled = true;
     status.textContent = 'Starting workout…';
@@ -199,5 +263,4 @@
   });
 })();
 </script>
-{% endif %}
 {% endblock %}
