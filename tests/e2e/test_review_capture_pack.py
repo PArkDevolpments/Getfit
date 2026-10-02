@@ -62,6 +62,8 @@ def test_automated_audit_tracks_current_workout_dom_contracts() -> None:
     assert "querySelector('[data-main-rest-panel]')" in script
     assert "Dedicated 01:30 rest state" in script
     assert "mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL'" in script
+    assert "clipped below the active viewport" in script
+    assert "clipped below the phone viewport" not in script
     assert "node.dataset.segmentType === 'CONDITIONING'" in script
     assert r"/RPE\s*7(?:\.0+)?–8(?:\.0+)?/" in script
     assert r"/RPE\s*2(?:\.0+)?–3(?:\.0+)?/" in script
@@ -81,7 +83,7 @@ def test_automated_audit_measures_core_touch_targets_across_product_states() -> 
     assert "touchAudit.failures.length ? 'FAIL' : 'PASS'" in script
 
 
-def test_strength_feedback_and_rest_audit_require_phone_viewport_visibility() -> None:
+def test_strength_feedback_and_rest_audit_require_active_viewport_visibility() -> None:
     script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
 
     assert "function fullyVisible" in script
