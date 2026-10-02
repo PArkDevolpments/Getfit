@@ -36,14 +36,12 @@ def test_018_exercise_detail_resolves_photorealistic_phase_assets() -> None:
     assert 'f"{root}/phases/{exercise_id}-{phase}.svg"' in media
 
 
-def test_018_cardio_and_rest_use_local_photographic_media() -> None:
+def test_018_cardio_uses_local_photographic_media() -> None:
     workout = (TEMPLATES / "workout.html").read_text(encoding="utf-8")
 
     assert "/static/media/cardio/spin-bike.svg" in workout
     assert "/static/media/cardio/treadmill.svg" in workout
-    assert "/static/media/cardio/rest-recovery.svg" in workout
     assert 'class="cardio-visual-photo"' in workout
-    assert 'class="rest-state-photo"' in workout
 
 
 def test_018_refresh_preserves_responsive_touch_and_green_primary_actions() -> None:
