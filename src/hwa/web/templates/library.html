@@ -34,9 +34,13 @@
         <p class="exercise-card__meta">{{ exercise.body_area }}</p>
       </div>
       <div class="exercise-card__footer">
+        {% if exercise.media.available %}
         <span class="status-pill status-pill--ready">
           {% if exercise.media.phase_demo_paths %}Step-by-step demo{% else %}Visual guide{% endif %}
         </span>
+        {% else %}
+        <span class="status-pill status-pill--quiet">Media unavailable</span>
+        {% endif %}
         <a class="exercise-card__open" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">View →</a>
       </div>
     </div>
