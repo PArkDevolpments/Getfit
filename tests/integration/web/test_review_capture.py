@@ -55,7 +55,7 @@ def test_review_capture_is_authenticated_person_scoped_tool(tmp_path) -> None:
         html = response.text
         assert "UI Review Pack" in html
         assert "Kris" in html
-        assert "Capture all pages" in html
+        assert "Run automated specification audit" in html
         assert "Phone" in html
         assert "Tablet" in html
         assert "Desktop" in html
