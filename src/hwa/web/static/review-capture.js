@@ -147,23 +147,31 @@
     });
   }
 
-  function syncCanvasState(originalRoot, clonedRoot) {
+  function replaceCanvasState(originalRoot, clonedRoot) {
     const originals = Array.from(originalRoot.querySelectorAll('canvas'));
     const clones = Array.from(clonedRoot.querySelectorAll('canvas'));
 
     originals.forEach((original, index) => {
       const clone = clones[index];
       if (!clone || clone.tagName !== 'CANVAS') return;
-      try {
-        const image = original.ownerDocument.createElement('img');
-        image.src = original.toDataURL('image/png');
-        image.width = original.width;
-        image.height = original.height;
-        image.setAttribute('style', original.getAttribute('style') || '');
-        clone.replaceWith(image);
-      } catch (_) {
-        // A tainted optional canvas remains blank rather than failing the pack.
-      }
+      const placeholder = original.ownerDocument.createElement('div');
+      placeholder.textContent = 'Canvas visual unavailable in review snapshot';
+      placeholder.setAttribute(
+        'style',
+        [
+          original.getAttribute('style') || '',
+          `width:${original.clientWidth || original.width || 320}px`,
+          `height:${original.clientHeight || original.height || 180}px`,
+          'display:grid',
+          'place-items:center',
+          'border:1px dashed #8aa6b8',
+          'border-radius:10px',
+          'color:#60778c',
+          'background:#eef5fa',
+          'font:600 12px system-ui,sans-serif',
+        ].join(';'),
+      );
+      clone.replaceWith(placeholder);
     });
   }
 
@@ -209,7 +217,7 @@
     }
   }
 
-  async function renderDocumentToPng(profile) {
+  async function renderDocumentToSvg(profile) {
     const documentRef = frame.contentDocument;
     if (!documentRef?.documentElement || !documentRef.body) {
       throw new Error('The Getfit page could not be read for capture.');
@@ -222,7 +230,7 @@
 
     copyDocumentAttributes(documentRef, clonedBody);
     syncFormState(documentRef.body, clonedBody);
-    syncCanvasState(documentRef.body, clonedBody);
+    replaceCanvasState(documentRef.body, clonedBody);
     removeNonVisualNodes(clonedBody);
     await inlineImages(documentRef.body, clonedBody);
 
@@ -237,13 +245,16 @@
     const xhtmlDocument = document.implementation.createHTMLDocument('Getfit capture');
     const wrapper = xhtmlDocument.createElement('div');
     wrapper.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-    wrapper.style.width = `${fullWidth}px`;
-    wrapper.style.minHeight = `${fullHeight}px`;
+    wrapper.setAttribute(
+      'style',
+      `width:${fullWidth}px;min-height:${fullHeight}px;overflow:hidden;`,
+    );
 
     const style = xhtmlDocument.createElement('style');
     style.textContent = [
       ':root{color-scheme:normal;}',
       'html,body{margin:0!important;width:100%!important;min-height:100%!important;}',
+      '*{animation:none!important;transition:none!important;caret-color:transparent!important;}',
       css,
     ].join('\n');
     wrapper.appendChild(style);
@@ -258,49 +269,11 @@
       '</svg>',
     ].join('');
 
-    const svgUrl = URL.createObjectURL(
-      new Blob([svg], {type: 'image/svg+xml;charset=utf-8'}),
-    );
-
-    try {
-      const image = new Image();
-      await new Promise((resolve, reject) => {
-        const timeout = window.setTimeout(
-          () => reject(new Error('Timed out rendering the page snapshot.')),
-          15000,
-        );
-        image.onload = () => {
-          window.clearTimeout(timeout);
-          resolve();
-        };
-        image.onerror = () => {
-          window.clearTimeout(timeout);
-          reject(new Error('Browser could not rasterise the page snapshot.'));
-        };
-        image.src = svgUrl;
-      });
-
-      const canvas = document.createElement('canvas');
-      canvas.width = fullWidth;
-      canvas.height = fullHeight;
-      const context = canvas.getContext('2d', {alpha: false});
-      if (!context) throw new Error('Canvas rendering is not available.');
-
-      context.fillStyle = '#ffffff';
-      context.fillRect(0, 0, fullWidth, fullHeight);
-      context.drawImage(image, 0, 0, fullWidth, fullHeight);
-
-      const blob = await new Promise((resolve, reject) => {
-        canvas.toBlob(
-          (value) => value ? resolve(value) : reject(new Error('PNG capture failed.')),
-          'image/png',
-        );
-      });
-
-      return {blob, width: fullWidth, height: fullHeight};
-    } finally {
-      URL.revokeObjectURL(svgUrl);
-    }
+    return {
+      blob: new Blob([svg], {type: 'image/svg+xml;charset=utf-8'}),
+      width: fullWidth,
+      height: fullHeight,
+    };
   }
 
   function uint16(value) {
@@ -456,6 +429,33 @@
     window.setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
+
+  function buildReviewGallery(captures) {
+    const cards = captures.map((capture) => [
+      '<article class="capture-card">',
+      `<h2>${capture.page_label} · ${capture.profile_label}</h2>`,
+      `<p>${capture.width} × ${capture.height}</p>`,
+      `<img src="${capture.file}" alt="${capture.page_label} ${capture.profile_label} review snapshot">`,
+      '</article>',
+    ].join('')).join('');
+
+    return [
+      '<!doctype html><html lang="en-GB"><head><meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width,initial-scale=1">',
+      '<title>Getfit UI Review Gallery</title>',
+      '<style>',
+      'body{margin:0;padding:24px;background:#061321;color:#eaf6ff;font-family:system-ui,sans-serif}',
+      'header{max-width:1200px;margin:0 auto 24px}h1{margin:0 0 8px}p{color:#9eb8ca}',
+      '.grid{max-width:1200px;margin:auto;display:grid;gap:20px}',
+      '.capture-card{padding:14px;border:1px solid #21415a;border-radius:16px;background:#0a2033}',
+      '.capture-card h2{margin:0;font-size:16px}.capture-card p{margin:4px 0 12px;font-size:12px}',
+      '.capture-card img{display:block;width:100%;height:auto;border-radius:10px;background:white}',
+      '</style></head><body><header><h1>Getfit UI Review Gallery</h1>',
+      '<p>Open this file after extracting the ZIP to browse every captured surface.</p>',
+      '</header><main class="grid">', cards, '</main></body></html>',
+    ].join('');
+  }
+
   async function runCapture(profiles) {
     cancelled = false;
     resetTargetStates();
@@ -478,8 +478,8 @@
           await loadTarget(target, profile);
 
           setMessage(`Capturing ${target.label} · ${profile.label}…`);
-          const shot = await renderDocumentToPng(profile);
-          const fileName = `screenshots/${String(completed + 1).padStart(2, '0')}-${slug(target.key)}-${slug(profile.key)}.png`;
+          const shot = await renderDocumentToSvg(profile);
+          const fileName = `screenshots/${String(completed + 1).padStart(2, '0')}-${slug(target.key)}-${slug(profile.key)}.svg`;
           files.push({name: fileName, data: shot.blob});
           captures.push({
             page: target.key,
@@ -498,8 +498,8 @@
       }
 
       const manifest = {
-        format: 'getfit-ui-review-pack-v2',
-        capture_method: 'same-origin-dom-raster',
+        format: 'getfit-ui-review-pack-v3',
+        capture_method: 'same-origin-dom-vector',
         app_version: document.body.dataset.appVersion,
         display_name: document.body.dataset.displayName,
         presentation_profile: document.body.dataset.presentationProfile,
@@ -511,7 +511,7 @@
           device_pixel_ratio: window.devicePixelRatio,
         },
         captures,
-        screenshot_count: files.length,
+        snapshot_count: files.length,
       };
 
       const encoder = new TextEncoder();
@@ -520,9 +520,13 @@
         data: encoder.encode(JSON.stringify(manifest, null, 2)),
       });
       files.push({
+        name: 'review-gallery.html',
+        data: encoder.encode(buildReviewGallery(captures)),
+      });
+      files.push({
         name: 'README.txt',
         data: encoder.encode(
-          'Getfit UI Review Pack\n\nUpload this ZIP directly into ChatGPT for visual review against the approved Home Workout Assistant design board.\n\nScreenshots are generated from the same-origin rendered Getfit DOM. No screen-sharing permission is required. The pack contains rendered screenshots plus non-sensitive capture metadata. It does not contain Home Assistant IDs, integration IDs, credentials or application database content.\n',
+          'Getfit UI Review Pack\n\nUpload this ZIP directly into ChatGPT for visual review against the approved Home Workout Assistant design board.\n\nThe pack contains self-contained SVG visual snapshots at phone, tablet and desktop sizes plus non-sensitive capture metadata and a local review gallery. SVG is used deliberately so browser canvas security cannot block export. No screen-sharing permission is required. The pack does not contain Home Assistant IDs, integration IDs, credentials or application database content.\n',
         ),
       });
 
@@ -530,7 +534,7 @@
       const zip = await createZip(files);
       downloadZip(zip);
       setProgress(1, 1);
-      setMessage(`Done — ${completed} screenshots downloaded in one ZIP. Upload that ZIP to ChatGPT.`);
+      setMessage(`Done — ${completed} visual snapshots downloaded in one ZIP. Upload that ZIP to ChatGPT.`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Capture failed.';
       setMessage(message);
