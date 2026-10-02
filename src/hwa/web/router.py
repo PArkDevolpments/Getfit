@@ -234,7 +234,11 @@ def exercise_detail(
             "page": build_page_context(person, "library"),
             "person": person,
             "exercise": exercise,
-            "exercise_history": get_exercise_history(\n                session, person.hwa_person_id, exercise_id\n            ),
+            "exercise_history": get_exercise_history(
+                session,
+                person.hwa_person_id,
+                exercise_id,
+            ),
         },
     )
 
