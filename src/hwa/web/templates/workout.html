@@ -366,9 +366,6 @@
         </section>
 
         <section class="main-rest-panel" data-main-rest-panel {% if review_state|default('') != 'strength-rest' %}hidden{% endif %}>
-          <div class="rest-state-photo" aria-hidden="true">
-            <img src="{{ ingress_url(request, '/static/media/cardio/rest-recovery.svg') }}" alt="">
-          </div>
           <p class="eyebrow">Rest</p>
           <div class="main-rest-ring">
             <strong data-rest-display>{% if review_state|default('') == 'strength-rest' %}01:30{% else %}00:00{% endif %}</strong>
