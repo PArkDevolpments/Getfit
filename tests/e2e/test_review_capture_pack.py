@@ -65,3 +65,14 @@ def test_automated_audit_tracks_current_workout_dom_contracts() -> None:
     assert "node.dataset.segmentType === 'CONDITIONING'" in script
     assert r"/RPE\s*7(?:\.0+)?–8(?:\.0+)?/" in script
     assert r"/RPE\s*2(?:\.0+)?–3(?:\.0+)?/" in script
+
+
+def test_automated_audit_measures_core_touch_targets_across_product_states() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "function auditTouchTargets" in script
+    assert "rect.height < 44 || rect.width < 44" in script
+    assert "'strength-feedback'" in script
+    assert "'interval-hard'" in script
+    assert "'exercise-detail'" in script
+    assert "touchAudit.failures.length ? 'FAIL' : 'PASS'" in script
