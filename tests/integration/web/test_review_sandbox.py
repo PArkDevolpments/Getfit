@@ -1,3 +1,4 @@
+from decimal import Decimal
 from pathlib import Path
 
 from sqlalchemy import func, select
@@ -71,7 +72,7 @@ def test_review_sandbox_uses_week1_authority_without_persisting_workout_state(tm
         assert bike_target.duration_seconds == 900
         assert (bike_target.cadence_rpm_min, bike_target.cadence_rpm_max) == (80, 90)
         assert bike_target.resistance == "moderate"
-        assert str(bike_target.rpe_min) == "5.00"
+        assert bike_target.rpe_min == Decimal("5")
 
         hard_target = next(item for item in hard.cardio if item.segment_type == "INTERVAL_HARD")
         assert hard_target.duration_seconds == 30
