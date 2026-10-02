@@ -871,17 +871,29 @@
   color: #fff;
 }
 
+/* Dedicated feedback/rest state */
 .workout-player.is-set-feedback .strength-item .strength-coach-grid,
 .workout-player.is-resting .strength-item .strength-coach-grid {
-  opacity: .24;
-  filter: saturate(.6);
-  pointer-events: none;
+  display: none;
+}
+
+.workout-player.is-set-feedback .strength-item,
+.workout-player.is-resting .strength-item {
+  padding: clamp(.75rem, 1.8vw, 1.2rem);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(72, 203, 255, .09), transparent 22rem),
+    rgba(7, 23, 38, .94);
 }
 
 .workout-player.is-set-feedback .set-feedback-panel,
 .workout-player.is-resting .main-rest-panel {
   position: relative;
   z-index: 3;
+  width: min(100%, 900px);
+  min-height: clamp(340px, 43vh, 430px);
+  margin: 0 auto;
+  display: grid;
+  align-content: center;
 }
 
 .workout-player.is-set-feedback .workout-layout,
@@ -890,8 +902,15 @@
 }
 
 .workout-player.is-set-feedback .workout-sidebar,
-.workout-player.is-resting .workout-sidebar {
+.workout-player.is-resting .workout-sidebar,
+.workout-player.is-set-feedback .workout-command-bar,
+.workout-player.is-resting .workout-command-bar {
   display: none;
+}
+
+.workout-player.is-set-feedback,
+.workout-player.is-resting {
+  padding-bottom: 1rem;
 }
 
 .cardio-coach-grid {
@@ -1174,41 +1193,20 @@
   min-height: 48px;
 }
 
-/* Mobile dedicated feedback/rest state */
+/* Phone sizing for dedicated feedback/rest state */
 @media (max-width: 700px) {
   .workout-sidebar {
-    display: none;
-  }
-
-  .workout-player.is-set-feedback .strength-item .strength-coach-grid,
-  .workout-player.is-resting .strength-item .strength-coach-grid {
     display: none;
   }
 
   .workout-player.is-set-feedback .strength-item,
   .workout-player.is-resting .strength-item {
     padding: .7rem;
-    background:
-      radial-gradient(circle at 50% 0%, rgba(72, 203, 255, .09), transparent 19rem),
-      rgba(7, 23, 38, .94);
   }
 
   .workout-player.is-set-feedback .set-feedback-panel,
   .workout-player.is-resting .main-rest-panel {
     min-height: 410px;
-    margin-top: 0;
-    display: grid;
-    align-content: center;
-  }
-
-  .workout-player.is-set-feedback .workout-command-bar,
-  .workout-player.is-resting .workout-command-bar {
-    display: none;
-  }
-
-  .workout-player.is-set-feedback,
-  .workout-player.is-resting {
-    padding-bottom: 1rem;
   }
 
   .set-feedback-options button {

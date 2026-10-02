@@ -433,7 +433,7 @@
             : 'FAIL',
           feedback && feedbackVisible && feedbackButtons.length === 4 && touchSized
             ? 'Dedicated set-complete feedback is fully visible with four touch-safe coaching choices.'
-            : 'Set-complete feedback is missing, clipped below the phone viewport, or has undersized choices.',
+            : 'Set-complete feedback is missing, clipped below the active viewport, or has undersized choices.',
           profile,
         );
       }
