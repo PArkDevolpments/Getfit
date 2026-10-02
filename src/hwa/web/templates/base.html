@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Home Workout Assistant{% endblock %}</title>
-  <link rel="stylesheet" href="/static/app.css">
-  {% if page.active_nav == "workout" %}<link rel="stylesheet" href="/static/workout.css">{% endif %}
+  <link rel="stylesheet" href="{{ ingress_url(request, '/static/app.css') }}">
+  {% if page.active_nav == "workout" %}<link rel="stylesheet" href="{{ ingress_url(request, '/static/workout.css') }}">{% endif %}
   {% block styles %}{% endblock %}
 </head>
 <body data-active-nav="{{ page.active_nav }}" data-profile="{{ page.presentation_profile }}">
@@ -24,7 +24,7 @@
     <nav class="primary-nav" aria-label="Primary navigation">
       {% for item in page.navigation %}
         <a
-          href="{{ item.path }}"
+          href="{{ ingress_url(request, item.path) }}"
           class="primary-nav__item{% if item.active %} is-active{% endif %}"
           {% if item.active %}aria-current="page"{% endif %}
         >{{ item.label }}</a>
