@@ -206,7 +206,7 @@
         throw new Error(payload?.detail?.code || 'WORKOUT_COMPLETION_FAILED');
       }
       if (completionStatus) completionStatus.textContent = 'Workout completed and saved.';
-      window.location.assign('/');
+      window.location.assign(player.dataset.todayUrl || './');
     } catch (error) {
       if (completionStatus) {
         completionStatus.textContent = `Workout not completed: ${error.message}. Your draft remains saved.`;
