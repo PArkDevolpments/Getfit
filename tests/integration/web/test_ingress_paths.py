@@ -111,8 +111,7 @@ def test_rendered_product_paths_follow_supervisor_ingress_prefix(tmp_path) -> No
         assert today.status_code == 200
         assert f'href="{prefix}/static/app.css"' in today.text
         assert f'href="{prefix}/workout"' in today.text
-        assert f"fetch('{prefix}/api/v1/workouts/drafts'" not in today.text
-        assert f"fetch('{prefix}/api/v1/workouts/drafts')" in today.text
+        assert f"fetch(\'{prefix}/api/v1/workouts/drafts\')" in today.text
 
         workout = client.get("/workout", headers={"X-Ingress-Path": prefix})
         assert workout.status_code == 200
