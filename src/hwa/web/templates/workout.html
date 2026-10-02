@@ -2,19 +2,41 @@
 
 {% block title %}Workout · Getfit{% endblock %}
 
+{% macro time_label(seconds) -%}
+  {%- if seconds is not none -%}
+    {{ "%02d:%02d"|format((seconds // 60), (seconds % 60)) }}
+  {%- else -%}
+    —
+  {%- endif -%}
+{%- endmacro %}
+
 {% macro cardio_stage(item) %}
 <article
-  class="workout-stage workout-item cardio-item"
+  class="workout-stage workout-item cardio-item{% if item.segment_type|upper == 'INTERVAL_HARD' %} cardio-item--hard{% elif item.segment_type|upper == 'INTERVAL_RECOVERY' %} cardio-item--recovery{% endif %}"
   hidden
   data-kind="CARDIO"
   data-stage-title="{{ item.segment_type.replace('_', ' ').title() }} · {{ item.equipment.replace('_', ' ').title() }}"
   data-item-id="{{ item.item_id }}"
   data-sequence="{{ item.sequence }}"
   data-equipment="{{ item.equipment }}"
+  data-segment-type="{{ item.segment_type|upper }}"
   data-duration-target="{{ item.duration_seconds or 0 }}"
+  data-rounds="{{ item.rounds or 0 }}"
 >
-  <div class="workout-stage__hero">
-    <div class="workout-stage__visual workout-stage__visual--{% if item.equipment == 'SPIN_BIKE' %}bike{% else %}treadmill{% endif %}" aria-hidden="true">
+  {% if item.segment_type|upper == "INTERVAL_HARD" %}
+  <div class="interval-state-banner interval-state-banner--hard">
+    <span>HARD</span>
+    <strong>Round {% if review_state|default('') == 'interval-hard' %}3{% else %}1{% endif %} of {{ item.rounds or 1 }}</strong>
+  </div>
+  {% elif item.segment_type|upper == "INTERVAL_RECOVERY" %}
+  <div class="interval-state-banner interval-state-banner--recovery">
+    <span>RECOVERY</span>
+    <strong>Round {% if review_state|default('') == 'interval-recovery' %}3{% else %}1{% endif %} of {{ item.rounds or 1 }}</strong>
+  </div>
+  {% endif %}
+
+  <div class="cardio-coach-grid">
+    <div class="cardio-visual-card workout-stage__visual workout-stage__visual--{% if item.equipment == 'SPIN_BIKE' %}bike{% else %}treadmill{% endif %}" aria-hidden="true">
       {% if item.equipment == "SPIN_BIKE" %}
       <svg viewBox="0 0 120 120">
         <circle cx="33" cy="84" r="22"/><circle cx="89" cy="84" r="22"/>
@@ -28,29 +50,82 @@
       </svg>
       {% endif %}
     </div>
-    <div class="workout-stage__intro">
-      <p class="eyebrow">{{ item.segment_type.replace('_', ' ') }}</p>
-      <h2>{{ item.equipment.replace('_', ' ').title() }}</h2>
-      <div class="target-chip-row">
-        {% if item.duration_seconds is not none %}<span class="target-chip">{{ item.duration_seconds }} sec</span>{% endif %}
-        {% if item.rounds %}<span class="target-chip">{{ item.rounds }} rounds</span>{% endif %}
-        {% if item.rpe_min is not none %}
-          <span class="target-chip">RPE {{ item.rpe_min }}{% if item.rpe_max is not none and item.rpe_max != item.rpe_min %}–{{ item.rpe_max }}{% endif %}</span>
+
+    <div class="cardio-coach-main">
+      <p class="eyebrow">
+        {% if item.segment_type|upper == "CONDITIONING" %}Bike finisher{% else %}{{ item.segment_type.replace('_', ' ') }}{% endif %}
+      </p>
+      <h2>
+        {% if item.segment_type|upper == "INTERVAL_HARD" %}Push the pace
+        {% elif item.segment_type|upper == "INTERVAL_RECOVERY" %}Recover and reset
+        {% else %}{{ item.equipment.replace('_', ' ').title() }}{% endif %}
+      </h2>
+
+      <div class="cardio-timer cardio-timer--hero" data-cardio-timer>
+        <span class="metric-caption">Time</span>
+        <strong class="cardio-timer__display" data-cardio-display>{{ time_label(item.duration_seconds) }}</strong>
+        {% if not review_mode|default(false) %}
+        <div class="timer-actions">
+          <button class="secondary-action cardio-timer-start" type="button">Start</button>
+          <button class="ghost-action cardio-timer-reset" type="button">Reset</button>
+        </div>
         {% endif %}
       </div>
+
+      <div class="cardio-prescription-grid">
+        {% if item.equipment == "TREADMILL" %}
+        <div>
+          <span>Speed</span>
+          <strong>{% if item.speed_kmh is not none %}{{ item.speed_kmh }} km/h{% else %}Calibrate{% endif %}</strong>
+        </div>
+        <div>
+          <span>Incline</span>
+          <strong>{% if item.incline_percent is not none %}{{ item.incline_percent }}%{% else %}Calibrate{% endif %}</strong>
+        </div>
+        {% else %}
+        <div>
+          <span>Cadence</span>
+          <strong>
+            {% if item.cadence_rpm_min is not none and item.cadence_rpm_max is not none %}
+              {{ item.cadence_rpm_min }}–{{ item.cadence_rpm_max }} rpm
+            {% else %}Calibrate{% endif %}
+          </strong>
+        </div>
+        <div>
+          <span>Resistance</span>
+          <strong>{{ item.resistance|title if item.resistance else "Calibrate" }}</strong>
+        </div>
+        {% endif %}
+        <div>
+          <span>Effort</span>
+          <strong>
+            {% if item.rpe_min is not none %}RPE {{ item.rpe_min }}{% if item.rpe_max is not none and item.rpe_max != item.rpe_min %}–{{ item.rpe_max }}{% endif %}{% else %}—{% endif %}
+          </strong>
+        </div>
+        {% if item.rounds %}
+        <div>
+          <span>Rounds</span>
+          <strong>{{ item.rounds }}</strong>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if item.segment_type|upper == "INTERVAL_HARD" %}
+      <div class="interval-next-card">
+        <span>Next: Recovery</span>
+        <strong>01:30</strong>
+      </div>
+      {% elif item.segment_type|upper == "INTERVAL_RECOVERY" %}
+      <div class="interval-next-card">
+        <span>Next: HARD</span>
+        <strong>00:30</strong>
+      </div>
+      {% endif %}
     </div>
   </div>
 
-  <div class="cardio-live-grid">
-    <div class="cardio-timer" data-cardio-timer>
-      <span class="metric-caption">Timer</span>
-      <strong class="cardio-timer__display" data-cardio-display>00:00</strong>
-      <div class="timer-actions">
-        <button class="secondary-action cardio-timer-start" type="button">Start timer</button>
-        <button class="ghost-action cardio-timer-reset" type="button">Reset</button>
-      </div>
-    </div>
-
+  <details class="actual-entry-panel">
+    <summary>Record actual performance</summary>
     <div class="cardio-targets">
       <label>Duration seconds
         <input name="{{ item.item_id }}-duration" type="number" min="0" inputmode="numeric" value="{{ item.duration_seconds or 0 }}">
@@ -77,9 +152,9 @@
         <input name="{{ item.item_id }}-rpe" type="number" min="1" max="10" step="0.5" inputmode="decimal" placeholder="1–10">
       </label>
     </div>
-  </div>
+  </details>
 
-  <label class="completion-toggle">
+  <label class="completion-toggle cardio-completion-toggle">
     <input name="{{ item.item_id }}-completed" type="checkbox">
     <span>Segment complete</span>
   </label>
@@ -89,9 +164,11 @@
 {% block content %}
 {% if player %}
 <section
-  class="workout-player"
+  class="workout-player{% if review_mode|default(false) %} workout-player--review{% endif %}{% if review_state|default('') == 'strength-feedback' %} is-set-feedback{% elif review_state|default('') == 'strength-rest' %} is-resting{% endif %}"
   id="workout-player"
   data-workout-state="active"
+  data-review-mode="{{ 'true' if review_mode|default(false) else 'false' }}"
+  data-review-state="{{ review_state|default('') }}"
   data-draft-id="{{ player.draft_id }}"
   data-draft-version="{{ player.draft_version }}"
   data-started-at="{{ player.started_at.isoformat() }}"
@@ -100,16 +177,28 @@
   data-programme-day="{{ player.day_number }}"
   data-workout-type="{{ player.workout_type }}"
   data-workout-block="{{ player.block }}"
+  data-current-item-kind="{{ player.snapshot.current_item_kind or '' }}"
+  data-current-sequence="{{ player.snapshot.current_sequence or '' }}"
+  data-current-set-number="{{ player.snapshot.current_set_number or '' }}"
+  {% if not review_mode|default(false) %}
   data-autosave-url="{{ ingress_url(request, '/api/v1/workouts/drafts/' ~ player.draft_id) }}"
   data-complete-url="{{ ingress_url(request, '/api/v1/workouts/drafts/' ~ player.draft_id ~ '/complete') }}"
+  {% endif %}
   data-today-url="{{ ingress_url(request, '/') }}"
 >
+  {% if review_mode|default(false) %}
+  <div class="review-sandbox-banner">
+    <strong>Review sandbox</strong>
+    <span>Read-only state · built from approved Week 1 authority · does not write workout history</span>
+  </div>
+  {% endif %}
+
   <header class="workout-session-header">
     <div>
       <p class="eyebrow">Week {{ player.week_number }} · Day {{ player.day_number }}</p>
       <h2>{{ player.title }}</h2>
     </div>
-    <span class="status-pill status-pill--ready" id="save-status">Saved</span>
+    <span class="status-pill status-pill--ready" id="save-status">{% if review_mode|default(false) %}Review state{% else %}Saved{% endif %}</span>
   </header>
 
   <div class="workout-progress" aria-label="Workout progress">
@@ -139,7 +228,7 @@
         class="workout-stage workout-item strength-item"
         hidden
         data-kind="STRENGTH"
-        data-stage-title="{{ item.exercise_id.replace('-', ' ').replace('_', ' ').title() }}"
+        data-stage-title="{{ item.display_name }}"
         data-item-id="{{ item.item_id }}"
         data-sequence="{{ item.sequence }}"
         data-exercise-id="{{ item.exercise_id }}"
@@ -147,129 +236,146 @@
         data-laterality="{{ item.laterality }}"
         data-load-mode="{{ item.load_mode }}"
         data-load-unit="{{ item.load_unit or '' }}"
-        data-rest-seconds="{{ item.rest_seconds_min or item.rest_seconds_max or 60 }}"
+        data-rest-seconds="{{ item.rest_seconds_max or item.rest_seconds_min or 60 }}"
       >
-        <div class="workout-stage__hero">
-          <div class="workout-stage__visual workout-stage__visual--strength" aria-hidden="true">
-            <svg viewBox="0 0 120 120">
-              <path d="M18 48v24M27 40v40M93 40v40M102 48v24M27 60h66"/>
-              <circle cx="60" cy="28" r="9"/><path d="M60 37v28M46 48l14 10 14-10M60 65 48 91M60 65l14 26"/>
-            </svg>
+        <div class="strength-coach-grid">
+          <div class="strength-media-column">
+            <div class="workout-stage__visual workout-stage__visual--strength">
+              {% if item.media_path %}
+              <img src="{{ ingress_url(request, item.media_path) }}" alt="{{ item.display_name }} demonstration">
+              {% else %}
+              <div class="movement-media-missing">Visual guide unavailable</div>
+              {% endif %}
+            </div>
+            <a class="technique-action" href="{{ ingress_url(request, '/library/' ~ item.exercise_id) }}" target="{% if review_mode|default(false) %}_self{% else %}_blank{% endif %}">
+              <span aria-hidden="true">▶</span> View Technique
+            </a>
           </div>
-          <div class="workout-stage__intro">
+
+          <div class="strength-coach-main">
             <p class="eyebrow">Current exercise</p>
-            <h2>{{ item.exercise_id.replace('-', ' ').replace('_', ' ').title() }}</h2>
-            <div class="target-chip-row">
-              {% if item.load_mode in ["BODYWEIGHT", "NONE"] %}
-                <span class="target-chip">Bodyweight</span>
-              {% elif item.load_value is not none %}
-                <span class="target-chip">
-                  {{ item.load_value }} {{ item.load_unit|lower }}
-                  {% if item.load_mode == "EACH_HAND" %} each hand{% elif item.load_mode == "TOTAL_EXTERNAL" %} total{% endif %}
+            <h2>{{ item.display_name }}</h2>
+            <div class="strength-primary-metrics">
+              <div>
+                <strong>
+                  {% if item.target_type == "REPS" %}
+                    {% if item.reps_min is not none and item.reps_max is not none %}{{ item.reps_min }}–{{ item.reps_max }}{% else %}{{ item.reps_target }}{% endif %}
+                  {% else %}
+                    {{ item.duration_seconds_target or item.duration_seconds_min or '—' }}
+                  {% endif %}
+                </strong>
+                <span>{% if item.target_type == "REPS" %}Reps{% else %}Seconds{% endif %}</span>
+              </div>
+              <div>
+                <strong>
+                  {% if item.load_mode in ["BODYWEIGHT", "NONE"] %}Bodyweight
+                  {% elif item.load_value is not none %}{{ item.load_value }} {{ item.load_unit|lower }}
+                  {% else %}Calibrate{% endif %}
+                </strong>
+                <span>
+                  {% if item.load_mode == "EACH_HAND" %}Each hand
+                  {% elif item.load_mode == "TOTAL_EXTERNAL" %}Total
+                  {% elif item.load_mode == "SINGLE_IMPLEMENT" %}Dumbbell
+                  {% else %}Load{% endif %}
                 </span>
-              {% else %}
-                <span class="target-chip">Calibrate load</span>
-              {% endif %}
-              <span class="target-chip">{{ item.sets_target }} sets</span>
-              {% if item.target_type == "REPS" %}
-                <span class="target-chip">
-                  {% if item.reps_min is not none and item.reps_max is not none %}{{ item.reps_min }}–{{ item.reps_max }} reps{% else %}{{ item.reps_target }} reps{% endif %}
-                </span>
-              {% else %}
-                <span class="target-chip">
-                  {% if item.duration_seconds_min is not none and item.duration_seconds_max is not none %}{{ item.duration_seconds_min }}–{{ item.duration_seconds_max }} sec{% else %}{{ item.duration_seconds_target }} sec{% endif %}
-                </span>
-              {% endif %}
+              </div>
+              <div>
+                <strong>
+                  {% if item.tempo_eccentric_seconds is not none or item.tempo_concentric_seconds is not none %}
+                    {{ item.tempo_eccentric_seconds or 0 }}–0–{{ item.tempo_concentric_seconds or 0 }}
+                  {% else %}Controlled{% endif %}
+                </strong>
+                <span>Tempo</span>
+              </div>
+            </div>
+
+            <div class="strength-secondary-prescription">
+              <span>Set <strong data-current-set-label>1</strong> of {{ item.sets_target }}</span>
+              <span>Rest <strong>{% if item.rest_seconds_min != item.rest_seconds_max %}{{ item.rest_seconds_min }}–{{ item.rest_seconds_max }} sec{% else %}{{ item.rest_seconds_max or item.rest_seconds_min or 60 }} sec{% endif %}</strong></span>
+            </div>
+
+            <div class="set-stack">
+              {% for set_number in range(1, item.sets_target + 1) %}
+              <fieldset class="set-entry" data-set-number="{{ set_number }}">
+                <legend>Set {{ set_number }} of {{ item.sets_target }}</legend>
+                <div class="set-entry__fields">
+                  {% if item.target_type == "REPS" %}
+                  <label>Actual reps
+                    <input
+                      name="{{ item.item_id }}-set-{{ set_number }}-reps"
+                      type="number"
+                      min="0"
+                      inputmode="numeric"
+                      value="{{ item.reps_target or item.reps_min or '' }}"
+                    >
+                  </label>
+                  {% else %}
+                  <label>Actual seconds
+                    <input
+                      name="{{ item.item_id }}-set-{{ set_number }}-duration"
+                      type="number"
+                      min="1"
+                      inputmode="numeric"
+                      value="{{ item.duration_seconds_target or item.duration_seconds_min or '' }}"
+                    >
+                  </label>
+                  {% endif %}
+                  {% if item.load_mode not in ["BODYWEIGHT", "NONE"] %}
+                  <label>Actual load {{ item.load_unit or "KG" }}
+                    <input
+                      name="{{ item.item_id }}-set-{{ set_number }}-load"
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      inputmode="decimal"
+                      value="{{ item.load_value if item.load_value is not none else '' }}"
+                      placeholder="Enter load"
+                    >
+                  </label>
+                  {% endif %}
+                  <label>RPE
+                    <input name="{{ item.item_id }}-set-{{ set_number }}-rpe" type="number" min="1" max="10" step="0.5" inputmode="decimal" placeholder="1–10">
+                  </label>
+                  <label>RIR
+                    <input name="{{ item.item_id }}-set-{{ set_number }}-rir" type="number" min="0" max="5" step="1" inputmode="numeric" placeholder="0–5">
+                  </label>
+                </div>
+                <div class="set-entry__actions">
+                  <button class="complete-set-button" type="button" data-complete-set>Complete Set</button>
+                  <label class="pain-toggle">
+                    <input name="{{ item.item_id }}-set-{{ set_number }}-pain" type="checkbox">
+                    <span>Pain / discomfort</span>
+                  </label>
+                  <input name="{{ item.item_id }}-set-{{ set_number }}-completed" type="checkbox" hidden>
+                </div>
+              </fieldset>
+              {% endfor %}
             </div>
           </div>
         </div>
 
-        <div class="prescription-strip">
-          <div>
-            <span class="metric-caption">Tempo</span>
-            <strong>
-              {% if item.tempo_eccentric_seconds is not none or item.tempo_concentric_seconds is not none %}
-                {{ item.tempo_eccentric_seconds or '—' }} sec down · {{ item.tempo_concentric_seconds or '—' }} sec up
-              {% else %}
-                Controlled
-              {% endif %}
-            </strong>
+        <section class="set-feedback-panel" id="set-feedback-panel" {% if review_state|default('') != 'strength-feedback' %}hidden{% endif %}>
+          <div class="set-feedback-panel__check" aria-hidden="true">✓</div>
+          <p class="eyebrow">Set Complete</p>
+          <h3>How did that feel?</h3>
+          <div class="set-feedback-options">
+            <button type="button" data-set-feedback="too-easy"><span>🙂</span><strong>Too easy</strong></button>
+            <button type="button" data-set-feedback="about-right"><span>😎</span><strong>About right</strong></button>
+            <button type="button" data-set-feedback="too-hard"><span>😣</span><strong>Too hard</strong></button>
+            <button type="button" data-set-feedback="pain"><span>⛔</span><strong>Pain / Stop</strong></button>
           </div>
-          <div>
-            <span class="metric-caption">Rest</span>
-            <strong>
-              {% if item.rest_seconds_min is not none and item.rest_seconds_max is not none and item.rest_seconds_min != item.rest_seconds_max %}
-                {{ item.rest_seconds_min }}–{{ item.rest_seconds_max }} sec
-              {% else %}
-                {{ item.rest_seconds_min or item.rest_seconds_max or 60 }} sec
-              {% endif %}
-            </strong>
-          </div>
-          <div>
-            <span class="metric-caption">Effort</span>
-            <strong>Record RPE / RIR</strong>
-          </div>
-        </div>
+        </section>
 
-        <div class="set-stack">
-          {% for set_number in range(1, item.sets_target + 1) %}
-          <fieldset class="set-entry" data-set-number="{{ set_number }}">
-            <legend>Set {{ set_number }} of {{ item.sets_target }}</legend>
-            <div class="set-entry__fields">
-              {% if item.target_type == "REPS" %}
-              <label>Actual reps
-                <input
-                  name="{{ item.item_id }}-set-{{ set_number }}-reps"
-                  type="number"
-                  min="0"
-                  inputmode="numeric"
-                  value="{{ item.reps_target or item.reps_min or '' }}"
-                >
-              </label>
-              {% else %}
-              <label>Actual seconds
-                <input
-                  name="{{ item.item_id }}-set-{{ set_number }}-duration"
-                  type="number"
-                  min="1"
-                  inputmode="numeric"
-                  value="{{ item.duration_seconds_target or item.duration_seconds_min or '' }}"
-                >
-              </label>
-              {% endif %}
-              {% if item.load_mode not in ["BODYWEIGHT", "NONE"] %}
-              <label>Actual load {{ item.load_unit or "KG" }}
-                <input
-                  name="{{ item.item_id }}-set-{{ set_number }}-load"
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  inputmode="decimal"
-                  value="{{ item.load_value if item.load_value is not none else '' }}"
-                  placeholder="Enter load"
-                >
-              </label>
-              {% endif %}
-              <label>RPE
-                <input name="{{ item.item_id }}-set-{{ set_number }}-rpe" type="number" min="1" max="10" step="0.5" inputmode="decimal" placeholder="1–10">
-              </label>
-              <label>RIR
-                <input name="{{ item.item_id }}-set-{{ set_number }}-rir" type="number" min="0" max="5" step="1" inputmode="numeric" placeholder="0–5">
-              </label>
-            </div>
-            <div class="set-entry__actions">
-              <label class="completion-toggle">
-                <input name="{{ item.item_id }}-set-{{ set_number }}-completed" type="checkbox">
-                <span>Set complete</span>
-              </label>
-              <label class="pain-toggle">
-                <input name="{{ item.item_id }}-set-{{ set_number }}-pain" type="checkbox">
-                <span>Pain / discomfort</span>
-              </label>
-            </div>
-          </fieldset>
-          {% endfor %}
-        </div>
+        <section class="main-rest-panel" id="main-rest-panel" {% if review_state|default('') != 'strength-rest' %}hidden{% endif %}>
+          <p class="eyebrow">Starting rest timer…</p>
+          <div class="main-rest-ring">
+            <strong data-rest-display>{% if review_state|default('') == 'strength-rest' %}01:30{% else %}00:00{% endif %}</strong>
+          </div>
+          <p class="main-rest-next">Next: <strong>{{ item.display_name }} · Set 2 of {{ item.sets_target }}</strong></p>
+          {% if not review_mode|default(false) %}
+          <button class="ghost-action" type="button" data-end-rest>End rest early</button>
+          {% endif %}
+        </section>
       </article>
       {% endfor %}
 
@@ -280,24 +386,26 @@
 
     <aside class="workout-sidebar">
       <section class="workout-side-card rest-panel" id="rest-timer">
-        <p class="eyebrow">Rest timer</p>
-        <strong class="rest-timer__display" id="rest-timer-display">00:00</strong>
+        <p class="eyebrow">Rest</p>
+        <strong class="rest-timer__display" id="rest-timer-display" data-rest-display>00:00</strong>
         <p class="muted" id="rest-timer-label">Complete a set to start the prescribed rest.</p>
+        {% if not review_mode|default(false) %}
         <div class="timer-actions">
           <button class="secondary-action" id="rest-start" type="button">Start</button>
           <button class="ghost-action" id="rest-reset" type="button">Reset</button>
         </div>
+        {% endif %}
       </section>
 
       <section class="workout-side-card next-preview">
         <p class="eyebrow">Up next</p>
         <strong id="next-stage-title">—</strong>
-        <p class="muted">Move on when you are ready. Strength work never advances just because a timer ended.</p>
+        <p class="muted">Strength never advances just because a timer ends.</p>
       </section>
 
       <section class="workout-side-card workout-save-note">
-        <span class="status-pill status-pill--ready">Autosave on</span>
-        <p class="muted">Set entries are saved to your active workout draft as you change them.</p>
+        <span class="status-pill status-pill--ready">{% if review_mode|default(false) %}Read only{% else %}Autosave on{% endif %}</span>
+        <p class="muted">{% if review_mode|default(false) %}Review sandbox changes are never written to training history.{% else %}Your active workout is saved as you train.{% endif %}</p>
       </section>
     </aside>
   </div>
@@ -310,11 +418,12 @@
     <button class="danger-action" id="stop-workout" type="button">Stop</button>
   </div>
 
+  {% if not review_mode|default(false) %}
   <section class="card workout-summary-controls">
     <div>
       <p class="eyebrow">Finish session</p>
       <h3>Workout summary</h3>
-      <p class="muted">Complete only when you are finished. Your recorded sets and cardio will become workout history.</p>
+      <p class="muted">Complete only when you are finished. Recorded sets and cardio then become workout history.</p>
     </div>
     <label>Session RPE
       <input id="session-rpe" name="session-rpe" type="number" min="1" max="10" step="0.5" inputmode="decimal" placeholder="1–10">
@@ -322,6 +431,7 @@
     <button class="primary-action" id="complete-workout" type="button">Complete workout</button>
     <p class="muted" id="completion-status">Your active draft remains resumable until completion succeeds.</p>
   </section>
+  {% endif %}
 </section>
 <script id="draft-state" type="application/json">{{ player.snapshot.state_data | tojson }}</script>
 {% else %}
