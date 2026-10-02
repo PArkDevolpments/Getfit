@@ -20,8 +20,8 @@ from hwa.read_models.history import get_exercise_history
 from hwa.services.today import get_today_view
 from hwa.services.workout_drafts import get_active_draft
 from hwa.web.context import build_page_context
-from hwa.web.home import build_home_dashboard
 from hwa.web.dependencies import resolve_web_person_context
+from hwa.web.home import build_home_dashboard
 from hwa.web.library import get_exercise, list_exercises
 from hwa.web.progress import build_progress_context
 from hwa.web.settings import build_settings_view
