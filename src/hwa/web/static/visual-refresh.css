@@ -623,6 +623,12 @@ body:not([data-active-nav="workout"]) .history-row {
   color: var(--refresh-muted);
 }
 
+
+.main-rest-panel[hidden],
+.set-feedback-panel[hidden] {
+  display: none !important;
+}
+
 /* Workout ----------------------------------------------------------------- */
 body[data-active-nav="workout"] {
   background:
@@ -956,7 +962,8 @@ body[data-active-nav="workout"] .primary-action {
   }
 
   .workout-stage__visual--strength img {
-    min-height: 260px;
+    min-height: 220px;
+    max-height: 240px;
   }
 
   .main-rest-panel {
@@ -965,8 +972,8 @@ body[data-active-nav="workout"] .primary-action {
 
   .rest-state-photo,
   .rest-state-photo img {
-    min-height: 210px;
-    max-height: 230px;
+    min-height: 160px;
+    max-height: 180px;
   }
 
   .set-feedback-panel,
