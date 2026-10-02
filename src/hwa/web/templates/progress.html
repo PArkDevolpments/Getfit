@@ -1,64 +1,111 @@
 {% extends "base.html" %}
 
-{% block title %}Progress · Home Workout Assistant{% endblock %}
+{% block title %}Progress · Getfit{% endblock %}
 
 {% block content %}
-<section class="card progress-summary">
-  <p class="eyebrow">Training progress</p>
-  <h2>{{ progress.summary.completed_workouts }} of {{ progress.summary.available_programme_workouts }} programme workouts completed</h2>
-  <p class="progress-percent">{{ progress.summary.completion_percent }}%</p>
-  <progress max="100" value="{{ progress.summary.completion_percent }}">{{ progress.summary.completion_percent }}%</progress>
-  {% if progress.summary.latest_programme_week and progress.summary.latest_programme_day %}
-    <p class="muted">Latest completed position: Week {{ progress.summary.latest_programme_week }} · Day {{ progress.summary.latest_programme_day }}</p>
-  {% endif %}
+<section class="card">
+  <p class="eyebrow">Progress</p>
+  <h2>Your training evidence, made useful.</h2>
+  <p class="muted">Built only from completed Getfit workouts. No health outcome or missing performance data is estimated here.</p>
+
+  <div class="progress-kpi-grid">
+    <article class="progress-kpi progress-ring-card">
+      <div class="progress-ring" style="--progress: {{ progress.summary.completion_percent }}">
+        <strong>{{ progress.summary.completion_percent }}%</strong>
+      </div>
+      <div>
+        <span class="metric-caption">Programme completion</span>
+        <span class="progress-kpi__label">{{ progress.summary.completed_workouts }} of {{ progress.summary.available_programme_workouts }} approved sessions</span>
+      </div>
+    </article>
+    <article class="progress-kpi">
+      <span class="metric-caption">Completed workouts</span>
+      <strong class="progress-kpi__value">{{ progress.summary.completed_workouts }}</strong>
+      <span class="progress-kpi__label">Saved completed sessions</span>
+    </article>
+    <article class="progress-kpi">
+      <span class="metric-caption">Latest position</span>
+      {% if progress.summary.latest_programme_week and progress.summary.latest_programme_day %}
+        <strong class="progress-kpi__value">W{{ progress.summary.latest_programme_week }} D{{ progress.summary.latest_programme_day }}</strong>
+        <span class="progress-kpi__label">Most recent approved programme session</span>
+      {% else %}
+        <strong class="progress-kpi__value">—</strong>
+        <span class="progress-kpi__label">Complete a workout to start your history</span>
+      {% endif %}
+    </article>
+  </div>
 </section>
 
 <section class="card">
-  <p class="eyebrow">Exercise history</p>
-  <h2>Latest performed evidence</h2>
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Exercise progression</p>
+      <h2>Latest performed evidence</h2>
+    </div>
+    <span class="status-pill status-pill--quiet">Person-scoped history</span>
+  </div>
+
   <div class="progress-grid">
     {% for exercise in progress.summary.exercise_summaries %}
-      <article class="progress-exercise" data-exercise-id="{{ exercise.exercise_id }}">
+      <article class="progress-exercise">
+        <p class="metric-caption">{{ exercise.sessions }} session{% if exercise.sessions != 1 %}s{% endif %}</p>
         <h3>{{ exercise.exercise_id.replace('-', ' ').replace('_', ' ').title() }}</h3>
-        <p>{{ exercise.sessions }} session{% if exercise.sessions != 1 %}s{% endif %}</p>
-        {% if exercise.latest_total_reps %}
-          <p><strong>{{ exercise.latest_total_reps }} reps</strong> latest session</p>
-        {% endif %}
-        {% if exercise.latest_total_duration_seconds %}
-          <p><strong>{{ exercise.latest_total_duration_seconds }} sec</strong> latest session</p>
-        {% endif %}
-        {% if exercise.latest_max_recorded_load_kg is not none %}
-          <p>{{ exercise.latest_max_recorded_load_kg }} kg max recorded external load</p>
-        {% endif %}
-        <p>{{ exercise.latest_completed_sets }} completed set{% if exercise.latest_completed_sets != 1 %}s{% endif %}</p>
-        <a href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">Technique support</a>
+        <div class="progress-exercise__metric-row">
+          {% if exercise.latest_max_recorded_load_kg is not none %}
+          <div class="mini-metric">
+            <strong>{{ exercise.latest_max_recorded_load_kg }} kg</strong>
+            <span>latest max load</span>
+          </div>
+          {% endif %}
+          {% if exercise.latest_total_reps %}
+          <div class="mini-metric">
+            <strong>{{ exercise.latest_total_reps }}</strong>
+            <span>latest reps</span>
+          </div>
+          {% endif %}
+          {% if exercise.latest_total_duration_seconds %}
+          <div class="mini-metric">
+            <strong>{{ exercise.latest_total_duration_seconds }} sec</strong>
+            <span>latest duration</span>
+          </div>
+          {% endif %}
+          <div class="mini-metric">
+            <strong>{{ exercise.latest_completed_sets }}</strong>
+            <span>completed sets</span>
+          </div>
+        </div>
+        <a class="secondary-action" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">Exercise details</a>
       </article>
     {% else %}
-      <p class="muted">Complete a strength session to build exercise history.</p>
+      <div class="empty-state">Complete a strength session to build per-exercise progression evidence.</div>
     {% endfor %}
   </div>
 </section>
 
 <section class="card">
-  <p class="eyebrow">Workout history</p>
-  <h2>Completed sessions</h2>
-  <div class="history-list">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">History</p>
+      <h2>Completed sessions</h2>
+    </div>
+  </div>
+  <div class="history-timeline">
     {% for row in progress.history %}
-      <article class="history-row" data-event-id="{{ row.event_id }}" data-revision="{{ row.revision_number }}">
-        <div>
+      <article class="history-row">
+        <div class="history-row__title">
           <strong>
             {% if row.programme_week and row.programme_day %}Week {{ row.programme_week }} · Day {{ row.programme_day }}{% else %}Workout{% endif %}
           </strong>
           <span class="muted">{{ row.start_at.strftime('%d %b %Y') }}</span>
         </div>
-        <div>
+        <div class="history-row__metrics">
           <span>{{ (row.duration_seconds / 60) | round | int }} min</span>
           {% if row.session_rpe is not none %}<span> · RPE {{ row.session_rpe }}</span>{% endif %}
-          {% if row.revision_number > 1 %}<span> · corrected revision {{ row.revision_number }}</span>{% endif %}
+          {% if row.revision_number > 1 %}<span> · corrected</span>{% endif %}
         </div>
       </article>
     {% else %}
-      <p class="muted">No completed workouts yet.</p>
+      <div class="empty-state">Your completed workouts will appear here.</div>
     {% endfor %}
   </div>
 </section>
