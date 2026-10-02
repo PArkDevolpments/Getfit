@@ -75,6 +75,9 @@ def test_automated_audit_measures_core_touch_targets_across_product_states() -> 
     assert "'strength-feedback'" in script
     assert "'interval-hard'" in script
     assert "'exercise-detail'" in script
+    assert "'.exercise-media-tab'" in script
+    assert "'.exercise-card__open'" in script
+    assert "'.coach-dashboard-card__settings'" in script
     assert "touchAudit.failures.length ? 'FAIL' : 'PASS'" in script
 
 
