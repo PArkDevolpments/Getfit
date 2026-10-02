@@ -10,6 +10,16 @@
   {%- endif -%}
 {%- endmacro %}
 
+{% macro clean_number(value) -%}
+  {%- if value is none -%}
+    —
+  {%- elif (value|float) == ((value|float)|int) -%}
+    {{ (value|float)|int }}
+  {%- else -%}
+    {{ "%.1f"|format(value|float) }}
+  {%- endif -%}
+{%- endmacro %}
+
 {% macro cardio_stage(item) %}
 <article
   class="workout-stage workout-item cardio-item{% if item.segment_type|upper == 'INTERVAL_HARD' %} cardio-item--hard{% elif item.segment_type|upper == 'INTERVAL_RECOVERY' %} cardio-item--recovery{% endif %}"
@@ -76,11 +86,11 @@
         {% if item.equipment == "TREADMILL" %}
         <div>
           <span>Speed</span>
-          <strong>{% if item.speed_kmh is not none %}{{ item.speed_kmh }} km/h{% else %}Calibrate{% endif %}</strong>
+          <strong>{% if item.speed_kmh is not none %}{{ clean_number(item.speed_kmh) }} km/h{% else %}Calibrate{% endif %}</strong>
         </div>
         <div>
           <span>Incline</span>
-          <strong>{% if item.incline_percent is not none %}{{ item.incline_percent }}%{% else %}Calibrate{% endif %}</strong>
+          <strong>{% if item.incline_percent is not none %}{{ clean_number(item.incline_percent) }}%{% else %}Calibrate{% endif %}</strong>
         </div>
         {% else %}
         <div>
@@ -99,7 +109,7 @@
         <div>
           <span>Effort</span>
           <strong>
-            {% if item.rpe_min is not none %}RPE {{ item.rpe_min }}{% if item.rpe_max is not none and item.rpe_max != item.rpe_min %}–{{ item.rpe_max }}{% endif %}{% else %}—{% endif %}
+            {% if item.rpe_min is not none %}RPE {{ clean_number(item.rpe_min) }}{% if item.rpe_max is not none and item.rpe_max != item.rpe_min %}–{{ clean_number(item.rpe_max) }}{% endif %}{% else %}—{% endif %}
           </strong>
         </div>
         {% if item.rounds %}
@@ -155,8 +165,8 @@
   </details>
 
   <label class="completion-toggle cardio-completion-toggle">
-    <input name="{{ item.item_id }}-completed" type="checkbox">
-    <span>Segment complete</span>
+    <input name="{{ item.item_id }}-completed" type="checkbox" hidden>
+    <span>Complete Segment</span>
   </label>
 </article>
 {% endmacro %}
@@ -187,10 +197,9 @@
   data-today-url="{{ ingress_url(request, '/') }}"
 >
   {% if review_mode|default(false) %}
-  <div class="review-sandbox-banner">
-    <strong>Review sandbox</strong>
-    <span>Read-only state · built from approved Week 1 authority · does not write workout history</span>
-  </div>
+  <span class="sr-only" data-review-sandbox>
+    Review sandbox: read-only state built from approved Week 1 authority. No workout history is written.
+  </span>
   {% endif %}
 
   <header class="workout-session-header">
@@ -198,7 +207,7 @@
       <p class="eyebrow">Week {{ player.week_number }} · Day {{ player.day_number }}</p>
       <h2>{{ player.title }}</h2>
     </div>
-    <span class="status-pill status-pill--ready" id="save-status">{% if review_mode|default(false) %}Review state{% else %}Saved{% endif %}</span>
+    <span class="status-pill status-pill--ready" id="save-status">Saved</span>
   </header>
 
   <div class="workout-progress" aria-label="Workout progress">
@@ -269,7 +278,7 @@
               <div>
                 <strong>
                   {% if item.load_mode in ["BODYWEIGHT", "NONE"] %}Bodyweight
-                  {% elif item.load_value is not none %}{{ item.load_value }} {{ item.load_unit|lower }}
+                  {% elif item.load_value is not none %}{{ clean_number(item.load_value) }} {{ item.load_unit|lower }}
                   {% else %}Calibrate{% endif %}
                 </strong>
                 <span>
@@ -342,10 +351,7 @@
                 </div>
                 <div class="set-entry__actions">
                   <button class="complete-set-button" type="button" data-complete-set>Complete Set</button>
-                  <label class="pain-toggle">
-                    <input name="{{ item.item_id }}-set-{{ set_number }}-pain" type="checkbox">
-                    <span>Pain / discomfort</span>
-                  </label>
+                  <input name="{{ item.item_id }}-set-{{ set_number }}-pain" type="checkbox" hidden>
                   <input name="{{ item.item_id }}-set-{{ set_number }}-completed" type="checkbox" hidden>
                 </div>
               </fieldset>
@@ -354,7 +360,7 @@
           </div>
         </div>
 
-        <section class="set-feedback-panel" id="set-feedback-panel" {% if review_state|default('') != 'strength-feedback' %}hidden{% endif %}>
+        <section class="set-feedback-panel" data-set-feedback-panel {% if review_state|default('') != 'strength-feedback' %}hidden{% endif %}>
           <div class="set-feedback-panel__check" aria-hidden="true">✓</div>
           <p class="eyebrow">Set Complete</p>
           <h3>How did that feel?</h3>
@@ -366,7 +372,7 @@
           </div>
         </section>
 
-        <section class="main-rest-panel" id="main-rest-panel" {% if review_state|default('') != 'strength-rest' %}hidden{% endif %}>
+        <section class="main-rest-panel" data-main-rest-panel {% if review_state|default('') != 'strength-rest' %}hidden{% endif %}>
           <p class="eyebrow">Starting rest timer…</p>
           <div class="main-rest-ring">
             <strong data-rest-display>{% if review_state|default('') == 'strength-rest' %}01:30{% else %}00:00{% endif %}</strong>
@@ -404,8 +410,8 @@
       </section>
 
       <section class="workout-side-card workout-save-note">
-        <span class="status-pill status-pill--ready">{% if review_mode|default(false) %}Read only{% else %}Autosave on{% endif %}</span>
-        <p class="muted">{% if review_mode|default(false) %}Review sandbox changes are never written to training history.{% else %}Your active workout is saved as you train.{% endif %}</p>
+        <span class="status-pill status-pill--ready">Autosave on</span>
+        <p class="muted">Your active workout is saved as you train.</p>
       </section>
     </aside>
   </div>

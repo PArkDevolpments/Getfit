@@ -22,9 +22,6 @@
   const restStartButton = document.getElementById('rest-start');
   const restResetButton = document.getElementById('rest-reset');
   const restDisplays = [...document.querySelectorAll('[data-rest-display]')];
-  const feedbackPanel = document.getElementById('set-feedback-panel');
-  const mainRestPanel = document.getElementById('main-rest-panel');
-  const endRestButton = document.querySelector('[data-end-rest]');
 
   let version = Number(player.dataset.draftVersion || '0');
   let saveTimer = null;
@@ -241,15 +238,35 @@
     if (stage.dataset.kind !== 'STRENGTH') return;
     const sets = [...stage.querySelectorAll('.set-entry')];
     const requestedSet = Number(player.dataset.currentSetNumber || 0);
-    const current = (
-      requestedSet
-        ? sets.find((set) => Number(set.dataset.setNumber) === requestedSet)
-        : null
-    ) || sets.find((set) => !set.querySelector('input[name$="-completed"]')?.checked)
+    const requested = requestedSet
+      ? sets.find((set) => Number(set.dataset.setNumber) === requestedSet)
+      : null;
+    const requestedIncomplete = requested
+      && !requested.querySelector('input[name$="-completed"]')?.checked
+      ? requested
+      : null;
+    const current = requestedIncomplete
+      || sets.find((set) => !set.querySelector('input[name$="-completed"]')?.checked)
       || sets.at(-1);
     current?.classList.add('is-current-set');
     const label = stage.querySelector('[data-current-set-label]');
     if (label && current) label.textContent = current.dataset.setNumber || '1';
+  }
+
+  function nextPreviewFor(stage) {
+    if (stage.dataset.kind === 'STRENGTH') {
+      const sets = [...stage.querySelectorAll('.set-entry')];
+      const current = stage.querySelector('.set-entry.is-current-set');
+      const currentNumber = Number(current?.dataset.setNumber || 0);
+      const nextSet = sets.find(
+        (set) => Number(set.dataset.setNumber) > currentNumber
+          && !set.querySelector('input[name$="-completed"]')?.checked,
+      );
+      if (nextSet) {
+        return `${stage.dataset.stageTitle} · Set ${nextSet.dataset.setNumber} of ${sets.length}`;
+      }
+    }
+    return stages[stageIndex + 1]?.dataset.stageTitle || 'Workout summary';
   }
 
   function setActiveStage(index, {scroll = false} = {}) {
@@ -273,9 +290,7 @@
         ? `Exercise ${Math.max(1, currentStrength)} of ${strengthCount}`
         : `Stage ${stageIndex + 1} of ${stages.length}`;
     }
-    if (nextStageTitle) {
-      nextStageTitle.textContent = stages[stageIndex + 1]?.dataset.stageTitle || 'Workout summary';
-    }
+    if (nextStageTitle) nextStageTitle.textContent = nextPreviewFor(active);
     if (previousButton) previousButton.disabled = stageIndex === 0;
     if (nextButton) nextButton.textContent = stageIndex === stages.length - 1 ? 'Review →' : 'Next →';
 
@@ -345,24 +360,36 @@
       .find((set) => set.querySelector('input[name$="-completed"]')?.checked) || null;
   }
 
+  function feedbackPanelFor(stage) {
+    return stage?.querySelector('[data-set-feedback-panel]') || null;
+  }
+
+  function restPanelFor(stage) {
+    return stage?.querySelector('[data-main-rest-panel]') || null;
+  }
+
   function showFeedback(stage, set) {
+    if (!stage) return;
     feedbackSet = set;
     player.classList.add('is-set-feedback');
     player.classList.remove('is-resting');
+    const feedbackPanel = feedbackPanelFor(stage);
+    const mainRestPanel = restPanelFor(stage);
     if (feedbackPanel) feedbackPanel.hidden = false;
     if (mainRestPanel) mainRestPanel.hidden = true;
-    if (stage) {
-      const stack = stage.querySelector('.set-stack');
-      if (stack) stack.setAttribute('aria-hidden', 'true');
-    }
+    const stack = stage.querySelector('.set-stack');
+    if (stack) stack.setAttribute('aria-hidden', 'true');
   }
 
   function showRest(stage) {
+    if (!stage) return;
     player.classList.remove('is-set-feedback');
     player.classList.add('is-resting');
+    const feedbackPanel = feedbackPanelFor(stage);
+    const mainRestPanel = restPanelFor(stage);
     if (feedbackPanel) feedbackPanel.hidden = true;
     if (mainRestPanel) mainRestPanel.hidden = false;
-    const seconds = Number(stage?.dataset.restSeconds || 90);
+    const seconds = Number(stage.dataset.restSeconds || 90);
     restRemaining = seconds;
     restSeconds = seconds;
     renderRestTimer();
@@ -372,11 +399,17 @@
 
   function endRest() {
     clearRestInterval();
-    player.classList.remove('is-resting');
-    if (mainRestPanel) mainRestPanel.hidden = true;
     const stage = stages[stageIndex];
+    player.classList.remove('is-resting', 'is-set-feedback');
+    const mainRestPanel = restPanelFor(stage);
+    const feedbackPanel = feedbackPanelFor(stage);
+    if (mainRestPanel) mainRestPanel.hidden = true;
+    if (feedbackPanel) feedbackPanel.hidden = true;
     stage?.querySelector('.set-stack')?.removeAttribute('aria-hidden');
-    updateCurrentSet(stage);
+    if (stage) {
+      updateCurrentSet(stage);
+      if (nextStageTitle) nextStageTitle.textContent = nextPreviewFor(stage);
+    }
   }
 
   function applyFeedback(choice) {
@@ -540,8 +573,6 @@
   previousButton?.addEventListener('click', () => setActiveStage(stageIndex - 1, {scroll: true}));
   nextButton?.addEventListener('click', () => {
     endRest();
-    player.classList.remove('is-set-feedback');
-    if (feedbackPanel) feedbackPanel.hidden = true;
     if (stageIndex < stages.length - 1) setActiveStage(stageIndex + 1, {scroll: true});
     else document.querySelector('.workout-summary-controls')?.scrollIntoView({
       behavior: 'smooth',
@@ -550,8 +581,6 @@
   });
   skipButton?.addEventListener('click', () => {
     endRest();
-    player.classList.remove('is-set-feedback');
-    if (feedbackPanel) feedbackPanel.hidden = true;
     if (stageIndex < stages.length - 1) setActiveStage(stageIndex + 1, {scroll: true});
   });
   pauseButton?.addEventListener('click', () => {
@@ -576,6 +605,8 @@
     else startRestTimer();
   });
   restResetButton?.addEventListener('click', resetRestTimer);
-  endRestButton?.addEventListener('click', endRest);
+  for (const button of document.querySelectorAll('[data-end-rest]')) {
+    button.addEventListener('click', endRest);
+  }
   completeButton?.addEventListener('click', () => void completeWorkout());
 })();

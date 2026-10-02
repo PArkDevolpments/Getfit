@@ -3239,15 +3239,16 @@ body[data-profile="female"] .home-context-rail__icon {
 
 .progress-chart > text,
 .progress-chart__point text {
-  fill: #7f9db1;
+  fill: #b8d0df !important;
   font-size: 13px;
   font-family: inherit;
+  font-weight: 700;
 }
 
 .progress-chart__point text:last-child {
-  fill: #d9edf8;
+  fill: #f2fbff !important;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 850;
 }
 
 .progress-chart__line {

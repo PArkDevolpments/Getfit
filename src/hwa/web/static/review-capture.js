@@ -490,15 +490,27 @@
         );
       }
       if (criterionId === 'CARDIO-03') {
-        if (!bike) return automatedResult('BLOCKED', 'No Day 1 spin-bike stage exists in the active workout.', profile);
-        const bikeText = bike.textContent || '';
-        const goodTargets = /80/.test(bikeText) && /90/.test(bikeText) && /moderate/i.test(bikeText) && /RPE\s*5/.test(bikeText);
-        const purposeBuilt = /15:00/.test(bikeText);
+        const finisher = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
+          (node) => node.dataset.equipment === 'SPIN_BIKE'
+            && node.dataset.segmentType === 'CONDITIONING',
+        );
+        if (!finisher) {
+          return automatedResult(
+            'BLOCKED',
+            'No Day 1 spin-bike conditioning stage exists in the review workout.',
+            profile,
+          );
+        }
+        const bikeText = finisher.textContent || '';
+        const goodTargets = /15:00/.test(bikeText)
+          && /80–90\s*rpm/.test(bikeText)
+          && /moderate/i.test(bikeText)
+          && /RPE\s*5(?:\.0+)?/.test(bikeText);
         return automatedResult(
-          goodTargets && purposeBuilt ? 'REVIEW_REQUIRED' : 'FAIL',
+          goodTargets ? 'REVIEW_REQUIRED' : 'FAIL',
           goodTargets
-            ? 'Approved bike targets exist, but the required 15:00 purpose-built presentation was not fully detected.'
-            : 'Approved Day 1 bike finisher targets were not all detected.',
+            ? 'Dedicated bike-finisher state contains 15:00, 80–90 rpm, moderate resistance and RPE 5.'
+            : 'Approved Day 1 bike-finisher state/targets were not all detected.',
           profile,
         );
       }
@@ -507,7 +519,7 @@
         const hardText = hard?.textContent || '';
         const targets = /00:30/.test(hardText)
           && /85–100\s*rpm/.test(hardText)
-          && /RPE\s*7–8/.test(hardText);
+          && /RPE\s*7(?:\.0+)?–8(?:\.0+)?/.test(hardText);
         return automatedResult(
           hard && targets ? 'REVIEW_REQUIRED' : 'FAIL',
           hard && targets
@@ -522,7 +534,7 @@
         const targets = /01:30/.test(recoveryText)
           && /60–75\s*rpm/.test(recoveryText)
           && /Light/i.test(recoveryText)
-          && /RPE\s*2–3/.test(recoveryText);
+          && /RPE\s*2(?:\.0+)?–3(?:\.0+)?/.test(recoveryText);
         return automatedResult(
           recovery && targets ? 'REVIEW_REQUIRED' : 'FAIL',
           recovery && targets
