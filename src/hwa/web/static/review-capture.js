@@ -8,6 +8,8 @@
   const cancelButton = document.getElementById('cancel-capture');
   const progressBar = document.getElementById('progress-bar');
   const progressMessage = document.getElementById('progress-message');
+  const acceptanceSpecNode = document.getElementById('acceptance-specification');
+  const acceptanceStorageKeyNode = document.getElementById('acceptance-storage-key');
 
   if (!targetsNode || !frame || !frameShell) return;
 
@@ -22,6 +24,25 @@
 
   const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
   const nextFrame = () => new Promise((resolve) => window.requestAnimationFrame(resolve));
+
+  function getAcceptanceResults() {
+    const fallback = {
+      format: 'getfit-acceptance-results-v1',
+      app_version: document.body.dataset.appVersion,
+      spec_version: null,
+      updated_at: null,
+      criteria: {},
+    };
+    if (!acceptanceStorageKeyNode) return fallback;
+    try {
+      const storageKey = JSON.parse(acceptanceStorageKeyNode.textContent || 'null');
+      if (!storageKey) return fallback;
+      const raw = localStorage.getItem(storageKey);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
 
   function setMessage(message) {
     if (progressMessage) progressMessage.textContent = message;
@@ -537,6 +558,18 @@
       };
 
       const encoder = new TextEncoder();
+      const acceptanceSpecification = acceptanceSpecNode
+        ? JSON.parse(acceptanceSpecNode.textContent || '{}')
+        : {};
+      const acceptanceResults = getAcceptanceResults();
+      files.push({
+        name: 'acceptance-specification.json',
+        data: encoder.encode(JSON.stringify(acceptanceSpecification, null, 2)),
+      });
+      files.push({
+        name: 'acceptance-results.json',
+        data: encoder.encode(JSON.stringify(acceptanceResults, null, 2)),
+      });
       files.push({
         name: 'review-manifest.json',
         data: encoder.encode(JSON.stringify(manifest, null, 2)),
@@ -548,7 +581,7 @@
       files.push({
         name: 'README.txt',
         data: encoder.encode(
-          'Getfit UI Review Pack\n\nUpload this ZIP directly into ChatGPT for visual review against the approved Home Workout Assistant design board.\n\nThe pack contains self-contained SVG visual snapshots at phone, tablet and desktop sizes plus non-sensitive capture metadata and a local review gallery. SVG is used deliberately so browser canvas security cannot block export. No screen-sharing permission is required. The pack does not contain Home Assistant IDs, integration IDs, credentials or application database content.\n',
+          'Getfit UI Review Pack\n\nUpload this ZIP directly into ChatGPT for visual review against the approved Home Workout Assistant design board.\n\nThe pack contains self-contained SVG visual snapshots at phone, tablet and desktop sizes, the versioned acceptance specification, saved PASS/FAIL/BLOCKED decisions, non-sensitive capture metadata and a local review gallery. SVG is used deliberately so browser canvas security cannot block export. No screen-sharing permission is required. The pack does not contain Home Assistant IDs, integration IDs, credentials or application database content.\n',
         ),
       });
 
