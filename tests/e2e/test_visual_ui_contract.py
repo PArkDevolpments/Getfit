@@ -31,27 +31,35 @@ def test_shared_shell_has_premium_design_tokens_and_responsive_navigation() -> N
     assert "min-height: 48px" in css
 
 
-def test_today_matches_design_board_home_and_workout_selection_hierarchy() -> None:
+def test_today_matches_approved_board_as_two_primary_surfaces() -> None:
     today = _text(TEMPLATES / "foundation.html")
     css = _text(STATIC / "app.css")
 
     for marker in (
         'class="home-dashboard"',
+        'class="coach-dashboard-card"',
         'class="next-workout-card"',
         'class="week-status-dots"',
-        'class="prescription-snapshot"',
+        'class="coach-progress-snapshot"',
         'class="weekly-cardio"',
         'class="workout-selection"',
         'class="weekly-goal"',
+        'class="home-context-rail"',
     ):
         assert marker in today
 
-    assert "Progress snapshot" in today
+    # The approved board keeps the per-user dashboard as one dark coaching surface,
+    # with Workout Selection as the adjacent light surface. 0.1.4 split the dashboard
+    # into multiple generic white cards, which is not the board.
+    assert 'home-panel--progress' not in today
+    assert 'class="profile-badge"' not in today
+    assert "Progress Snapshot" in today
     assert "Weekly cardio" in today
     assert "150 minutes of moderate activity" in today
-    assert "progress-orb" not in today
-    assert "--board-panel:" in css
-    assert "--profile-accent:" in css
+    assert "--coach-card-bg:" in css
+    assert "--programme-card-bg:" in css
+    assert ".home-dashboard {" in css
+    assert "grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr)" in css
     assert 'body[data-profile="female"]' in css
 
 
