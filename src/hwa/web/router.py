@@ -394,8 +394,16 @@ def review_capture(
             "label": "Progress — populated review state",
             "url": ingress_url(request, "/review-sandbox/progress"),
         },
-        {"key": "progress", "label": "Progress — live evidence", "url": ingress_url(request, "/progress")},
-        {"key": "library", "label": "Library", "url": ingress_url(request, "/library")},
+        {
+            "key": "progress",
+            "label": "Progress — live evidence",
+            "url": ingress_url(request, "/progress"),
+        },
+        {
+            "key": "library",
+            "label": "Library",
+            "url": ingress_url(request, "/library"),
+        },
         {
             "key": "exercise-detail",
             "label": "Exercise detail — Dumbbell Floor Press",
