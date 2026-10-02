@@ -137,7 +137,11 @@
           <p class="card-kicker">Health context</p>
           {% if external_context.health.status == "READY" and external_context.health.body_mass %}
           <strong>{{ external_context.health.body_mass.value }} {{ external_context.health.body_mass.unit }}</strong>
+          {% if external_context.health.sleep_duration %}
+          <span>{{ external_context.health.sleep_duration.value }} {{ external_context.health.sleep_duration.unit }} sleep</span>
+          {% else %}
           <span>Latest body mass</span>
+          {% endif %}
           {% elif external_context.health.status == "READY" and external_context.health.sleep_duration %}
           <strong>{{ external_context.health.sleep_duration.value }} {{ external_context.health.sleep_duration.unit }}</strong>
           <span>Latest sleep</span>
@@ -150,8 +154,8 @@
         <div id="external-nutrition-context">
           <p class="card-kicker">Nutrition context</p>
           {% if external_context.nutrition.status == "READY" and external_context.nutrition.current_target %}
-          <strong>{{ external_context.nutrition.current_target.calories_kcal|int }} kcal</strong>
-          <span>{{ external_context.nutrition.current_target.protein_g|int }} g protein target</span>
+          <strong>{{ external_context.nutrition.current_target.calories_kcal|int }} kcal target</strong>
+          <span>{{ external_context.nutrition.current_target.protein_g|int }} g protein</span>
           {% elif external_context.nutrition.status == "READY" and external_context.nutrition.latest_day and external_context.nutrition.latest_day.energy_consumed_kcal is not none %}
           <strong>{{ external_context.nutrition.latest_day.energy_consumed_kcal|int }} kcal</strong>
           <span>Latest logged intake</span>
