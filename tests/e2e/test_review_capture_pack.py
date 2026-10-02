@@ -25,6 +25,9 @@ def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> Non
     assert "getfit-ui-review-" in script
     assert "review-manifest.json" in script
     assert "README.txt" in script
+    assert "detectPageState" in script
+    assert "page_state" in script
+    assert "No active workout" in script
     assert "390" in script
     assert "820" in script
     assert "1440" in script

@@ -10,9 +10,12 @@
         <p class="coach-greeting"><span id="day-greeting">Good morning</span>,</p>
         <h2>{{ page.display_name }} <span aria-hidden="true">👋</span></h2>
       </div>
-      <div class="coach-profile-mark" aria-label="{{ page.presentation_profile|title }} training profile">
-        <span>{{ page.display_name[:1] }}</span>
-      </div>
+      <a class="coach-dashboard-card__settings" href="{{ ingress_url(request, '/settings') }}" aria-label="Open settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/>
+          <path d="m4 12 1.6-1 .2-1.9-1.1-1.5 2-2 1.5 1.1 1.9-.2L11 5h2l.9 1.5 1.9.2 1.5-1.1 2 2-1.1 1.5.2 1.9 1.6 1v2l-1.6 1-.2 1.9 1.1 1.5-2 2-1.5-1.1-1.9.2L13 20h-2l-.9-1.5-1.9-.2-1.5 1.1-2-2 1.1-1.5-.2-1.9L4 14Z"/>
+        </svg>
+      </a>
     </header>
 
     {% if today_view.week_number is not none and today_view.day_number is not none %}
@@ -88,10 +91,7 @@
 
     <section class="coach-progress-snapshot" aria-labelledby="progress-snapshot-title">
       <div class="coach-progress-snapshot__heading">
-        <div>
-          <p class="card-kicker">Progress Snapshot</p>
-          <h3 id="progress-snapshot-title">Current targets</h3>
-        </div>
+        <h3 id="progress-snapshot-title">Progress Snapshot</h3>
         <a class="coach-link" href="{{ ingress_url(request, '/progress') }}">View progress</a>
       </div>
 
@@ -198,6 +198,7 @@
   </aside>
 </section>
 
+{% if external_context.health.status == "READY" or external_context.nutrition.status == "READY" %}
 <section class="home-context-rail" aria-label="Connected recovery and nutrition context">
   <article id="external-health-context">
     <div class="home-context-rail__icon" aria-hidden="true">♥</div>
@@ -237,6 +238,7 @@
     </div>
   </article>
 </section>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}

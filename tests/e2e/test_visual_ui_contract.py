@@ -54,12 +54,15 @@ def test_today_matches_approved_board_as_two_primary_surfaces() -> None:
     assert 'home-panel--progress' not in today
     assert 'class="profile-badge"' not in today
     assert "Progress Snapshot" in today
+    assert 'class="coach-dashboard-card__settings"' in today
+    assert 'class="coach-profile-mark"' not in today
     assert "Weekly cardio" in today
     assert "150 minutes of moderate activity" in today
     assert "--coach-card-bg:" in css
     assert "--programme-card-bg:" in css
     assert ".home-dashboard {" in css
     assert "grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr)" in css
+    assert "align-items: start" in css
     assert 'body[data-profile="female"]' in css
 
 

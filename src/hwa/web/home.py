@@ -64,8 +64,18 @@ def _duration_label(programme_id: str, week_number: int, day_number: int) -> str
     return _APPROVED_WEEK1_DURATION.get(day_number)
 
 
+_HOME_SNAPSHOT_LABELS = {
+    "dumbbell_floor_press": "Floor press",
+    "one_arm_dumbbell_row": "Row",
+    "seated_dumbbell_shoulder_press": "Shoulder press",
+}
+
+
 def _exercise_display_name(exercise_id: str) -> str:
-    return exercise_id.replace("_", " ").replace("-", " ").title()
+    return _HOME_SNAPSHOT_LABELS.get(
+        exercise_id,
+        exercise_id.replace("_", " ").replace("-", " ").title(),
+    )
 
 
 def _load_label(value: Decimal | None, unit: str | None, mode: str) -> str:

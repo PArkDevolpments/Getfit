@@ -137,8 +137,9 @@ def test_kris_can_start_interrupt_resume_complete_review_and_export(tmp_path) ->
 
         today = client.get("/")
         assert 'data-primary-action="start"' in today.text
-        assert "Health context unavailable" in today.text
-        assert "Nutrition context unavailable" in today.text
+        assert "Health context unavailable" not in today.text
+        assert "Nutrition context unavailable" not in today.text
+        assert 'class="home-context-rail"' not in today.text
 
         created = client.post(
             "/api/v1/workouts/drafts",

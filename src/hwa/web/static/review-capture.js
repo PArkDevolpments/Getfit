@@ -102,6 +102,14 @@
     await sleep(500);
   }
 
+  function detectPageState(target) {
+    const documentRef = frame.contentDocument;
+    if (!documentRef?.body) return "unknown";
+    if (target.key !== "workout") return "ready";
+    const text = documentRef.body.textContent || "";
+    return text.includes("No workout is currently in progress") ? "empty" : "active";
+  }
+
   function collectCss(documentRef) {
     const chunks = [];
     for (const sheet of Array.from(documentRef.styleSheets)) {
@@ -477,6 +485,7 @@
           setMessage(`Loading ${target.label} · ${profile.label}…`);
           await loadTarget(target, profile);
 
+          const pageState = detectPageState(target);
           setMessage(`Capturing ${target.label} · ${profile.label}…`);
           const shot = await renderDocumentToSvg(profile);
           const fileName = `screenshots/${String(completed + 1).padStart(2, '0')}-${slug(target.key)}-${slug(profile.key)}.svg`;
@@ -488,13 +497,21 @@
             profile_label: profile.label,
             width: shot.width,
             height: shot.height,
+            page_state: pageState,
             file: fileName,
           });
           completed += 1;
           setProgress(completed, targets.length * profiles.length);
         }
 
-        setTargetState(target.key, 'done', 'Captured');
+        const targetCaptures = captures.filter((capture) => capture.page === target.key);
+        const emptyWorkout = target.key === 'workout'
+          && targetCaptures.some((capture) => capture.page_state === 'empty');
+        setTargetState(
+          target.key,
+          'done',
+          emptyWorkout ? 'No active workout' : 'Captured',
+        );
       }
 
       const manifest = {
@@ -511,6 +528,11 @@
           device_pixel_ratio: window.devicePixelRatio,
         },
         captures,
+        review_warnings: captures.some(
+          (capture) => capture.page === 'workout' && capture.page_state === 'empty',
+        )
+          ? ['No active workout was captured. Start or resume a workout before Gate 2 review.']
+          : [],
         snapshot_count: files.length,
       };
 
@@ -534,7 +556,14 @@
       const zip = await createZip(files);
       downloadZip(zip);
       setProgress(1, 1);
-      setMessage(`Done — ${completed} visual snapshots downloaded in one ZIP. Upload that ZIP to ChatGPT.`);
+      const emptyWorkout = captures.some(
+        (capture) => capture.page === 'workout' && capture.page_state === 'empty',
+      );
+      setMessage(
+        emptyWorkout
+          ? `Done — ${completed} snapshots downloaded. No active workout was captured; start or resume one before the Gate 2 pack.`
+          : `Done — ${completed} visual snapshots downloaded in one ZIP. Upload that ZIP to ChatGPT.`,
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Capture failed.';
       setMessage(message);
