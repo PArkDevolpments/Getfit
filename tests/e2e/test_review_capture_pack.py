@@ -76,3 +76,13 @@ def test_automated_audit_measures_core_touch_targets_across_product_states() -> 
     assert "'interval-hard'" in script
     assert "'exercise-detail'" in script
     assert "touchAudit.failures.length ? 'FAIL' : 'PASS'" in script
+
+
+def test_strength_feedback_and_rest_audit_require_phone_viewport_visibility() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "function fullyVisible" in script
+    assert "const feedbackPanel = documentRef.querySelector('[data-set-feedback-panel]')" in script
+    assert "feedbackVisible && feedbackButtons.length === 4" in script
+    assert "const restVisible = fullyVisible(mainRest, documentRef, profile)" in script
+    assert "mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL'" in script
