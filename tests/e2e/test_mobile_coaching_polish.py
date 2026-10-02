@@ -59,4 +59,6 @@ def test_library_actions_and_phone_progress_chart_are_viewport_safe() -> None:
     progress_mobile = css.split("/* Evidence-first Progress product surface", 1)[1]
     progress_mobile = progress_mobile.split("@media (max-width: 620px)", 1)[1]
     assert "overflow-x: hidden;" in progress_mobile
-    assert ".progress-chart {\n    min-width: 0;" in progress_mobile
+    progress_chart = progress_mobile.split(".progress-chart {", 1)[1].split("}", 1)[0]
+    assert "width: 100%;" in progress_chart
+    assert "min-width: 0;" in progress_chart
