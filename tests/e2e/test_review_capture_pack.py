@@ -61,7 +61,7 @@ def test_automated_audit_tracks_current_workout_dom_contracts() -> None:
     assert "data-main-rest-panel" in workout
     assert "querySelector('[data-main-rest-panel]')" in script
     assert "Dedicated 01:30 rest state" in script
-    assert "mainRest && /01:30/.test(restText) ? 'PASS' : 'FAIL'" in script
+    assert "mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL'" in script
     assert "node.dataset.segmentType === 'CONDITIONING'" in script
     assert r"/RPE\s*7(?:\.0+)?–8(?:\.0+)?/" in script
     assert r"/RPE\s*2(?:\.0+)?–3(?:\.0+)?/" in script
