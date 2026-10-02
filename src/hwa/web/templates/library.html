@@ -1,25 +1,38 @@
 {% extends "base.html" %}
 
-{% block title %}Library · Home Workout Assistant{% endblock %}
+{% block title %}Library · Getfit{% endblock %}
 
 {% block content %}
 <section class="card">
   <p class="eyebrow">Exercise library</p>
-  <h2>Technique support</h2>
-  <p class="muted">Exercises come from the approved programme. Media is optional support and never changes your prescribed workout.</p>
+  <h2>Know the movement before the set.</h2>
+  <p class="muted">Technique support comes from the approved programme. Local or approved external media is optional and never blocks your workout.</p>
 </section>
-{% for exercise in exercises %}
-<section class="card" data-exercise-id="{{ exercise.exercise_id }}">
-  <h3>{{ exercise.display_name }}</h3>
-  <p class="muted"><code>{{ exercise.exercise_id }}</code></p>
-  {% if exercise.media.available %}
-    <p>Technique media available</p>
+
+<section class="exercise-grid" aria-label="Programme exercises">
+  {% for exercise in exercises %}
+  <article class="exercise-card" data-exercise-id="{{ exercise.exercise_id }}">
+    <div class="exercise-card__visual" aria-hidden="true">
+      <svg viewBox="0 0 100 100">
+        <path d="M14 41v18M22 34v32M78 34v32M86 41v18M22 50h56"/>
+        <circle cx="50" cy="24" r="8"/>
+        <path d="M50 32v26M38 42l12 9 12-9M50 58 39 82M50 58l11 24"/>
+      </svg>
+    </div>
+    <div class="exercise-card__body">
+      <p class="eyebrow">{{ exercise.movement_family }}</p>
+      <h3>{{ exercise.display_name }}</h3>
+      <p class="exercise-card__meta">{{ exercise.body_area }}</p>
+      {% if exercise.media.available %}
+        <span class="status-pill status-pill--ready">Technique media available</span>
+      {% else %}
+        <span class="status-pill status-pill--quiet">Media unavailable</span>
+      {% endif %}
+      <a class="primary-action" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">View exercise</a>
+    </div>
+  </article>
   {% else %}
-    <p>Media unavailable</p>
-  {% endif %}
-  <a class="primary-action" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">View exercise</a>
+  <div class="empty-state">No approved programme exercises are available yet.</div>
+  {% endfor %}
 </section>
-{% else %}
-<section class="card"><p>No programme exercises are available yet.</p></section>
-{% endfor %}
 {% endblock %}
