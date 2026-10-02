@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Versioned human-acceptance specification for the staged Getfit rebuild."""
 
 from typing import Any
