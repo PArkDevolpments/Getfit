@@ -3,7 +3,7 @@
   const frame = document.getElementById('review-frame');
   const frameShell = document.getElementById('frame-shell');
   const stageLabel = document.getElementById('stage-label');
-  const captureAllButton = document.getElementById('capture-all');
+  const automatedAuditButton = document.getElementById('run-automated-audit');
   const responsiveButton = document.getElementById('capture-responsive');
   const cancelButton = document.getElementById('cancel-capture');
   const progressBar = document.getElementById('progress-bar');
@@ -14,6 +14,9 @@
   if (!targetsNode || !frame || !frameShell) return;
 
   const targets = JSON.parse(targetsNode.textContent || '[]');
+  const acceptanceSpecification = acceptanceSpecNode
+    ? JSON.parse(acceptanceSpecNode.textContent || '{}')
+    : {};
   const fullProfiles = [
     {key: 'phone', label: 'Phone', width: 390, height: 844},
     {key: 'tablet', label: 'Tablet', width: 820, height: 1180},
