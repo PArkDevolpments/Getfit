@@ -373,14 +373,15 @@
         </section>
 
         <section class="main-rest-panel" data-main-rest-panel {% if review_state|default('') != 'strength-rest' %}hidden{% endif %}>
-          <p class="eyebrow">Starting rest timer…</p>
+          <p class="eyebrow">Rest</p>
           <div class="main-rest-ring">
             <strong data-rest-display>{% if review_state|default('') == 'strength-rest' %}01:30{% else %}00:00{% endif %}</strong>
           </div>
           <p class="main-rest-next">Next: <strong>{{ item.display_name }} · Set 2 of {{ item.sets_target }}</strong></p>
-          {% if not review_mode|default(false) %}
-          <button class="ghost-action" type="button" data-end-rest>End rest early</button>
-          {% endif %}
+          <div class="main-rest-actions">
+            <button class="secondary-action" type="button" data-add-rest>+15 sec</button>
+            <button class="ghost-action" type="button" data-end-rest>Skip Rest</button>
+          </div>
         </section>
       </article>
       {% endfor %}
