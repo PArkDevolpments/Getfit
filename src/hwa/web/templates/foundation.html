@@ -10,7 +10,7 @@
       <p class="eyebrow">Today</p>
       {% if today_view.week_number is not none and today_view.day_number is not none %}
         <h2 class="today-hero__title">{{ today_view.title }}</h2>
-        <p class="today-hero__meta">Week {{ today_view.week_number }} · Day {{ today_view.day_number }} · Foundation block</p>
+        <p class="today-hero__meta">Week {{ today_view.week_number }} · Day {{ today_view.day_number }}</p>
       {% elif primary_action == "programme_complete" %}
         <h2 class="today-hero__title">Week 1 complete.</h2>
         <p class="today-hero__meta">All currently approved programme content has been completed.</p>
