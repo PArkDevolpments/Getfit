@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from hwa.db.base import Base
 from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import Person
+from hwa.db.models.programme import ProgrammeDay
 from hwa.services.programmes import import_week_seed
 from hwa.web.home import build_home_dashboard
 
@@ -46,13 +47,18 @@ def _session(tmp_path) -> tuple[Session, object]:
 def test_home_dashboard_projects_design_board_data_from_real_week1_authority(tmp_path) -> None:
     session, engine = _session(tmp_path)
     try:
+        day = session.query(ProgrammeDay).filter_by(
+            programme_id="home-workout-12m-v1",
+            week_number=1,
+            day_number=1,
+        ).one()
         dashboard = build_home_dashboard(
             session,
             person_id="hwa-kris",
             programme_id="home-workout-12m-v1",
             week_number=1,
             current_day_number=1,
-            current_programme_day_id="home-workout-12m-v1-week-01-day-01",
+            current_programme_day_id=day.id,
         )
 
         assert dashboard.duration_label == "~ 40–45 min"
@@ -77,13 +83,18 @@ def test_home_dashboard_projects_design_board_data_from_real_week1_authority(tmp
 def test_home_dashboard_never_fabricates_unapproved_person_loads(tmp_path) -> None:
     session, engine = _session(tmp_path)
     try:
+        day = session.query(ProgrammeDay).filter_by(
+            programme_id="home-workout-12m-v1",
+            week_number=1,
+            day_number=1,
+        ).one()
         dashboard = build_home_dashboard(
             session,
             person_id="hwa-kirsty",
             programme_id="home-workout-12m-v1",
             week_number=1,
             current_day_number=1,
-            current_programme_day_id="home-workout-12m-v1-week-01-day-01",
+            current_programme_day_id=day.id,
         )
 
         assert dashboard.prescription_snapshot
