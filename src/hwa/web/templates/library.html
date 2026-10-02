@@ -3,32 +3,42 @@
 {% block title %}Library · Getfit{% endblock %}
 
 {% block content %}
-<section class="card">
-  <p class="eyebrow">Exercise library</p>
-  <h2>Know the movement before the set.</h2>
-  <p class="muted">Technique support comes from the approved programme. Local or approved external media is optional and never blocks your workout.</p>
+<section class="library-hero">
+  <div>
+    <p class="eyebrow">Exercise library</p>
+    <h2>Learn the movement. Then train it.</h2>
+    <p class="muted">Every movement in the approved Week 1 programme has a local visual guide and coaching cues. Your workout targets remain authoritative.</p>
+  </div>
+  <div class="library-hero__badge">
+    <strong>{{ exercises|length }}</strong>
+    <span>programme movements</span>
+  </div>
 </section>
 
-<section class="exercise-grid" aria-label="Programme exercises">
+<section class="exercise-grid exercise-grid--visual" aria-label="Programme exercises">
   {% for exercise in exercises %}
-  <article class="exercise-card" data-exercise-id="{{ exercise.exercise_id }}">
-    <div class="exercise-card__visual" aria-hidden="true">
-      <svg viewBox="0 0 100 100">
-        <path d="M14 41v18M22 34v32M78 34v32M86 41v18M22 50h56"/>
-        <circle cx="50" cy="24" r="8"/>
-        <path d="M50 32v26M38 42l12 9 12-9M50 58 39 82M50 58l11 24"/>
-      </svg>
-    </div>
-    <div class="exercise-card__body">
-      <p class="eyebrow">{{ exercise.movement_family }}</p>
-      <h3>{{ exercise.display_name }}</h3>
-      <p class="exercise-card__meta">{{ exercise.body_area }}</p>
-      {% if exercise.media.available %}
-        <span class="status-pill status-pill--ready">Technique media available</span>
+  <article class="exercise-card exercise-card--visual" data-exercise-id="{{ exercise.exercise_id }}">
+    <a class="exercise-card__media" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}" aria-label="Open {{ exercise.display_name }}">
+      {% if exercise.media.local_demo_path %}
+      <img src="{{ ingress_url(request, exercise.media.local_demo_path) }}" alt="" loading="lazy">
       {% else %}
-        <span class="status-pill status-pill--quiet">Media unavailable</span>
+      <div class="exercise-card__intentional-fallback" aria-hidden="true">
+        <span>{{ exercise.display_name[:1] }}</span>
+      </div>
       {% endif %}
-      <a class="primary-action" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">View exercise</a>
+      <span class="exercise-card__movement">{{ exercise.movement_family }}</span>
+    </a>
+    <div class="exercise-card__body">
+      <div>
+        <h3>{{ exercise.display_name }}</h3>
+        <p class="exercise-card__meta">{{ exercise.body_area }}</p>
+      </div>
+      <div class="exercise-card__footer">
+        <span class="status-pill status-pill--ready">
+          {% if exercise.media.phase_demo_paths %}Step-by-step demo{% else %}Visual guide{% endif %}
+        </span>
+        <a class="exercise-card__open" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}">View →</a>
+      </div>
     </div>
   </article>
   {% else %}
