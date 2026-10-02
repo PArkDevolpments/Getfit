@@ -9,8 +9,8 @@ def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> Non
     template = (TEMPLATES / "review_capture.html").read_text(encoding="utf-8")
     script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
 
-    assert "Capture all pages" in template
-    assert "Full responsive pack" in template
+    assert "Run automated specification audit" in template
+    assert "Visual pack only" in template
     assert "getDisplayMedia" not in script
     assert "preferCurrentTab" not in script
     assert "contentDocument" in script
