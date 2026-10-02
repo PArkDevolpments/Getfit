@@ -23,10 +23,12 @@ from hwa.web.dependencies import resolve_web_person_context
 from hwa.web.library import get_exercise, list_exercises
 from hwa.web.progress import build_progress_context
 from hwa.web.settings import build_settings_view
+from hwa.web.urls import ingress_url
 from hwa.web.workout import build_player_context
 
 router = APIRouter(tags=["product-web"])
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+templates.env.globals["ingress_url"] = ingress_url
 
 _IDENTITY_SELECTORS = frozenset(
     {
