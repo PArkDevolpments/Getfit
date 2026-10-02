@@ -114,7 +114,7 @@
     button.disabled = true;
     status.textContent = 'Starting workout…';
     try {
-      const response = await fetch('/api/v1/workouts/drafts', {
+      const response = await fetch('{{ ingress_url(request, "/api/v1/workouts/drafts") }}', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
