@@ -1,17 +1,33 @@
 (() => {
-  for (const host of document.querySelectorAll('[data-local-demo]')) {
-    const path = host.dataset.localDemo;
-    if (!path) continue;
-    const media = document.createElement('img');
-    media.src = path;
-    media.alt = 'Exercise technique demonstration';
-    media.loading = 'lazy';
-    media.addEventListener('error', () => {
-      host.replaceChildren();
-      const note = document.createElement('p');
-      note.textContent = 'Technique media is unavailable. The exercise is still usable.';
-      host.append(note);
+  for (const image of document.querySelectorAll('.exercise-card__media img, .exercise-phase img, .exercise-single-demo img')) {
+    image.addEventListener('error', () => {
+      const host = image.closest('.exercise-card__media, .exercise-phase, .exercise-single-demo');
+      if (!host) return;
+      const fallback = document.createElement('div');
+      fallback.className = 'exercise-media-fallback';
+      fallback.innerHTML = '<strong>Visual unavailable</strong><p>The approved technique cues remain available.</p>';
+      image.replaceWith(fallback);
     });
-    host.replaceChildren(media);
   }
+
+  const tabs = [...document.querySelectorAll('[data-media-tab]')];
+  const panels = [...document.querySelectorAll('[data-media-panel]')];
+  if (!tabs.length || !panels.length) return;
+
+  const activate = (key) => {
+    for (const tab of tabs) {
+      const active = tab.dataset.mediaTab === key;
+      tab.classList.toggle('is-active', active);
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+    }
+    for (const panel of panels) {
+      panel.hidden = panel.dataset.mediaPanel !== key;
+    }
+  };
+
+  for (const tab of tabs) {
+    tab.addEventListener('click', () => activate(tab.dataset.mediaTab || 'images'));
+  }
+
+  activate('images');
 })();

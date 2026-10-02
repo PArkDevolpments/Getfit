@@ -25,6 +25,7 @@ from hwa.web.dependencies import resolve_web_person_context
 from hwa.web.home import build_home_dashboard
 from hwa.web.library import get_exercise, list_exercises
 from hwa.web.progress import build_progress_context
+from hwa.web.review_sandbox import build_review_player, build_review_progress
 from hwa.web.settings import build_settings_view
 from hwa.web.urls import ingress_url
 from hwa.web.workout import build_player_context
@@ -257,6 +258,57 @@ def exercise_detail(
 
 
 @router.get(
+    "/review-sandbox/{state}",
+    response_class=HTMLResponse,
+    dependencies=[Depends(reject_identity_selectors)],
+)
+def review_sandbox(
+    state: str,
+    request: Request,
+    person: Annotated[PersonContext, Depends(resolve_web_person_context)],
+    session: Annotated[Session, Depends(get_session)],
+) -> HTMLResponse:
+    """Render deterministic read-only product states for automated review."""
+
+    if state == "progress":
+        return templates.TemplateResponse(
+            request=request,
+            name="progress.html",
+            context={
+                "page": build_page_context(person, "progress"),
+                "person": person,
+                "progress": build_review_progress(),
+                "review_mode": True,
+                "review_state": "progress",
+            },
+        )
+
+    allowed = {
+        "strength-active",
+        "strength-feedback",
+        "strength-rest",
+        "bike-finisher",
+        "treadmill",
+        "interval-hard",
+        "interval-recovery",
+    }
+    if state not in allowed:
+        raise HTTPException(status_code=404, detail="REVIEW_SANDBOX_STATE_NOT_FOUND")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="workout.html",
+        context={
+            "page": build_page_context(person, "workout"),
+            "person": person,
+            "player": build_review_player(session, person.hwa_person_id, state),
+            "review_mode": True,
+            "review_state": state,
+        },
+    )
+
+
+@router.get(
     "/review-spec",
     response_class=HTMLResponse,
     dependencies=[Depends(reject_identity_selectors)],
@@ -302,21 +354,63 @@ def review_capture(
 
     targets = [
         {"key": "today", "label": "Today", "url": ingress_url(request, "/")},
-        {"key": "workout", "label": "Workout", "url": ingress_url(request, "/workout")},
-        {"key": "progress", "label": "Progress", "url": ingress_url(request, "/progress")},
-        {"key": "library", "label": "Library", "url": ingress_url(request, "/library")},
+        {
+            "key": "strength-active",
+            "label": "Strength — active Floor Press",
+            "url": ingress_url(request, "/review-sandbox/strength-active"),
+        },
+        {
+            "key": "strength-feedback",
+            "label": "Strength — Set Complete feedback",
+            "url": ingress_url(request, "/review-sandbox/strength-feedback"),
+        },
+        {
+            "key": "strength-rest",
+            "label": "Strength — rest countdown",
+            "url": ingress_url(request, "/review-sandbox/strength-rest"),
+        },
+        {
+            "key": "bike-finisher",
+            "label": "Cardio — bike finisher",
+            "url": ingress_url(request, "/review-sandbox/bike-finisher"),
+        },
+        {
+            "key": "treadmill",
+            "label": "Cardio — treadmill",
+            "url": ingress_url(request, "/review-sandbox/treadmill"),
+        },
+        {
+            "key": "interval-hard",
+            "label": "Intervals — HARD",
+            "url": ingress_url(request, "/review-sandbox/interval-hard"),
+        },
+        {
+            "key": "interval-recovery",
+            "label": "Intervals — recovery",
+            "url": ingress_url(request, "/review-sandbox/interval-recovery"),
+        },
+        {
+            "key": "progress-review",
+            "label": "Progress — populated review state",
+            "url": ingress_url(request, "/review-sandbox/progress"),
+        },
+        {
+            "key": "progress",
+            "label": "Progress — live evidence",
+            "url": ingress_url(request, "/progress"),
+        },
+        {
+            "key": "library",
+            "label": "Library",
+            "url": ingress_url(request, "/library"),
+        },
+        {
+            "key": "exercise-detail",
+            "label": "Exercise detail — Dumbbell Floor Press",
+            "url": ingress_url(request, "/library/dumbbell_floor_press"),
+        },
         {"key": "settings", "label": "Settings", "url": ingress_url(request, "/settings")},
     ]
-    exercises = list_exercises(session)
-    if exercises:
-        targets.insert(
-            4,
-            {
-                "key": "exercise-detail",
-                "label": f"Exercise detail — {exercises[0].display_name}",
-                "url": ingress_url(request, f"/library/{exercises[0].exercise_id}"),
-            },
-        )
 
     specification = acceptance_spec_payload()
     storage_key = (

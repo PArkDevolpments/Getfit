@@ -74,10 +74,22 @@ def test_workout_has_guided_stage_hierarchy_and_large_live_controls() -> None:
     assert 'class="workout-stage' in workout
     assert 'id="workout-progress-bar"' in workout
     assert 'id="rest-timer"' in workout
+    assert 'data-complete-set' in workout
+    assert 'id="set-feedback-panel"' in workout
+    assert 'id="main-rest-panel"' in workout
+    assert "Too easy" in workout
+    assert "About right" in workout
+    assert "Too hard" in workout
+    assert "Pain / Stop" in workout
+    assert "View Technique" in workout
+    assert "interval-state-banner--hard" in workout
+    assert "interval-state-banner--recovery" in workout
     for control in ("previous-stage", "pause-workout", "skip-stage", "next-stage", "stop-workout"):
         assert f'id="{control}"' in workout
     assert "setActiveStage" in js
     assert "startRestTimer" in js
+    assert "showFeedback" in js
+    assert "applyFeedback" in js
     assert ".workout-command-bar" in css
     assert "min-height: 48px" in css
 
@@ -90,7 +102,15 @@ def test_library_and_progress_hide_implementation_ids_and_use_product_cards() ->
     assert "<code>{{ exercise.exercise_id }}</code>" not in library
     assert "<code>{{ exercise.exercise_id }}</code>" not in detail
     assert 'class="exercise-card' in library
+    assert 'class="exercise-card__media"' in library
+    assert 'class="exercise-media-tabs"' in detail
+    assert "exercise.media.phase_demo_paths" in detail
+    assert "exercise.media.phase_labels[loop.index0]" in detail
+    assert 'data-media-panel="technique"' in detail
+    assert 'data-media-panel="video"' in detail
     assert 'class="progress-kpi-grid' in progress
+    assert 'data-progress-chart' in progress
+    assert 'class="recent-progression-list"' in progress
     assert 'class="history-timeline' in progress
 
 

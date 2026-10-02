@@ -15,6 +15,7 @@ from hwa.db.models.programme import (
     ProgrammeStrengthItem,
 )
 from hwa.domain.draft import WorkoutDraftSnapshot
+from hwa.domain.exercise_media import resolve_exercise_media
 from hwa.services.workout_drafts import DraftNotFoundError, get_draft
 
 
@@ -23,6 +24,8 @@ class StrengthTarget:
     item_id: str
     sequence: int
     exercise_id: str
+    display_name: str
+    media_path: str | None
     target_type: str
     sets_target: int
     reps_target: int | None
@@ -123,6 +126,8 @@ def _strength_targets(
                 item_id=item.id,
                 sequence=item.sequence,
                 exercise_id=item.exercise_id,
+                display_name=item.exercise_id.replace("-", " ").replace("_", " ").title(),
+                media_path=resolve_exercise_media(item.exercise_id).local_demo_path,
                 target_type=item.target_type.upper(),
                 sets_target=item.sets_target,
                 reps_target=item.reps_target,
@@ -191,6 +196,15 @@ def _cardio_targets(
             )
         )
     return tuple(projected)
+
+
+def get_cardio_targets(
+    session: Session,
+    programme_day_id: str,
+) -> tuple[CardioTarget, ...]:
+    """Project approved cardio targets without requiring a draft."""
+
+    return _cardio_targets(session, programme_day_id)
 
 
 def build_player_context(

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f7fbfe"/>
+      <stop offset="1" stop-color="#dcecf7"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" x2="1">
+      <stop offset="0" stop-color="#27a7ff"/>
+      <stop offset="1" stop-color="#0b65a7"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#062033" flood-opacity=".18"/></filter>
+  </defs>
+  <rect width="640" height="420" rx="28" fill="url(#bg)"/>
+  <path d="M45 345H595" stroke="#bdd0dc" stroke-width="8" stroke-linecap="round"/>
+  <g filter="url(#shadow)" stroke-linecap="round" stroke-linejoin="round"><rect x="150" y="300" width="340" height="24" rx="12" fill="#7993a5"/><g transform="translate(0 52)"><circle cx="320" cy="112" r="34" fill="#efc6a7" stroke="#17344d" stroke-width="7"/><path d="M278 150h84l35 100H243z" fill="url(#shirt)" stroke="#17344d" stroke-width="7"/><path d="M290 167 270 80M350 167l20-87" stroke="#efc6a7" stroke-width="22"/><path d="M280 245 235 303M360 245l45 58" stroke="#17344d" stroke-width="24"/><g transform="translate(268 74)" stroke="#122d43" stroke-width="8"><path d="M-30 0H30"/><rect x="-48" y="-18" width="18" height="36" rx="5" fill="#223d52"/><rect x="30" y="-18" width="18" height="36" rx="5" fill="#223d52"/></g><g transform="translate(372 74)" stroke="#122d43" stroke-width="8"><path d="M-30 0H30"/><rect x="-48" y="-18" width="18" height="36" rx="5" fill="#223d52"/><rect x="30" y="-18" width="18" height="36" rx="5" fill="#223d52"/></g></g></g>
+</svg>
