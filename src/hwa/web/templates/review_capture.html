@@ -12,6 +12,7 @@
   data-app-version="{{ app_version }}"
   data-display-name="{{ person.display_name }}"
   data-presentation-profile="{{ person.presentation_profile }}"
+  data-acceptance-storage-key="{{ acceptance_storage_key }}"
 >
   <aside class="review-toolbar" id="review-toolbar">
     <div class="review-toolbar__heading">
@@ -69,6 +70,12 @@
       <span>The Workout image reflects its current live state. Start or resume a workout first when you want the active workout player reviewed.</span>
     </div>
 
+    <div class="review-help">
+      <strong>Specification evidence</strong>
+      <span>The ZIP also includes the versioned acceptance specification and your saved PASS / FAIL / BLOCKED decisions.</span>
+      <a class="review-button review-button--secondary" href="{{ ingress_url(request, '/review-spec') }}">Open Specification & Acceptance</a>
+    </div>
+
     <a class="review-back" href="{{ ingress_url(request, '/settings') }}">← Back to Settings</a>
   </aside>
 
@@ -84,6 +91,8 @@
   </main>
 
   <script id="review-targets" type="application/json">{{ capture_targets | tojson }}</script>
+  <script id="acceptance-specification" type="application/json">{{ acceptance_spec | tojson }}</script>
+  <script id="acceptance-storage-key" type="application/json">{{ acceptance_storage_key | tojson }}</script>
   <script src="{{ ingress_url(request, '/static/review-capture.js') }}" defer></script>
 </body>
 </html>

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Specification & Acceptance · Getfit{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ ingress_url(request, '/static/acceptance-review.css') }}">
+{% endblock %}
+
+{% block content %}
+<section
+  class="acceptance-review"
+  data-app-version="{{ app_version }}"
+  data-spec-version="{{ acceptance_spec.spec_version }}"
+  data-storage-key="{{ acceptance_storage_key }}"
+  data-workout-active="{{ 'true' if workout_active else 'false' }}"
+>
+  <header class="acceptance-hero">
+    <div>
+      <p class="eyebrow">Human release gate</p>
+      <h2>Specification & Acceptance</h2>
+      <p class="acceptance-hero__intro">
+        Test each requirement against the live app, record PASS / FAIL / BLOCKED, and keep the evidence tied to this exact app and specification version.
+      </p>
+    </div>
+    <div class="acceptance-version-card">
+      <span>App</span>
+      <strong>v{{ app_version }}</strong>
+      <span>Specification</span>
+      <strong>{{ acceptance_spec.spec_version }}</strong>
+    </div>
+  </header>
+
+  <section class="acceptance-summary" aria-label="Acceptance summary">
+    <div class="acceptance-summary__metric">
+      <span>Overall</span>
+      <strong id="overall-status" class="acceptance-status acceptance-status--not-tested">NOT TESTED</strong>
+    </div>
+    <div class="acceptance-summary__metric">
+      <span>Criteria passed</span>
+      <strong id="passed-count">0 / 0</strong>
+    </div>
+    <div class="acceptance-summary__metric">
+      <span>Failed</span>
+      <strong id="failed-count">0</strong>
+    </div>
+    <div class="acceptance-summary__metric">
+      <span>Blocked</span>
+      <strong id="blocked-count">0</strong>
+    </div>
+    <div class="acceptance-summary__actions">
+      <button type="button" class="button button--quiet" id="download-acceptance">Download acceptance JSON</button>
+      <button type="button" class="button button--quiet" id="reset-acceptance">Reset this version</button>
+    </div>
+  </section>
+
+  {% if not workout_active %}
+  <aside class="acceptance-prerequisite" role="status">
+    <strong>Gate 2 prerequisite is not currently met.</strong>
+    <span>No active workout draft exists. Start or resume Day 1 before testing the Strength Workout criteria.</span>
+    <a href="{{ ingress_url(request, '/') }}">Go to Today</a>
+  </aside>
+  {% endif %}
+
+  <nav class="acceptance-gate-nav" aria-label="Acceptance gates">
+    {% for gate in acceptance_spec.gates %}
+    <a href="#{{ gate.gate_id|lower }}">
+      <span>{{ gate.gate_id }}</span>
+      <strong>{{ gate.title }}</strong>
+      <em class="gate-nav-status" data-gate-nav-status="{{ gate.gate_id }}">NOT TESTED</em>
+    </a>
+    {% endfor %}
+  </nav>
+
+  <div class="acceptance-gates">
+    {% for gate in acceptance_spec.gates %}
+    <section class="acceptance-gate" id="{{ gate.gate_id|lower }}" data-gate-id="{{ gate.gate_id }}">
+      <header class="acceptance-gate__header">
+        <div>
+          <p class="eyebrow">{{ gate.gate_id }}</p>
+          <h3>{{ gate.title }}</h3>
+          <p>{{ gate.description }}</p>
+          <small>Source: {{ gate.source }}</small>
+        </div>
+        <div class="acceptance-gate__status">
+          <span>Gate result</span>
+          <strong class="acceptance-status acceptance-status--not-tested" data-gate-status="{{ gate.gate_id }}">NOT TESTED</strong>
+          <small data-gate-progress="{{ gate.gate_id }}">0 / {{ gate.criteria|length }} mandatory passed</small>
+        </div>
+      </header>
+
+      <div class="acceptance-criteria">
+        {% for criterion in gate.criteria %}
+        <article
+          class="acceptance-criterion"
+          data-criterion-id="{{ criterion.criterion_id }}"
+          data-gate-id="{{ gate.gate_id }}"
+          data-mandatory="{{ 'true' if criterion.mandatory else 'false' }}"
+          data-route="{{ criterion.route }}"
+        >
+          <div class="acceptance-criterion__heading">
+            <div>
+              <div class="criterion-id-row">
+                <span class="criterion-id">{{ criterion.criterion_id }}</span>
+                {% if criterion.mandatory %}<span class="criterion-required">Required</span>{% endif %}
+              </div>
+              <h4>{{ criterion.title }}</h4>
+            </div>
+            <span class="acceptance-status acceptance-status--not-tested" data-criterion-status>NOT TESTED</span>
+          </div>
+
+          <div class="acceptance-criterion__body">
+            <section>
+              <h5>Expected result</h5>
+              <p>{{ criterion.expected }}</p>
+            </section>
+
+            <section>
+              <h5>Human checks</h5>
+              <ol>
+                {% for step in criterion.test_steps %}
+                <li>{{ step }}</li>
+                {% endfor %}
+              </ol>
+            </section>
+
+            <section class="criterion-meta">
+              <div>
+                <h5>Source</h5>
+                <p>{{ criterion.source }}</p>
+              </div>
+              <div>
+                <h5>Viewports</h5>
+                <p>{{ criterion.viewports|join(", ") }}</p>
+              </div>
+              {% if criterion.automated_check %}
+              <div>
+                <h5>Automated checks</h5>
+                <p>{{ criterion.automated_check }}</p>
+              </div>
+              {% endif %}
+            </section>
+          </div>
+
+          <div class="acceptance-criterion__actions">
+            <a class="criterion-open-link" href="{{ ingress_url(request, criterion.route) }}" target="_blank" rel="noopener">Open feature</a>
+            <div class="criterion-decision" role="group" aria-label="{{ criterion.criterion_id }} result">
+              <button type="button" data-decision="PASS">Pass</button>
+              <button type="button" data-decision="FAIL">Fail</button>
+              <button type="button" data-decision="BLOCKED">Blocked</button>
+              <button type="button" data-decision="NOT_TESTED">Not tested</button>
+            </div>
+          </div>
+
+          <label class="criterion-notes">
+            <span>Evidence / notes</span>
+            <textarea rows="3" data-criterion-notes placeholder="What did you observe? What failed? Add screenshot/reference notes here."></textarea>
+          </label>
+
+          <footer class="criterion-audit">
+            <span data-criterion-updated>Not yet reviewed</span>
+          </footer>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+</section>
+
+<script id="acceptance-spec" type="application/json">{{ acceptance_spec | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ ingress_url(request, '/static/acceptance-review.js') }}" defer></script>
+{% endblock %}

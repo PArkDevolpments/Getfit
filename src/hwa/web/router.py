@@ -19,6 +19,7 @@ from hwa.integrations.pep.health_reader import PepHealthContext, PepHealthReader
 from hwa.read_models.history import get_exercise_history
 from hwa.services.today import get_today_view
 from hwa.services.workout_drafts import get_active_draft
+from hwa.web.acceptance import acceptance_spec_payload
 from hwa.web.context import build_page_context
 from hwa.web.dependencies import resolve_web_person_context
 from hwa.web.home import build_home_dashboard
@@ -256,6 +257,38 @@ def exercise_detail(
 
 
 @router.get(
+    "/review-spec",
+    response_class=HTMLResponse,
+    dependencies=[Depends(reject_identity_selectors)],
+)
+def review_spec(
+    request: Request,
+    person: Annotated[PersonContext, Depends(resolve_web_person_context)],
+    session: Annotated[Session, Depends(get_session)],
+) -> HTMLResponse:
+    """Render the versioned human acceptance specification and gate checklist."""
+
+    active = get_active_draft(session, person.hwa_person_id)
+    specification = acceptance_spec_payload()
+    storage_key = (
+        f"getfit-acceptance:{request.app.version}:"
+        f"{specification['spec_version']}:{person.display_name.lower()}"
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="acceptance_review.html",
+        context={
+            "page": build_page_context(person, "settings"),
+            "person": person,
+            "acceptance_spec": specification,
+            "acceptance_storage_key": storage_key,
+            "app_version": request.app.version,
+            "workout_active": active is not None,
+        },
+    )
+
+
+@router.get(
     "/review-capture",
     response_class=HTMLResponse,
     dependencies=[Depends(reject_identity_selectors)],
@@ -285,6 +318,11 @@ def review_capture(
             },
         )
 
+    specification = acceptance_spec_payload()
+    storage_key = (
+        f"getfit-acceptance:{request.app.version}:"
+        f"{specification['spec_version']}:{person.display_name.lower()}"
+    )
     return templates.TemplateResponse(
         request=request,
         name="review_capture.html",
@@ -292,6 +330,8 @@ def review_capture(
             "person": person,
             "capture_targets": targets,
             "app_version": request.app.version,
+            "acceptance_spec": specification,
+            "acceptance_storage_key": storage_key,
         },
     )
 
