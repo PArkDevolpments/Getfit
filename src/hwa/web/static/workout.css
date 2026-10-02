@@ -569,3 +569,558 @@
     padding: .42rem;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* Coaching-first workout states                                             */
+/* -------------------------------------------------------------------------- */
+
+.review-sandbox-banner {
+  min-height: 42px;
+  padding: .55rem .75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  border: 1px solid rgba(92, 203, 255, .24);
+  border-radius: 12px;
+  color: #ccecff;
+  background: rgba(20, 133, 196, .09);
+  font-size: .68rem;
+}
+
+.review-sandbox-banner strong {
+  color: #fff;
+}
+
+.strength-coach-grid,
+.cardio-coach-grid {
+  display: grid;
+  grid-template-columns: minmax(250px, .82fr) minmax(0, 1.18fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.strength-media-column {
+  min-width: 0;
+  display: grid;
+  gap: .55rem;
+  align-content: start;
+}
+
+.workout-stage__visual--strength {
+  min-height: 300px;
+  padding: 0;
+  background: #eef6fa;
+}
+
+.workout-stage__visual--strength img {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  display: block;
+  object-fit: cover;
+}
+
+.movement-media-missing {
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  color: #7894a8;
+  font-size: .76rem;
+}
+
+.technique-action {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  border: 1px solid rgba(67, 187, 246, .25);
+  border-radius: 11px;
+  color: #aee5ff;
+  background: rgba(22, 151, 255, .075);
+  font-size: .72rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.strength-coach-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.strength-coach-main > h2 {
+  margin: .22rem 0 .8rem;
+  font-size: clamp(1.75rem, 4vw, 2.8rem);
+  line-height: 1;
+  letter-spacing: -.05em;
+}
+
+.strength-primary-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .55rem;
+}
+
+.strength-primary-metrics > div {
+  min-height: 90px;
+  padding: .7rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border: 1px solid rgba(119, 166, 199, .16);
+  border-radius: 13px;
+  background: rgba(255,255,255,.025);
+  text-align: center;
+}
+
+.strength-primary-metrics strong,
+.strength-primary-metrics span {
+  display: block;
+}
+
+.strength-primary-metrics strong {
+  color: #fff;
+  font-size: 1.12rem;
+  line-height: 1.05;
+}
+
+.strength-primary-metrics span {
+  margin-top: .28rem;
+  color: #87a5b8;
+  font-size: .62rem;
+  font-weight: 720;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.strength-secondary-prescription {
+  margin: .6rem 0 .55rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem;
+  color: #9bb5c7;
+  font-size: .68rem;
+}
+
+.strength-secondary-prescription strong {
+  color: #eaf8ff;
+}
+
+.set-stack {
+  margin-top: auto;
+}
+
+.set-entry:not(.is-current-set) {
+  display: none;
+}
+
+.set-entry.is-current-set {
+  padding: .8rem;
+  border-radius: 13px;
+  background: rgba(5, 18, 31, .55);
+}
+
+.set-entry.is-current-set legend {
+  color: #bcd5e5;
+  font-size: .68rem;
+}
+
+.set-entry__fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.set-entry__fields label {
+  font-size: .68rem;
+}
+
+.set-entry__fields input {
+  min-height: 46px;
+}
+
+.complete-set-button {
+  min-height: 50px;
+  flex: 1 1 190px;
+  border: 1px solid rgba(72, 193, 255, .42);
+  border-radius: 11px;
+  color: #fff;
+  background: linear-gradient(180deg, #20a8ff, #0877d0);
+  box-shadow: 0 8px 18px rgba(9, 122, 207, .22);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.pain-toggle {
+  flex: 0 1 160px;
+}
+
+.set-feedback-panel,
+.main-rest-panel {
+  margin-top: .9rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(104, 165, 202, .18);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(72, 203, 255, .11), transparent 18rem),
+    rgba(5, 18, 31, .62);
+  text-align: center;
+}
+
+.set-feedback-panel__check {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto .55rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #06251b;
+  background: #53dfa2;
+  box-shadow: 0 8px 22px rgba(83, 223, 162, .22);
+  font-size: 1.4rem;
+  font-weight: 950;
+}
+
+.set-feedback-panel h3 {
+  margin: .2rem 0 .9rem;
+  font-size: 1.35rem;
+}
+
+.set-feedback-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .5rem;
+}
+
+.set-feedback-options button {
+  min-height: 94px;
+  padding: .65rem .45rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: .35rem;
+  border: 1px solid rgba(128, 166, 191, .17);
+  border-radius: 12px;
+  color: #eaf7ff;
+  background: rgba(255,255,255,.025);
+  cursor: pointer;
+}
+
+.set-feedback-options button:hover {
+  border-color: rgba(79, 193, 250, .4);
+  background: rgba(22, 151, 255, .075);
+}
+
+.set-feedback-options span {
+  font-size: 1.45rem;
+}
+
+.set-feedback-options strong {
+  font-size: .68rem;
+}
+
+.main-rest-panel .eyebrow {
+  text-align: center;
+}
+
+.main-rest-ring {
+  width: 150px;
+  height: 150px;
+  margin: .6rem auto .75rem;
+  display: grid;
+  place-items: center;
+  border: 10px solid rgba(87, 152, 193, .18);
+  border-top-color: var(--colour-accent);
+  border-right-color: var(--colour-accent);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+}
+
+.main-rest-ring strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 2.3rem;
+  letter-spacing: -.06em;
+}
+
+.main-rest-next {
+  color: #8eaabb;
+  font-size: .72rem;
+}
+
+.main-rest-next strong {
+  display: block;
+  margin-top: .2rem;
+  color: #fff;
+}
+
+.workout-player.is-set-feedback .strength-item .strength-coach-grid,
+.workout-player.is-resting .strength-item .strength-coach-grid {
+  opacity: .24;
+  filter: saturate(.6);
+  pointer-events: none;
+}
+
+.workout-player.is-set-feedback .set-feedback-panel,
+.workout-player.is-resting .main-rest-panel {
+  position: relative;
+  z-index: 3;
+}
+
+.cardio-coach-grid {
+  grid-template-columns: minmax(220px, .65fr) minmax(0, 1.35fr);
+}
+
+.cardio-visual-card {
+  min-height: 310px;
+}
+
+.cardio-coach-main {
+  min-width: 0;
+}
+
+.cardio-coach-main h2 {
+  margin: .2rem 0 .65rem;
+  font-size: clamp(1.7rem, 4vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -.045em;
+}
+
+.cardio-timer--hero {
+  min-height: 145px;
+  margin-bottom: .65rem;
+  padding: .8rem;
+  border-radius: 15px;
+}
+
+.cardio-timer--hero .cardio-timer__display {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+}
+
+.cardio-prescription-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .5rem;
+}
+
+.cardio-prescription-grid > div {
+  min-height: 76px;
+  padding: .6rem;
+  display: grid;
+  align-content: center;
+  border: 1px solid rgba(120, 165, 195, .15);
+  border-radius: 11px;
+  background: rgba(255,255,255,.025);
+}
+
+.cardio-prescription-grid span,
+.cardio-prescription-grid strong {
+  display: block;
+}
+
+.cardio-prescription-grid span {
+  color: #89a5b8;
+  font-size: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .045em;
+}
+
+.cardio-prescription-grid strong {
+  margin-top: .2rem;
+  color: #fff;
+  font-size: .78rem;
+}
+
+.actual-entry-panel {
+  margin-top: .8rem;
+  border: 1px solid rgba(123, 164, 192, .14);
+  border-radius: 12px;
+  background: rgba(3, 14, 25, .28);
+}
+
+.actual-entry-panel summary {
+  min-height: 44px;
+  padding: .65rem .75rem;
+  display: flex;
+  align-items: center;
+  color: #a9c2d3;
+  cursor: pointer;
+  font-size: .68rem;
+  font-weight: 850;
+}
+
+.actual-entry-panel[open] summary {
+  border-bottom: 1px solid rgba(123, 164, 192, .12);
+}
+
+.actual-entry-panel .cardio-targets {
+  padding: .75rem;
+}
+
+.cardio-completion-toggle {
+  margin-top: .65rem;
+}
+
+.interval-state-banner {
+  margin-bottom: .7rem;
+  padding: .52rem .7rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem;
+  border-radius: 10px;
+  font-size: .7rem;
+  font-weight: 900;
+}
+
+.interval-state-banner--hard {
+  color: #fff;
+  background: linear-gradient(90deg, #d92c3d, #8b1828);
+  box-shadow: 0 8px 20px rgba(217, 44, 61, .18);
+}
+
+.interval-state-banner--recovery {
+  color: #dffff6;
+  background: linear-gradient(90deg, #0c8b79, #07584f);
+}
+
+.cardio-item--hard {
+  border-color: rgba(255, 73, 95, .4);
+  background:
+    radial-gradient(circle at 70% 0%, rgba(255, 59, 82, .18), transparent 25rem),
+    linear-gradient(145deg, #241421, #0e1521);
+}
+
+.cardio-item--hard .cardio-timer--hero {
+  border-color: rgba(255, 88, 108, .38);
+  background: rgba(117, 18, 37, .28);
+}
+
+.cardio-item--hard .cardio-timer__display {
+  color: #fff2f4;
+  text-shadow: 0 0 22px rgba(255, 52, 76, .42);
+}
+
+.cardio-item--recovery {
+  border-color: rgba(41, 203, 179, .34);
+  background:
+    radial-gradient(circle at 70% 0%, rgba(35, 203, 178, .13), transparent 25rem),
+    linear-gradient(145deg, #102a2a, #091a22);
+}
+
+.interval-next-card {
+  margin-top: .6rem;
+  padding: .58rem .7rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(124, 168, 203, .14);
+  border-radius: 10px;
+  color: #9db8c9;
+  background: rgba(255,255,255,.025);
+  font-size: .68rem;
+}
+
+.interval-next-card strong {
+  color: #fff;
+  font-size: .9rem;
+}
+
+.workout-player--review .workout-command-bar button,
+.workout-player--review input,
+.workout-player--review summary {
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .strength-coach-grid,
+  .cardio-coach-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .strength-media-column {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, .35fr);
+    align-items: stretch;
+  }
+
+  .technique-action {
+    min-height: 100%;
+  }
+
+  .cardio-prescription-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .review-sandbox-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .strength-media-column {
+    grid-template-columns: 1fr;
+  }
+
+  .workout-stage__visual--strength,
+  .workout-stage__visual--strength img {
+    min-height: 230px;
+  }
+
+  .strength-primary-metrics {
+    gap: .4rem;
+  }
+
+  .strength-primary-metrics > div {
+    min-height: 78px;
+    padding: .5rem;
+  }
+
+  .strength-primary-metrics strong {
+    font-size: .98rem;
+  }
+
+  .set-feedback-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cardio-prescription-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .strength-primary-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .strength-primary-metrics > div {
+    min-height: 72px;
+  }
+
+  .strength-primary-metrics strong {
+    font-size: .86rem;
+  }
+
+  .strength-secondary-prescription {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .set-entry__fields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .set-entry__actions {
+    align-items: stretch;
+  }
+
+  .pain-toggle {
+    flex: 1 1 100%;
+  }
+
+  .cardio-prescription-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
