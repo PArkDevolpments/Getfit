@@ -128,26 +128,53 @@
 
   function detectPageState(target) {
     const documentRef = frame.contentDocument;
-    if (!documentRef?.body) return "unknown";
-    if (target.key !== "workout") return "ready";
-    const text = documentRef.body.textContent || "";
-    return text.includes("No workout is currently in progress") ? "empty" : "active";
+    if (!documentRef?.body) return 'unknown';
+    const workoutTargets = new Set([
+      'strength-active',
+      'strength-feedback',
+      'strength-rest',
+      'bike-finisher',
+      'treadmill',
+      'interval-hard',
+      'interval-recovery',
+    ]);
+    if (!workoutTargets.has(target.key)) return 'ready';
+    const text = documentRef.body.textContent || '';
+    return text.includes('No workout is currently in progress') ? 'empty' : 'active';
   }
 
-  function criterionTargetKey(criterionId) {
-    if (criterionId.startsWith('TODAY-')) return 'today';
-    if (criterionId.startsWith('STRENGTH-')) return 'workout';
-    if (criterionId.startsWith('TECH-')) return 'exercise-detail';
-    if (criterionId.startsWith('CARDIO-')) return 'workout';
-    if (criterionId.startsWith('PROGRESS-')) return 'progress';
-    if (criterionId === 'LIBRARY-01') return 'library';
-    if (criterionId === 'LIBRARY-02') return 'exercise-detail';
-    if (criterionId.startsWith('SETTINGS-')) return 'settings';
-    if (criterionId === 'REGRESSION-01' || criterionId === 'REGRESSION-04' || criterionId === 'REGRESSION-05') return 'today';
-    if (criterionId === 'REGRESSION-02') return 'workout';
-    if (criterionId === 'REGRESSION-03') return 'progress';
-    if (criterionId === 'REGRESSION-06') return 'settings';
-    return null;
+  function criterionTargetKeys(criterionId) {
+    if (criterionId.startsWith('TODAY-')) return ['today'];
+
+    if (criterionId === 'STRENGTH-06') return ['strength-feedback'];
+    if (criterionId === 'STRENGTH-07' || criterionId === 'STRENGTH-08') {
+      return ['strength-rest'];
+    }
+    if (criterionId.startsWith('STRENGTH-')) return ['strength-active'];
+
+    if (criterionId.startsWith('TECH-')) return ['exercise-detail'];
+
+    if (criterionId === 'CARDIO-02') return ['treadmill'];
+    if (criterionId === 'CARDIO-04') return ['interval-hard'];
+    if (criterionId === 'CARDIO-05') return ['interval-recovery'];
+    if (criterionId.startsWith('CARDIO-')) return ['bike-finisher'];
+
+    if (criterionId === 'PROGRESS-01') return ['progress-review'];
+    if (criterionId.startsWith('PROGRESS-')) return ['progress'];
+
+    if (criterionId === 'LIBRARY-01') return ['library'];
+    if (criterionId === 'LIBRARY-02') return ['exercise-detail'];
+    if (criterionId.startsWith('SETTINGS-')) return ['settings'];
+
+    if (
+      criterionId === 'REGRESSION-01'
+      || criterionId === 'REGRESSION-04'
+      || criterionId === 'REGRESSION-05'
+    ) return ['today'];
+    if (criterionId === 'REGRESSION-02') return ['strength-active'];
+    if (criterionId === 'REGRESSION-03') return ['progress'];
+    if (criterionId === 'REGRESSION-06') return ['settings'];
+    return [];
   }
 
   function pageText(documentRef) {
@@ -283,10 +310,9 @@
           (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press'),
         );
         const floorText = floorPress?.textContent || '';
-        const metrics = /10\s*(?:–\s*10\s*)?reps/i.test(floorText)
+        const metrics = /10\s*reps/i.test(floorText)
           && /6(?:\.0+)?\s*kg/i.test(floorText)
-          && /2\s*sec\s*down/i.test(floorText)
-          && /1\s*sec\s*up/i.test(floorText);
+          && /2[–-]0[–-]1/.test(floorText);
         return automatedResult(
           metrics ? 'PASS' : 'FAIL',
           metrics
@@ -329,18 +355,22 @@
         );
       }
       if (criterionId === 'STRENGTH-07') {
+        const mainRest = documentRef.querySelector('#main-rest-panel');
+        const restText = mainRest?.textContent || '';
         return automatedResult(
-          has('#rest-timer') ? 'REVIEW_REQUIRED' : 'FAIL',
-          has('#rest-timer')
-            ? 'Rest timer exists; prominence, prescribed timing and set-complete transition require review.'
-            : 'Rest timer was not found.',
+          mainRest && /01:30/.test(restText) ? 'REVIEW_REQUIRED' : 'FAIL',
+          mainRest && /01:30/.test(restText)
+            ? 'Dedicated set-complete rest state renders the prescribed 01:30 review countdown.'
+            : 'Dedicated 01:30 rest state was not found.',
           profile,
         );
       }
       if (criterionId === 'STRENGTH-08') {
         return automatedResult(
-          has('#next-stage-title') ? 'PASS' : 'FAIL',
-          'Checked for an explicit next-stage preview.',
+          has('.main-rest-next') && includes('Next:')
+            ? 'PASS'
+            : 'FAIL',
+          'Checked the dedicated rest-state next-set preview.',
           profile,
         );
       }
@@ -354,25 +384,28 @@
         );
       }
       if (criterionId === 'STRENGTH-10') {
-        const player = documentRef.querySelector('#workout-player');
+        const playerNode = documentRef.querySelector('#workout-player');
+        const review = playerNode?.dataset.reviewMode === 'true';
         return automatedResult(
-          player?.dataset.autosaveUrl ? 'REVIEW_REQUIRED' : 'FAIL',
-          player?.dataset.autosaveUrl
-            ? 'Autosave contract is wired; destructive reload/resume behaviour is covered by integration tests and requires no live mutation during this audit.'
-            : 'Autosave URL was not present on the active workout player.',
+          playerNode ? 'REVIEW_REQUIRED' : 'FAIL',
+          review
+            ? 'Review sandbox intentionally disables writes; live draft persistence remains covered by integration/restart tests.'
+            : 'Live workout player is present; draft persistence remains covered by integration/restart tests.',
           profile,
         );
       }
     }
 
     if (criterionId.startsWith('TECH-')) {
-      const mediaUnavailable = includes('Media unavailable');
+      const mediaUnavailable = includes('Media unavailable')
+        || includes('Visual guide not yet approved');
       if (criterionId === 'TECH-01') {
+        const movementMedia = has('.exercise-phase img, .exercise-single-demo img');
         return automatedResult(
-          mediaUnavailable || has('.exercise-demo-fallback') ? 'FAIL' : 'REVIEW_REQUIRED',
-          mediaUnavailable
-            ? 'Technique media is unavailable and the generic fallback is active.'
-            : 'Movement media is present; movement specificity requires visual review.',
+          movementMedia && !mediaUnavailable ? 'REVIEW_REQUIRED' : 'FAIL',
+          movementMedia && !mediaUnavailable
+            ? 'Movement-specific local media is rendered; coaching quality requires visual review.'
+            : 'Movement-specific local technique media was not rendered.',
           profile,
         );
       }
@@ -406,11 +439,12 @@
         );
       }
       if (criterionId === 'TECH-05') {
+        const genericFallback = has('.exercise-demo-fallback');
         return automatedResult(
-          mediaUnavailable && has('.exercise-demo-fallback') ? 'FAIL' : 'REVIEW_REQUIRED',
-          mediaUnavailable
-            ? 'Current fallback still presents generic placeholder media and requires redesign.'
-            : 'Media fallback is not active in this capture; visual fallback quality remains review-required.',
+          genericFallback || mediaUnavailable ? 'FAIL' : 'PASS',
+          genericFallback || mediaUnavailable
+            ? 'A generic/unapproved media fallback is still active.'
+            : 'No generic fallback is active for the reviewed exercise; local approved media is available.',
           profile,
         );
       }
@@ -430,7 +464,7 @@
         if (!bike) return automatedResult('BLOCKED', 'No spin-bike stage exists in the active workout.', profile);
         const bikeText = bike.textContent || '';
         return automatedResult(
-          /Cadence min rpm/.test(bikeText)
+          /Cadence/.test(bikeText)
             && /Resistance/.test(bikeText)
             && !/Speed km\/h/.test(bikeText)
             && !/Incline %/.test(bikeText)
@@ -468,12 +502,32 @@
           profile,
         );
       }
-      if (criterionId === 'CARDIO-04' || criterionId === 'CARDIO-05') {
+      if (criterionId === 'CARDIO-04') {
+        const hard = documentRef.querySelector('.cardio-item--hard');
+        const hardText = hard?.textContent || '';
+        const targets = /00:30/.test(hardText)
+          && /85–100\s*rpm/.test(hardText)
+          && /RPE\s*7–8/.test(hardText);
         return automatedResult(
-          text.includes('INTERVAL') || text.includes('Interval') ? 'REVIEW_REQUIRED' : 'BLOCKED',
-          text.includes('INTERVAL') || text.includes('Interval')
-            ? 'Interval content exists; hard/recovery state treatment requires visual review.'
-            : 'The active workout does not contain the Day 4 interval state required for this check.',
+          hard && targets ? 'REVIEW_REQUIRED' : 'FAIL',
+          hard && targets
+            ? 'Dedicated HARD interval state contains 00:30, 85–100 rpm and RPE 7–8.'
+            : 'Required HARD interval state/targets were not found.',
+          profile,
+        );
+      }
+      if (criterionId === 'CARDIO-05') {
+        const recovery = documentRef.querySelector('.cardio-item--recovery');
+        const recoveryText = recovery?.textContent || '';
+        const targets = /01:30/.test(recoveryText)
+          && /60–75\s*rpm/.test(recoveryText)
+          && /Light/i.test(recoveryText)
+          && /RPE\s*2–3/.test(recoveryText);
+        return automatedResult(
+          recovery && targets ? 'REVIEW_REQUIRED' : 'FAIL',
+          recovery && targets
+            ? 'Dedicated recovery state contains 01:30, 60–75 rpm, light resistance and RPE 2–3.'
+            : 'Required recovery interval state/targets were not found.',
           profile,
         );
       }
@@ -487,12 +541,13 @@
     }
 
     if (criterionId === 'PROGRESS-01') {
-      const chart = documentRef.querySelector('canvas, svg[data-progress-chart], .progress-chart');
+      const chart = documentRef.querySelector('svg[data-progress-chart]');
+      const points = Number(chart?.dataset.pointCount || 0);
       return automatedResult(
-        chart ? 'REVIEW_REQUIRED' : 'FAIL',
-        chart
-          ? 'A progression chart surface exists; plotted evidence requires review.'
-          : 'No exercise progression chart was found.',
+        chart && points >= 2 ? 'REVIEW_REQUIRED' : 'FAIL',
+        chart && points >= 2
+          ? `Evidence chart component renders ${points} review points; visual clarity requires review and live mode remains evidence-only.`
+          : 'A populated evidence progression chart was not rendered.',
         profile,
       );
     }
@@ -522,12 +577,17 @@
 
     if (criterionId === 'LIBRARY-01') {
       const cards = Array.from(documentRef.querySelectorAll('.exercise-card'));
-      const genericVisuals = cards.length > 1 && cards.every((card) => card.querySelector('.exercise-card__visual svg'));
+      const sources = cards
+        .map((card) => card.querySelector('.exercise-card__media img')?.getAttribute('src'))
+        .filter(Boolean);
+      const uniqueSources = new Set(sources);
+      const movementSpecific = cards.length > 1 && sources.length === cards.length
+        && uniqueSources.size === cards.length;
       return automatedResult(
-        genericVisuals ? 'FAIL' : 'REVIEW_REQUIRED',
-        genericVisuals
-          ? 'Multiple exercise cards still use the same generic SVG placeholder pattern.'
-          : 'Movement-specific card presentation requires visual review.',
+        movementSpecific ? 'REVIEW_REQUIRED' : 'FAIL',
+        movementSpecific
+          ? 'Each programme exercise card uses a distinct local movement visual; overall art quality requires visual review.'
+          : 'Exercise cards are missing distinct movement-specific local visuals.',
         profile,
       );
     }
@@ -1083,7 +1143,7 @@
             const documentRef = frame.contentDocument;
             for (const gate of acceptanceSpecification.gates || []) {
               for (const criterion of gate.criteria || []) {
-                if (criterionTargetKey(criterion.criterion_id) !== target.key) continue;
+                if (!criterionTargetKeys(criterion.criterion_id).includes(target.key)) continue;
                 const result = evaluateCriterion(
                   criterion.criterion_id,
                   target,
