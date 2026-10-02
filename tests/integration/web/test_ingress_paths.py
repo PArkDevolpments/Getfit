@@ -8,6 +8,7 @@ from hwa.auth.principal import StaticPrincipalProvider
 from hwa.db.base import Base
 from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import ExternalIdentityMapping, Person
+from hwa.db.models.programme import ProgrammeDay, ProgrammeDefinition
 from hwa.main import create_app
 from hwa.web.urls import ingress_prefix, ingress_url
 
@@ -64,6 +65,27 @@ def _client(tmp_path) -> tuple[TestClient, object]:
                     external_subject_id=subject,
                 )
             )
+        session.add(
+            ProgrammeDefinition(
+                programme_id="home-workout-12m-v1",
+                schema_version=1,
+                title="Home Workout",
+                active=True,
+                seed_checksum="seed",
+            )
+        )
+        session.flush()
+        session.add(
+            ProgrammeDay(
+                id="week1-day1",
+                programme_id="home-workout-12m-v1",
+                week_number=1,
+                day_number=1,
+                title="Upper Body + Bike",
+                workout_type="upper_body_bike",
+                block="foundation",
+            )
+        )
         session.commit()
     return (
         TestClient(
