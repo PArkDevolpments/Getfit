@@ -230,6 +230,9 @@
       '.ghost-action',
       '.primary-nav__item',
       '.bottom-nav__item',
+      '.exercise-media-tab',
+      '.exercise-card__open',
+      '.coach-dashboard-card__settings',
     ];
     const seen = new Set();
     const failures = [];
