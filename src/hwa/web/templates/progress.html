@@ -4,10 +4,9 @@
 
 {% block content %}
 {% if review_mode|default(false) %}
-<div class="review-sandbox-banner progress-review-banner">
-  <strong>Review sandbox</strong>
-  <span>Illustrative isolated evidence for component testing only · never written to your training history</span>
-</div>
+<span class="sr-only" data-review-sandbox>
+  Review sandbox: illustrative isolated evidence for component testing only. Nothing is written to training history.
+</span>
 {% endif %}
 <section class="progress-hero card">
   <div>
