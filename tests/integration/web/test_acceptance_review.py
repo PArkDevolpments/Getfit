@@ -55,8 +55,7 @@ def test_acceptance_review_is_person_scoped_and_versioned(tmp_path) -> None:
         response = client.get("/review-spec")
         assert response.status_code == 200
         html = response.text
-        assert "Specification evidence" in html
-        assert "automated specification audit" in html.lower()
+        assert "Specification &amp; Acceptance" in html or "Specification & Acceptance" in html
         assert "Kris" in html
         assert "2026-10-02-v1" in html
         assert "GATE-1-TODAY" in html
@@ -83,7 +82,8 @@ def test_review_capture_includes_acceptance_payload_hooks(tmp_path) -> None:
         assert 'id="acceptance-specification"' in html
         assert 'id="acceptance-storage-key"' in html
         assert "2026-10-02-v1" in html
-        assert "Specification &amp; Acceptance" in html or "Specification & Acceptance" in html
+        assert "Specification evidence" in html
+        assert "automated specification audit" in html.lower()
     finally:
         client.close()
         engine.dispose()
