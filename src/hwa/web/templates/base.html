@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Home Workout Assistant{% endblock %}</title>
+  <meta name="theme-color" content="#07111f">
+  <title>{% block title %}Getfit{% endblock %}</title>
   <link rel="stylesheet" href="{{ ingress_url(request, '/static/app.css') }}">
   {% if page.active_nav == "workout" %}<link rel="stylesheet" href="{{ ingress_url(request, '/static/workout.css') }}">{% endif %}
   {% block styles %}{% endblock %}
@@ -11,13 +12,23 @@
 <body data-active-nav="{{ page.active_nav }}" data-profile="{{ page.presentation_profile }}">
   <div class="app-shell">
     <header class="app-header">
-      <div>
-        <p class="eyebrow">GETFIT</p>
-        <h1>Home Workout Assistant</h1>
+      <div class="app-header__brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" role="img">
+            <path d="M8 19v10M13 16v16M35 16v16M40 19v10M13 24h22" />
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <p class="eyebrow">GETFIT</p>
+          <h1>Train with purpose.</h1>
+        </div>
       </div>
-      <div class="person-chip" aria-label="Signed-in person">
-        <span class="person-chip__label">Signed in as</span>
-        <strong>{{ page.display_name }}</strong>
+      <div class="app-header__identity" aria-label="Signed-in person">
+        <span class="identity-dot" aria-hidden="true"></span>
+        <span>
+          <span class="person-chip__label">Training as</span>
+          <strong>{{ page.display_name }}</strong>
+        </span>
       </div>
     </header>
 
@@ -27,7 +38,22 @@
           href="{{ ingress_url(request, item.path) }}"
           class="primary-nav__item{% if item.active %} is-active{% endif %}"
           {% if item.active %}aria-current="page"{% endif %}
-        >{{ item.label }}</a>
+        >
+          <span class="primary-nav__icon" aria-hidden="true">
+            {% if item.key == "today" %}
+              <svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v9H5v-9Z"/><path d="M9 20v-6h6v6"/></svg>
+            {% elif item.key == "workout" %}
+              <svg viewBox="0 0 24 24"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg>
+            {% elif item.key == "progress" %}
+              <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/></svg>
+            {% elif item.key == "library" %}
+              <svg viewBox="0 0 24 24"><path d="M5 4h5v16H5zM14 4h5v16h-5z"/></svg>
+            {% else %}
+              <svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="m4 12 1.6-1 .2-1.9-1.1-1.5 2-2 1.5 1.1 1.9-.2L11 5h2l.9 1.5 1.9.2 1.5-1.1 2 2-1.1 1.5.2 1.9 1.6 1v2l-1.6 1-.2 1.9 1.1 1.5-2 2-1.5-1.1-1.9.2L13 20h-2l-.9-1.5-1.9-.2-1.5 1.1-2-2 1.1-1.5-.2-1.9L4 14Z"/></svg>
+            {% endif %}
+          </span>
+          <span>{{ item.label }}</span>
+        </a>
       {% endfor %}
     </nav>
 
