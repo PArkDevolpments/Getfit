@@ -20,6 +20,7 @@ from hwa.read_models.history import get_exercise_history
 from hwa.services.today import get_today_view
 from hwa.services.workout_drafts import get_active_draft
 from hwa.web.context import build_page_context
+from hwa.web.home import build_home_dashboard
 from hwa.web.dependencies import resolve_web_person_context
 from hwa.web.library import get_exercise, list_exercises
 from hwa.web.progress import build_progress_context
@@ -111,6 +112,16 @@ async def today(
         )
 
     external_context = await _external_context(request, person)
+    home = None
+    if today_view.programme_id and today_view.week_number is not None:
+        home = build_home_dashboard(
+            session,
+            person_id=person.hwa_person_id,
+            programme_id=today_view.programme_id,
+            week_number=today_view.week_number,
+            current_day_number=today_view.day_number,
+            current_programme_day_id=today_view.programme_day_id,
+        )
     return templates.TemplateResponse(
         request=request,
         name="foundation.html",
@@ -122,6 +133,7 @@ async def today(
             "primary_action": today_view.primary_action,
             "primary_day": primary_day,
             "external_context": external_context,
+            "home": home,
         },
     )
 
