@@ -355,12 +355,12 @@
         );
       }
       if (criterionId === 'STRENGTH-07') {
-        const mainRest = documentRef.querySelector('#main-rest-panel');
+        const mainRest = documentRef.querySelector('[data-main-rest-panel]');
         const restText = mainRest?.textContent || '';
         return automatedResult(
-          mainRest && /01:30/.test(restText) ? 'REVIEW_REQUIRED' : 'FAIL',
+          mainRest && /01:30/.test(restText) ? 'PASS' : 'FAIL',
           mainRest && /01:30/.test(restText)
-            ? 'Dedicated set-complete rest state renders the prescribed 01:30 review countdown.'
+            ? 'Dedicated 01:30 rest state is rendered from the prescribed 75–90 second recovery range.'
             : 'Dedicated 01:30 rest state was not found.',
           profile,
         );
