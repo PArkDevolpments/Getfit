@@ -16,8 +16,8 @@
   data-programme-day="{{ player.day_number }}"
   data-workout-type="{{ player.workout_type }}"
   data-workout-block="{{ player.block }}"
-  data-autosave-url="/api/v1/workouts/drafts/{{ player.draft_id }}"
-  data-complete-url="/api/v1/workouts/drafts/{{ player.draft_id }}/complete"
+  data-autosave-url="{{ ingress_url(request, '/api/v1/workouts/drafts/' ~ player.draft_id) }}"
+  data-complete-url="{{ ingress_url(request, '/api/v1/workouts/drafts/' ~ player.draft_id ~ '/complete') }}"
 >
   <p class="eyebrow">Workout · Week {{ player.week_number }} · Day {{ player.day_number }}</p>
   <h2>{{ player.title }}</h2>
@@ -153,11 +153,11 @@
   <p class="eyebrow">Workout</p>
   <h2>No workout is currently in progress</h2>
   <p class="muted">Start the next approved workout from Today. Another person's draft will never be shown here.</p>
-  <a class="primary-action" href="/">Go to Today</a>
+  <a class="primary-action" href="{{ ingress_url(request, '/') }}">Go to Today</a>
 </section>
 {% endif %}
 {% endblock %}
 
 {% block scripts %}
-{% if player %}<script src="/static/workout.js" defer></script>{% endif %}
+{% if player %}<script src="{{ ingress_url(request, '/static/workout.js') }}" defer></script>{% endif %}
 {% endblock %}
