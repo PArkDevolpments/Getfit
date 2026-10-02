@@ -203,6 +203,21 @@
     };
   }
 
+  function fullyVisible(node, documentRef, profile) {
+    if (!node) return false;
+    const style = documentRef.defaultView?.getComputedStyle(node);
+    if (!style || style.display === 'none' || style.visibility === 'hidden') return false;
+    const rect = node.getBoundingClientRect();
+    const viewportHeight = documentRef.documentElement.clientHeight
+      || documentRef.defaultView?.innerHeight
+      || profile.height;
+    const mobileReserve = profile.width <= 700 ? 76 : 0;
+    return rect.top >= 0
+      && rect.bottom <= viewportHeight - mobileReserve
+      && rect.width > 0
+      && rect.height > 0;
+  }
+
   function auditTouchTargets(documentRef) {
     const selectors = [
       '[data-primary-action]',
@@ -397,25 +412,37 @@
         );
       }
       if (criterionId === 'STRENGTH-06') {
+        const feedbackPanel = documentRef.querySelector('[data-set-feedback-panel]');
+        const feedbackButtons = Array.from(
+          feedbackPanel?.querySelectorAll('[data-set-feedback]') || [],
+        );
         const feedback = ['Too easy', 'About right', 'Too hard', 'Pain'].every(
           (value) => text.includes(value),
         );
+        const feedbackVisible = fullyVisible(feedbackPanel, documentRef, profile);
+        const touchSized = feedbackButtons.every((button) => {
+          const rect = button.getBoundingClientRect();
+          return rect.width >= 44 && rect.height >= 44;
+        });
         return automatedResult(
-          feedback ? 'REVIEW_REQUIRED' : 'FAIL',
-          feedback
-            ? 'All set-complete coaching feedback choices are present; presentation requires review.'
-            : 'The required Too easy / About right / Too hard / Pain feedback state was not found.',
+          feedback && feedbackVisible && feedbackButtons.length === 4 && touchSized
+            ? 'PASS'
+            : 'FAIL',
+          feedback && feedbackVisible && feedbackButtons.length === 4 && touchSized
+            ? 'Dedicated set-complete feedback is fully visible with four touch-safe coaching choices.'
+            : 'Set-complete feedback is missing, clipped below the phone viewport, or has undersized choices.',
           profile,
         );
       }
       if (criterionId === 'STRENGTH-07') {
         const mainRest = documentRef.querySelector('[data-main-rest-panel]');
         const restText = mainRest?.textContent || '';
+        const restVisible = fullyVisible(mainRest, documentRef, profile);
         return automatedResult(
-          mainRest && /01:30/.test(restText) ? 'PASS' : 'FAIL',
-          mainRest && /01:30/.test(restText)
-            ? 'Dedicated 01:30 rest state is rendered from the prescribed 75–90 second recovery range.'
-            : 'Dedicated 01:30 rest state was not found.',
+          mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL',
+          mainRest && restVisible && /01:30/.test(restText)
+            ? 'Dedicated 01:30 rest state is fully visible and uses the prescribed 75–90 second recovery range.'
+            : 'Dedicated 01:30 rest state is missing or clipped below the active viewport.',
           profile,
         );
       }
