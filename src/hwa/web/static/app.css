@@ -3484,3 +3484,18 @@ body[data-profile="female"] .home-context-rail__icon {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Touch-safe desktop/tablet navigation */
+@media (min-width: 701px) {
+  .primary-nav__item {
+    min-height: 46px;
+  }
+}
+
+/* Reserve space for the fixed mobile product nav */
+@media (max-width: 700px) {
+  .app-shell {
+    padding-bottom: 7.5rem;
+  }
+}
