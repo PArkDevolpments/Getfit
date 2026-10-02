@@ -28,6 +28,7 @@ class PrescriptionSnapshotItem:
     load_value: Decimal | None
     load_unit: str | None
     load_mode: str
+    load_label: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +66,16 @@ def _duration_label(programme_id: str, week_number: int, day_number: int) -> str
 
 def _exercise_display_name(exercise_id: str) -> str:
     return exercise_id.replace("_", " ").replace("-", " ").title()
+
+
+def _load_label(value: Decimal | None, unit: str | None, mode: str) -> str:
+    if value is None:
+        return "Calibration"
+    amount = format(value.normalize(), "f")
+    suffix = (unit or "KG").lower()
+    if mode == "EACH_HAND":
+        return f"{amount} {suffix} each"
+    return f"{amount} {suffix}"
 
 
 def build_home_dashboard(
@@ -120,6 +131,7 @@ def build_home_dashboard(
             load_value=target.load_value,
             load_unit=target.load_unit,
             load_mode=target.load_mode,
+            load_label=_load_label(target.load_value, target.load_unit, target.load_mode),
         )
         for target in targets[:3]
     )
