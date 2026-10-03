@@ -74,14 +74,6 @@
               allowfullscreen
             ></iframe>
           </div>
-          <div class="exercise-video-panel__copy">
-            <p class="eyebrow">Approved technique video</p>
-            <h3>Watch the movement</h3>
-            {% if exercise.media.external_video_source %}
-            <p class="muted">Source: {{ exercise.media.external_video_source }}. Getfit's local cues and prescribed targets remain authoritative.</p>
-            {% endif %}
-            <a class="primary-action" href="{{ exercise.media.approved_external_video_url }}" rel="noopener noreferrer" target="_blank">Open on YouTube ↗</a>
-          </div>
           {% else %}
           <div class="exercise-video-panel__icon" aria-hidden="true">▶</div>
           <h3>No approved external video configured</h3>
