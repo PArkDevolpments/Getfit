@@ -82,6 +82,8 @@ def test_workout_has_guided_stage_hierarchy_and_large_live_controls() -> None:
     assert "Too hard" in workout
     assert "Pain / Stop" in workout
     assert "data-pain-stop-panel" in workout
+    assert "data-pain-skip" in workout
+    assert "data-pain-end" in workout
     assert "data-feedback-continue" in workout
     assert 'class="set-effort-panel"' in workout
     assert "View video" in workout
