@@ -120,3 +120,34 @@ def test_three_stage_technique_media_is_photorealistic_and_local() -> None:
             assert "data:image/webp;base64," in media
             assert "<path" not in media
             assert "<circle" not in media
+
+
+def test_week_one_videos_use_fixed_local_mp4_filenames() -> None:
+    exercise_ids = (
+        "dumbbell_floor_press",
+        "one_arm_dumbbell_row",
+        "seated_dumbbell_shoulder_press",
+        "dumbbell_biceps_curl",
+        "overhead_triceps_extension",
+        "goblet_squat",
+        "dumbbell_romanian_deadlift",
+        "supported_reverse_lunge",
+        "standing_calf_raise",
+        "dead_bug",
+        "forearm_plank",
+        "dumbbell_lateral_raise",
+        "hammer_curl",
+    )
+
+    for exercise_id in exercise_ids:
+        media = resolve_exercise_media(exercise_id)
+        assert media.local_video_filename == f"{exercise_id}.mp4"
+        assert media.local_video_path == f"/exercise-videos/{exercise_id}.mp4"
+
+
+def test_local_video_filename_rejects_path_traversal() -> None:
+    media = ExerciseMedia(
+        exercise_id="unsafe",
+        local_video_filename="../unsafe.mp4",
+    )
+    assert media.local_video_path is None
