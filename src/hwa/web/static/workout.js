@@ -496,10 +496,12 @@
     const estimate = estimates[choice];
     if (!estimate) return;
 
-    // Quick feedback is an explicit estimate. Never overwrite an exact value
-    // the user has already entered in the optional effort controls.
-    if (rpe && rpe.value === '') rpe.value = estimate.rpe;
-    if (rir && rir.value === '') rir.value = estimate.rir;
+    // Quick feedback is an explicit estimate. Manual RPE/RIR always wins.
+    const manualEffort = checked(`${prefix}-effort-manual`);
+    if (!manualEffort) {
+      if (rpe) rpe.value = estimate.rpe;
+      if (rir) rir.value = estimate.rir;
+    }
 
     const feedbackPanel = feedbackPanelFor(stage);
     for (const button of feedbackPanel?.querySelectorAll('[data-set-feedback]') || []) {
@@ -636,6 +638,15 @@
   for (const input of formInputs) {
     input.addEventListener('input', queueAutosave);
     input.addEventListener('change', () => queueAutosave());
+  }
+
+  for (const input of document.querySelectorAll('[data-effort-value]')) {
+    const markManual = () => {
+      const marker = valueOf(input.dataset.effortManualName || '');
+      if (marker) marker.checked = true;
+    };
+    input.addEventListener('input', markManual);
+    input.addEventListener('change', markManual);
   }
 
   for (const button of document.querySelectorAll('[data-complete-set]')) {
