@@ -147,6 +147,7 @@
     const workoutTargets = new Set([
       'strength-active',
       'strength-feedback',
+      'strength-pain',
       'strength-rest',
       'bike-finisher',
       'treadmill',
@@ -196,6 +197,7 @@
         'today',
         'strength-active',
         'strength-feedback',
+        'strength-pain',
         'strength-rest',
         'bike-finisher',
         'treadmill',
