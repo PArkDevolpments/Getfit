@@ -3070,15 +3070,6 @@ body[data-profile="female"] .home-context-rail__icon {
   display: block;
   border: 0;
 }
-
-.exercise-video-panel__copy {
-  width: min(100%, 760px);
-}
-
-.exercise-video-panel__copy .primary-action {
-  margin-top: .45rem;
-}
-
 .exercise-video-panel__icon {
   width: 58px;
   height: 58px;
