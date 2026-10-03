@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hmac
-from typing import Annotated, cast
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
