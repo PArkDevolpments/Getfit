@@ -115,7 +115,6 @@ def test_library_and_progress_hide_implementation_ids_and_use_product_cards() ->
     assert 'data-video-src="{{ exercise.media.approved_external_video_embed_url }}"' in detail
     assert "iframe[data-video-src]" in _text(STATIC / "media.js")
     assert "videoFrame.setAttribute('src'" in _text(STATIC / "media.js")
-    assert "Getfit's local cues and prescribed targets remain authoritative." in detail
     assert 'class="progress-kpi-grid' in progress
     assert 'data-progress-chart' in progress
     assert 'class="recent-progression-list"' in progress
@@ -128,3 +127,13 @@ def test_settings_uses_safe_status_cards() -> None:
     assert 'class="settings-grid' in settings
     assert 'class="equipment-card' in settings
     assert 'class="integration-card' in settings
+
+
+def test_exercise_video_tab_is_player_only() -> None:
+    detail = _text(TEMPLATES / "exercise_detail.html")
+
+    assert 'class="exercise-video-embed"' in detail
+    assert "Approved technique video" not in detail
+    assert "Watch the movement" not in detail
+    assert "Source:" not in detail
+    assert "Open on YouTube" not in detail
