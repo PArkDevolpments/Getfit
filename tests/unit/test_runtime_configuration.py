@@ -1,4 +1,5 @@
 from decimal import Decimal
+from pathlib import Path
 
 import hwa.runtime as runtime
 from hwa.domain.equipment import EquipmentKind
@@ -80,3 +81,10 @@ def test_runtime_pep_bridge_token_is_optional_and_validated(monkeypatch) -> None
         assert "HWA_PEP_BRIDGE_TOKEN" in str(exc)
     else:
         raise AssertionError("weak Pep bridge credential must fail closed")
+
+
+def test_addon_masks_pep_bridge_token() -> None:
+    config = (Path(__file__).resolve().parents[2] / "getfit" / "config.yaml").read_text(
+        encoding="utf-8"
+    )
+    assert "  pep_bridge_token: password" in config
