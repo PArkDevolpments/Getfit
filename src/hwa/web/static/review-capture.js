@@ -124,6 +124,21 @@
 
     await nextFrame();
     await sleep(500);
+
+    if (target.media_tab) {
+      const documentRef = frame.contentDocument;
+      const tab = documentRef?.querySelector(
+        `[data-media-tab="${target.media_tab}"]`,
+      );
+      if (!tab) {
+        throw new Error(
+          `Review target ${target.label} could not activate media tab ${target.media_tab}.`,
+        );
+      }
+      tab.click();
+      await nextFrame();
+      await sleep(350);
+    }
   }
 
   function detectPageState(target) {
@@ -152,6 +167,13 @@
     }
     if (criterionId.startsWith('STRENGTH-')) return ['strength-active'];
 
+    if (criterionId === 'TECH-04') {
+      return [
+        'exercise-video-floor-press',
+        'exercise-video-supported-reverse-lunge',
+        'exercise-video-lateral-raise',
+      ];
+    }
     if (criterionId.startsWith('TECH-')) return ['exercise-detail'];
 
     if (criterionId === 'CARDIO-02') return ['treadmill'];
@@ -181,6 +203,9 @@
         'interval-recovery',
         'library',
         'exercise-detail',
+        'exercise-video-floor-press',
+        'exercise-video-supported-reverse-lunge',
+        'exercise-video-lateral-raise',
         'settings',
       ];
     }
@@ -514,11 +539,20 @@
       }
       if (criterionId === 'TECH-04') {
         const modes = ['Images', 'Technique', 'Video'].every((value) => text.includes(value));
+        const videoFrame = documentRef.querySelector('.exercise-video-embed iframe');
+        const videoLink = documentRef.querySelector('.exercise-video-panel__copy a[href*="youtube"]');
+        const source = documentRef.querySelector('.exercise-video-panel__copy .muted');
+        const privacyEmbed = Boolean(
+          videoFrame?.getAttribute('src')?.startsWith('https://www.youtube-nocookie.com/embed/'),
+        );
+        const sourceText = (source?.textContent || '').trim();
         return automatedResult(
-          modes ? 'REVIEW_REQUIRED' : 'FAIL',
-          modes
-            ? 'Images / Technique / Video modes are present.'
-            : 'The approved Images / Technique / Video hierarchy was not found.',
+          modes && privacyEmbed && Boolean(videoLink) && sourceText.startsWith('Source:')
+            ? 'REVIEW_REQUIRED'
+            : 'FAIL',
+          modes && privacyEmbed && Boolean(videoLink) && sourceText.startsWith('Source:')
+            ? 'Images / Technique / Video modes are present, with an approved privacy-enhanced YouTube embed, visible source attribution and YouTube fallback link. Visual player presentation still requires screenshot review.'
+            : 'The approved media hierarchy, privacy-enhanced embed, source attribution or YouTube fallback link was not found.',
           profile,
         );
       }
