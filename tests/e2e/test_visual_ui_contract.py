@@ -143,3 +143,27 @@ def test_exercise_video_tab_is_player_only() -> None:
     assert "Watch the movement" not in detail
     assert "Source:" not in detail
     assert "Open on YouTube" not in detail
+
+
+def test_strength_feedback_estimates_are_explicit_and_pain_stops_normal_rest_flow() -> None:
+    workout = _text(TEMPLATES / "workout.html")
+    script = _text(STATIC / "workout.js")
+
+    assert "RPE 6 · about 4 reps left" in workout
+    assert "RPE 8 · about 2 reps left" in workout
+    assert "RPE 10 · no reps left" in workout
+    assert "data-effort-manual-name" in workout
+    assert "data-pain-stop-panel" in workout
+
+    pain_branch = script.split("if (choice === 'pain')", 1)[1].split("const estimates", 1)[0]
+    assert "showPainStop(stage)" in pain_branch
+    assert "showRest(stage)" not in pain_branch
+    assert "const manualEffort = checked" in script
+    assert "if (!manualEffort)" in script
+
+
+def test_settings_does_not_expose_internal_review_tools() -> None:
+    settings = _text(TEMPLATES / "settings.html")
+
+    assert "Quality & build review tools" not in settings
+    assert "Run review pack" not in settings
