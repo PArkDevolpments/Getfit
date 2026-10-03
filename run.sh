@@ -12,6 +12,7 @@ alembic -c /app/alembic.ini upgrade head
 
 export HWA_KRIS_HA_USER_ID="$(bashio::config 'kris_ha_user_id')"
 export HWA_KIRSTY_HA_USER_ID="$(bashio::config 'kirsty_ha_user_id')"
+export HWA_PEP_BRIDGE_TOKEN="$(bashio::config 'pep_bridge_token')"
 
 exec uvicorn hwa.runtime:build_production_app \
   --factory \
