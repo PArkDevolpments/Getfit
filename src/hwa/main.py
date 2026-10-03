@@ -31,6 +31,7 @@ def create_app(
     menu_nutrition_reader: MenuNutritionReader | None = None,
     equipment_profile: InstallationEquipmentProfile | None = None,
     pep_bridge_token: str | None = None,
+    pep_bridge_allowed_person_ids: frozenset[str] | None = None,
 ) -> FastAPI:
     """Create the HWA application with explicit injectable trust boundaries."""
 
@@ -44,6 +45,9 @@ def create_app(
     application.state.menu_nutrition_reader = menu_nutrition_reader
     application.state.equipment_profile = equipment_profile
     application.state.pep_bridge_token = pep_bridge_token.strip() if pep_bridge_token else None
+    application.state.pep_bridge_allowed_person_ids = frozenset(
+        pep_bridge_allowed_person_ids or ()
+    )
     application.add_exception_handler(
         WebIdentitySetupRequired,
         setup_required_exception_handler,
