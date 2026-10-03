@@ -28,3 +28,15 @@ def test_healthz_reports_service_and_version() -> None:
         "service": "home-workout-assistant",
         "version": "0.1.22",
     }
+
+
+def test_browser_security_headers_are_applied() -> None:
+    _, app = _load_application()
+    response = TestClient(app).get("/healthz")
+
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "SAMEORIGIN"
+    assert response.headers["referrer-policy"] == "same-origin"
+    assert "camera=()" in response.headers["permissions-policy"]
+    assert "default-src 'self'" in response.headers["content-security-policy"]
+    assert "object-src 'none'" in response.headers["content-security-policy"]
