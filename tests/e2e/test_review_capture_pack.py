@@ -91,3 +91,22 @@ def test_strength_feedback_and_rest_audit_require_active_viewport_visibility() -
     assert "feedbackVisible && feedbackButtons.length === 4" in script
     assert "const restVisible = fullyVisible(mainRest, documentRef, profile)" in script
     assert "mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL'" in script
+
+
+def test_review_pack_captures_approved_video_states() -> None:
+    router = (ROOT / "src" / "hwa" / "web" / "router.py").read_text(encoding="utf-8")
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    for target in (
+        "exercise-video-floor-press",
+        "exercise-video-supported-reverse-lunge",
+        "exercise-video-lateral-raise",
+    ):
+        assert target in router
+        assert target in script
+
+    assert '"media_tab": "video"' in router
+    assert "if (target.media_tab)" in script
+    assert 'data-media-tab="' in script
+    assert "youtube-nocookie.com/embed/" in script
+    assert "sourceText.startsWith('Source:')" in script
