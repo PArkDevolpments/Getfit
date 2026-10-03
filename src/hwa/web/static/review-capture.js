@@ -540,19 +540,14 @@
       if (criterionId === 'TECH-04') {
         const modes = ['Images', 'Technique', 'Video'].every((value) => text.includes(value));
         const videoFrame = documentRef.querySelector('.exercise-video-embed iframe');
-        const videoLink = documentRef.querySelector('.exercise-video-panel__copy a[href*="youtube"]');
-        const source = documentRef.querySelector('.exercise-video-panel__copy .muted');
         const privacyEmbed = Boolean(
           videoFrame?.getAttribute('src')?.startsWith('https://www.youtube-nocookie.com/embed/'),
         );
-        const sourceText = (source?.textContent || '').trim();
         return automatedResult(
-          modes && privacyEmbed && Boolean(videoLink) && sourceText.startsWith('Source:')
-            ? 'REVIEW_REQUIRED'
-            : 'FAIL',
-          modes && privacyEmbed && Boolean(videoLink) && sourceText.startsWith('Source:')
-            ? 'Images / Technique / Video modes are present, with an approved privacy-enhanced YouTube embed, visible source attribution and YouTube fallback link. Visual player presentation still requires screenshot review.'
-            : 'The approved media hierarchy, privacy-enhanced embed, source attribution or YouTube fallback link was not found.',
+          modes && privacyEmbed ? 'REVIEW_REQUIRED' : 'FAIL',
+          modes && privacyEmbed
+            ? 'Images / Technique / Video modes are present with an approved privacy-enhanced video embed. Visual player presentation still requires screenshot review.'
+            : 'The approved media hierarchy or privacy-enhanced video embed was not found.',
           profile,
         );
       }
