@@ -67,7 +67,7 @@ def create_app(
             "img-src 'self' data:; "
             "media-src 'self'; "
             "style-src 'self' 'unsafe-inline'; "
-            "script-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
             "connect-src 'self'; "
             "object-src 'none'; "
             "base-uri 'self'; "
