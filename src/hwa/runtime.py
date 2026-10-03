@@ -102,6 +102,17 @@ def build_pep_bridge_token() -> str | None:
     return token
 
 
+def build_pep_bridge_allowed_person_ids() -> frozenset[str]:
+    """Build the explicit service-level Pep person allow-list; default deny all."""
+
+    allowed: set[str] = set()
+    if _bool_env("HWA_PEP_BRIDGE_ALLOW_PERSON_A", False):
+        allowed.add("person_a")
+    if _bool_env("HWA_PEP_BRIDGE_ALLOW_PERSON_B", False):
+        allowed.add("person_b")
+    return frozenset(allowed)
+
+
 def _programme_seed_root() -> Path:
     configured = os.getenv("HWA_PROGRAMME_SEED_ROOT")
     if configured is not None and configured.strip():
@@ -131,6 +142,7 @@ def build_production_app() -> FastAPI:
             engine=engine,
             equipment_profile=build_installation_equipment_profile(),
             pep_bridge_token=build_pep_bridge_token(),
+            pep_bridge_allowed_person_ids=build_pep_bridge_allowed_person_ids(),
         )
     except Exception:
         engine.dispose()
