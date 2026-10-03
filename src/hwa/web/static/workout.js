@@ -4,6 +4,7 @@
 
   const reviewMode = player.dataset.reviewMode === 'true';
   const reviewState = player.dataset.reviewState || '';
+  const draftPhase = player.dataset.draftPhase || 'ACTIVE_SET';
   const saveStatus = document.getElementById('save-status');
   const completionStatus = document.getElementById('completion-status');
   const completeButton = document.getElementById('complete-workout');
@@ -59,6 +60,10 @@
     }
     if (player.classList.contains('is-pain-stop')) {
       state.__pain_stop_item = stages[stageIndex]?.dataset.itemId || null;
+    }
+    if (player.classList.contains('is-resting')) {
+      state.__rest_remaining = restRemaining;
+      state.__rest_total = restSeconds;
     }
     const selectedFeedback = stages[stageIndex]?.querySelector(
       '[data-set-feedback][aria-pressed="true"]',
@@ -350,7 +355,9 @@
       if (paused) return;
       restRemaining = Math.max(0, restRemaining - 1);
       renderRestTimer();
+      if (restRemaining > 0 && restRemaining % 15 === 0) queueAutosave();
       if (restRemaining === 0) {
+        queueAutosave();
         clearRestInterval();
         if (restStartButton) restStartButton.textContent = 'Start';
         if (restLabel) restLabel.textContent = 'Rest complete. Start the next set when you are ready.';
@@ -424,7 +431,7 @@
     queueAutosave();
   }
 
-  function showRest(stage) {
+  function showRest(stage, remaining = null) {
     if (!stage) return;
     player.classList.remove('is-set-feedback', 'is-pain-stop');
     player.classList.add('is-resting');
@@ -434,11 +441,13 @@
     if (feedbackPanel) feedbackPanel.hidden = true;
     if (mainRestPanel) mainRestPanel.hidden = false;
     if (painPanel) painPanel.hidden = true;
-    const seconds = Number(stage.dataset.restSeconds || 90);
-    restRemaining = seconds;
-    restSeconds = seconds;
+    const prescribed = Number(stage.dataset.restSeconds || 90);
+    restSeconds = Number(restoredUiState.__rest_total || prescribed);
+    restRemaining = remaining === null
+      ? prescribed
+      : Math.max(0, Number(remaining) || 0);
     renderRestTimer();
-    startRestTimer(seconds);
+    startRestTimer();
     queueAutosave();
   }
 
@@ -609,11 +618,17 @@
   ) {
     feedbackSet = currentCompletedSet(restoredStage);
     showPainStop(restoredStage);
-  } else if (reviewState === 'strength-feedback') {
+  } else if (reviewState === 'strength-feedback' || draftPhase === 'SET_FEEDBACK') {
     showFeedback(restoredStage, currentCompletedSet(restoredStage));
-  } else if (reviewState === 'strength-rest') {
+    if (restoredUiState.__feedback_choice) {
+      applyFeedback(restoredUiState.__feedback_choice);
+    }
+  } else if (reviewState === 'strength-rest' || draftPhase === 'REST_TIMER') {
     feedbackSet = currentCompletedSet(restoredStage);
-    showRest(restoredStage);
+    const remaining = Object.prototype.hasOwnProperty.call(restoredUiState, '__rest_remaining')
+      ? restoredUiState.__rest_remaining
+      : null;
+    showRest(restoredStage, remaining);
   }
 
   for (const input of formInputs) {
@@ -698,5 +713,9 @@
   for (const button of document.querySelectorAll('[data-end-rest]')) {
     button.addEventListener('click', endRest);
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') void autosave();
+  });
   completeButton?.addEventListener('click', () => void completeWorkout());
 })();
