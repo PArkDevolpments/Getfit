@@ -215,6 +215,7 @@ def ensure_production_identities(
     configured_ha = _configured_ha_subjects(config)
     existing_people: dict[str, Person | None] = {}
     existing_mappings: dict[tuple[str, str], ExternalIdentityMapping | None] = {}
+    stale_home_assistant_mappings: list[ExternalIdentityMapping] = []
 
     for spec in _APPROVED_PEOPLE:
         existing_people[spec.person_id] = _validate_person_preflight(session, spec)
@@ -225,6 +226,15 @@ def ensure_production_identities(
                 authority,
                 subject,
             )
+        if spec.person_id not in configured_ha:
+            stale = session.scalar(
+                select(ExternalIdentityMapping).where(
+                    ExternalIdentityMapping.person_id == spec.person_id,
+                    ExternalIdentityMapping.authority == "HOME_ASSISTANT",
+                )
+            )
+            if stale is not None:
+                stale_home_assistant_mappings.append(stale)
 
     people_created = 0
     for spec in _APPROVED_PEOPLE:
@@ -239,6 +249,10 @@ def ensure_production_identities(
                 )
             )
             people_created += 1
+    session.flush()
+
+    for mapping in stale_home_assistant_mappings:
+        session.delete(mapping)
     session.flush()
 
     mappings_created = 0
