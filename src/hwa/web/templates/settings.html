@@ -88,28 +88,5 @@
   </article>
 </section>
 
-<details class="settings-review-tools">
-  <summary>
-    <span>
-      <strong>Quality & build review tools</strong>
-      <small>Specification audit, responsive captures and release evidence</small>
-    </span>
-    <span aria-hidden="true">⌄</span>
-  </summary>
-  <div class="settings-review-tools__grid">
-    <article class="card" id="ui-review-settings">
-      <p class="eyebrow">Automated review</p>
-      <h2>UI Review Pack</h2>
-      <p class="muted">Run the full specification audit against deterministic review states and export one ZIP with responsive evidence.</p>
-      <a class="primary-action" href="{{ ingress_url(request, '/review-capture') }}">Run review pack</a>
-    </article>
 
-    <article class="card" id="acceptance-review-settings">
-      <p class="eyebrow">Manual override & notes</p>
-      <h2>Specification & Acceptance</h2>
-      <p class="muted">Open individual criteria only when you want to add notes or override a judgement that genuinely needs a human decision.</p>
-      <a class="secondary-action" href="{{ ingress_url(request, '/review-spec') }}">Open Specification & Acceptance</a>
-    </article>
-  </div>
-</details>
 {% endblock %}
