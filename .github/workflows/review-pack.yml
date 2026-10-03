@@ -1,0 +1,44 @@
+name: UI Review Pack
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  build-review-pack:
+    name: Build UI review pack
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install project
+        run: uv sync --dev
+
+      - name: Install Chromium
+        run: uv run playwright install --with-deps chromium
+
+      - name: Generate automated UI review pack
+        run: uv run python scripts/generate_review_pack.py --output-dir dist/review-pack
+
+      - name: Upload UI review pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: getfit-ui-review-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: dist/review-pack/*.zip
+          if-no-files-found: error
+          retention-days: 7
