@@ -28,7 +28,7 @@ def test_repository_is_installable_as_a_home_assistant_app_repository() -> None:
     assert "kirsty_ha_user_id: str" in config_text
 
 
-def test_release_versions_are_aligned_to_0_1_21() -> None:
+def test_release_versions_are_aligned_to_0_1_22() -> None:
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     main_module = (ROOT / "src" / "hwa" / "main.py").read_text(encoding="utf-8")
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
