@@ -23,6 +23,12 @@
     for (const panel of panels) {
       panel.hidden = panel.dataset.mediaPanel !== key;
       if (panel.dataset.mediaPanel === 'video' && key === 'video') {
+        for (const source of panel.querySelectorAll('video source[data-video-src]')) {
+          if (!source.getAttribute('src')) {
+            source.setAttribute('src', source.dataset.videoSrc || '');
+            source.closest('video')?.load();
+          }
+        }
         for (const videoFrame of panel.querySelectorAll('iframe[data-video-src]')) {
           if (!videoFrame.getAttribute('src')) {
             videoFrame.setAttribute('src', videoFrame.dataset.videoSrc || '');
