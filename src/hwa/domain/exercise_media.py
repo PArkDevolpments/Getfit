@@ -4,8 +4,8 @@ Media is presentation support only. Programme authority, targets and workout evi
 remain valid even if an asset cannot be rendered.
 """
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 from urllib.parse import parse_qs, urlparse
 
 
