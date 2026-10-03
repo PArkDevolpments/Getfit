@@ -37,7 +37,7 @@ def test_rest_state_has_mockup_style_controls() -> None:
     assert 'data-add-rest' in workout
     assert "+15 sec" in workout
     assert 'data-end-rest' in workout
-    assert "Skip Rest" in workout
+    assert "Start next set" in workout
     assert "function addRestTime" in script
     assert "restRemaining += 15" in script
 
