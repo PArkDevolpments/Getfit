@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 from sqlalchemy.engine import Engine
@@ -53,8 +54,8 @@ def _event(
     )
 
 
-def _session() -> tuple[Session, Engine]:
-    engine = create_engine(DatabaseSettings(database_url="sqlite:///:memory:"))
+def _session(database_url: str = "sqlite:///:memory:") -> tuple[Session, Engine]:
+    engine = create_engine(DatabaseSettings(database_url=database_url))
     Base.metadata.create_all(engine)
     session = Session(engine)
     session.add_all(
@@ -206,8 +207,8 @@ def _machine_client(session_engine: Engine, credential: str | None) -> TestClien
     return TestClient(app)
 
 
-def test_pep_machine_transport_fails_closed_without_configuration() -> None:
-    session, engine = _session()
+def test_pep_machine_transport_fails_closed_without_configuration(tmp_path: Path) -> None:
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
     session.close()
     try:
         response = _machine_client(engine, None).get(
@@ -219,8 +220,8 @@ def test_pep_machine_transport_fails_closed_without_configuration() -> None:
         engine.dispose()
 
 
-def test_pep_machine_transport_rejects_missing_wrong_and_ingress_only_auth() -> None:
-    session, engine = _session()
+def test_pep_machine_transport_rejects_missing_wrong_and_ingress_only_auth(tmp_path: Path) -> None:
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
     session.close()
     credential = "qa-only-machine-credential"
     client = _machine_client(engine, credential)
@@ -241,8 +242,8 @@ def test_pep_machine_transport_rejects_missing_wrong_and_ingress_only_auth() -> 
         engine.dispose()
 
 
-def test_pep_machine_transport_returns_only_requested_person_and_no_secret() -> None:
-    session, engine = _session()
+def test_pep_machine_transport_returns_only_requested_person_and_no_secret(tmp_path: Path) -> None:
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
     session.close()
     credential = "qa-only-machine-credential"
     client = _machine_client(engine, credential)
@@ -276,8 +277,8 @@ def test_pep_machine_transport_returns_only_requested_person_and_no_secret() -> 
         engine.dispose()
 
 
-def test_pep_machine_transport_unknown_person_has_no_cross_person_fallback() -> None:
-    session, engine = _session()
+def test_pep_machine_transport_unknown_person_has_no_cross_person_fallback(tmp_path: Path) -> None:
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
     session.close()
     credential = "qa-only-machine-credential"
     try:
