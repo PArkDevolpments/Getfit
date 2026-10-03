@@ -13,11 +13,22 @@ from urllib.parse import parse_qs, urlparse
 class ExerciseMedia:
     exercise_id: str
     local_demo_path: str | None = None
+    local_video_filename: str | None = None
     phase_demo_paths: tuple[str, ...] = ()
     phase_labels: tuple[str, ...] = ()
     external_video_url: str | None = None
     external_video_source: str | None = None
     external_video_approved: bool = False
+
+    @property
+    def local_video_path(self) -> str | None:
+        """Return the fixed Getfit route for a safe local MP4 filename."""
+
+        if self.local_video_filename is None:
+            return None
+        if re.fullmatch(r"[a-z0-9_]+\.mp4", self.local_video_filename) is None:
+            return None
+        return f"/exercise-videos/{self.local_video_filename}"
 
     @property
     def approved_external_video_url(self) -> str | None:
@@ -57,6 +68,7 @@ class ExerciseMedia:
     def available(self) -> bool:
         return bool(
             self.local_demo_path
+            or self.local_video_path
             or self.phase_demo_paths
             or self.approved_external_video_url
         )
@@ -82,6 +94,7 @@ def _local(
     return ExerciseMedia(
         exercise_id=exercise_id,
         local_demo_path=f"{root}/{exercise_id}.svg",
+        local_video_filename=f"{exercise_id}.mp4" if video_url is not None else None,
         phase_demo_paths=phase_paths,
         phase_labels=phase_labels,
         external_video_url=video_url,
