@@ -442,12 +442,14 @@
     if (mainRestPanel) mainRestPanel.hidden = false;
     if (painPanel) painPanel.hidden = true;
     const prescribed = Number(stage.dataset.restSeconds || 90);
-    restSeconds = Number(restoredUiState.__rest_total || prescribed);
+    restSeconds = remaining === null
+      ? prescribed
+      : Number(restoredUiState.__rest_total || prescribed);
     restRemaining = remaining === null
       ? prescribed
       : Math.max(0, Number(remaining) || 0);
     renderRestTimer();
-    startRestTimer();
+    if (restRemaining > 0) startRestTimer();
     queueAutosave();
   }
 
