@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from hwa.db.base import Base
 from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import ExternalIdentityMapping, Person
+from hwa.repositories.identity import IdentityRepository
 from hwa.services.production_bootstrap import (
     BootstrapConflictError,
     ProductionBootstrapConfig,
@@ -214,6 +215,38 @@ def test_external_subject_owned_by_other_person_fails_without_reassignment() -> 
         )
         assert mapping is not None
         assert mapping.person_id == "someone-else"
+    finally:
+        session.close()
+        engine.dispose()
+
+
+def test_clearing_home_assistant_option_revokes_existing_mapping() -> None:
+    session, engine = _session()
+    try:
+        ensure_production_identities(
+            session,
+            ProductionBootstrapConfig.from_raw("ha-kris", "ha-kirsty"),
+        )
+        session.commit()
+        assert IdentityRepository(session).person_for_external_subject(
+            "HOME_ASSISTANT", "ha-kirsty"
+        ) is not None
+
+        ensure_production_identities(
+            session,
+            ProductionBootstrapConfig.from_raw("ha-kris", None),
+        )
+        session.commit()
+
+        assert IdentityRepository(session).person_for_external_subject(
+            "HOME_ASSISTANT", "ha-kirsty"
+        ) is None
+        assert _mapping_dict(session, "hwa-kirsty") == {
+            "PEP_SITE": "person_b",
+            "HEALTH_PROFILE": "kirsty",
+            "MENU_NUTRITION": "person_2",
+        }
+        assert session.get(Person, "hwa-kirsty") is not None
     finally:
         session.close()
         engine.dispose()
