@@ -199,12 +199,20 @@ def test_provider_does_not_cross_person_fallback() -> None:
         engine.dispose()
 
 
-def _machine_client(session_engine: Engine, credential: str | None) -> TestClient:
+def _machine_client(
+    session_engine: Engine,
+    credential: str | None,
+    allowed_person_ids: frozenset[str] = frozenset({"person_a", "person_b"}),
+) -> TestClient:
     from hwa.main import create_app
 
-    app = create_app(engine=session_engine)
-    app.state.pep_bridge_token = credential
-    return TestClient(app)
+    return TestClient(
+        create_app(
+            engine=session_engine,
+            pep_bridge_token=credential,
+            pep_bridge_allowed_person_ids=allowed_person_ids,
+        )
+    )
 
 
 def test_pep_machine_transport_fails_closed_without_configuration(tmp_path: Path) -> None:
@@ -286,12 +294,8 @@ def test_pep_machine_transport_unknown_person_has_no_cross_person_fallback(tmp_p
             "/api/integrations/pep/v1/workouts/person_unknown",
             headers={"Authorization": f"Bearer {credential}"},
         )
-        assert response.status_code == 200
-        body = response.json()
-        assert body["person_id"] == "person_unknown"
-        assert body["readiness"]["ready"] is False
-        assert body["readiness"]["reason"] == "PERSON_NOT_MAPPED"
-        assert body["records"] == []
+        assert response.status_code == 403
+        assert response.json()["detail"]["code"] == "PEP_BRIDGE_PERSON_NOT_ALLOWED"
     finally:
         engine.dispose()
 
