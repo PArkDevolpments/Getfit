@@ -75,6 +75,7 @@ def test_automated_audit_measures_core_touch_targets_across_product_states() -> 
     assert "function auditTouchTargets" in script
     assert "rect.height < 44 || rect.width < 44" in script
     assert "'strength-feedback'" in script
+    assert "'strength-pain'" in script
     assert "'interval-hard'" in script
     assert "'exercise-detail'" in script
     assert "'.exercise-media-tab'" in script
