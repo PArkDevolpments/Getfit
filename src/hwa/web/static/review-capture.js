@@ -1004,6 +1004,19 @@
     }));
   }
 
+  function replaceExternalFrameState(root) {
+    for (const videoFrame of root.querySelectorAll('.exercise-video-embed iframe')) {
+      const placeholder = root.ownerDocument.createElement('div');
+      placeholder.className = 'review-external-frame-placeholder';
+      placeholder.innerHTML = [
+        '<span aria-hidden="true">▶</span>',
+        '<strong>Approved YouTube embed</strong>',
+        '<small>Live playback is intentionally omitted from the offline vector snapshot.</small>',
+      ].join('');
+      videoFrame.replaceWith(placeholder);
+    }
+  }
+
   function removeNonVisualNodes(root) {
     root.querySelectorAll('script, iframe, video, audio').forEach((node) => node.remove());
   }
@@ -1028,6 +1041,7 @@
     copyDocumentAttributes(documentRef, clonedBody);
     syncFormState(documentRef.body, clonedBody);
     replaceCanvasState(documentRef.body, clonedBody);
+    replaceExternalFrameState(clonedBody);
     removeNonVisualNodes(clonedBody);
     await inlineImages(documentRef.body, clonedBody);
 
@@ -1052,6 +1066,10 @@
       ':root{color-scheme:normal;}',
       'html,body{margin:0!important;width:100%!important;min-height:100%!important;}',
       '*{animation:none!important;transition:none!important;caret-color:transparent!important;}',
+      '.review-external-frame-placeholder{width:100%;height:100%;min-height:160px;display:grid;place-items:center;align-content:center;gap:8px;padding:20px;box-sizing:border-box;background:#07111a;color:#eaf6ff;text-align:center;}',
+      '.review-external-frame-placeholder span{width:52px;height:52px;display:grid;place-items:center;border-radius:50%;background:#1fcf72;color:#04170f;font-weight:900;font-size:20px;}',
+      '.review-external-frame-placeholder strong{font-size:16px;}',
+      '.review-external-frame-placeholder small{max-width:320px;color:#9eb8ca;font-size:12px;line-height:1.4;}',
       css,
     ].join('\n');
     wrapper.appendChild(style);
