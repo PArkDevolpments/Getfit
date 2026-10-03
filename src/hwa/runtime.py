@@ -90,6 +90,18 @@ def build_production_bootstrap_config() -> ProductionBootstrapConfig:
     )
 
 
+def build_pep_bridge_token() -> str | None:
+    """Read the private Pep machine credential or leave the transport disabled."""
+
+    raw = os.getenv("HWA_PEP_BRIDGE_TOKEN")
+    if raw is None or not raw.strip():
+        return None
+    token = raw.strip()
+    if len(token) < 24:
+        raise ValueError("HWA_PEP_BRIDGE_TOKEN must be at least 24 characters")
+    return token
+
+
 def _programme_seed_root() -> Path:
     configured = os.getenv("HWA_PROGRAMME_SEED_ROOT")
     if configured is not None and configured.strip():
@@ -118,6 +130,7 @@ def build_production_app() -> FastAPI:
         return create_app(
             engine=engine,
             equipment_profile=build_installation_equipment_profile(),
+            pep_bridge_token=build_pep_bridge_token(),
         )
     except Exception:
         engine.dispose()
