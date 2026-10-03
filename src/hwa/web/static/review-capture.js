@@ -539,15 +539,20 @@
       }
       if (criterionId === 'TECH-04') {
         const modes = ['Images', 'Technique', 'Video'].every((value) => text.includes(value));
+        const localVideo = documentRef.querySelector('.exercise-local-video source');
+        const localSource = localVideo?.getAttribute('src') || localVideo?.dataset.videoSrc || '';
+        const localConfigured = localSource.includes('/exercise-videos/');
         const videoFrame = documentRef.querySelector('.exercise-video-embed iframe');
         const privacyEmbed = Boolean(
           videoFrame?.getAttribute('src')?.startsWith('https://www.youtube-nocookie.com/embed/'),
         );
         return automatedResult(
-          modes && privacyEmbed ? 'REVIEW_REQUIRED' : 'FAIL',
-          modes && privacyEmbed
-            ? 'Images / Technique / Video modes are present with an approved privacy-enhanced video embed. Visual player presentation still requires screenshot review.'
-            : 'The approved media hierarchy or privacy-enhanced video embed was not found.',
+          modes && (localConfigured || privacyEmbed) ? 'REVIEW_REQUIRED' : 'FAIL',
+          modes && localConfigured
+            ? 'Images / Technique / Video modes are present with a configured local MP4 exercise video. Visual playback still requires screenshot/device review.'
+            : modes && privacyEmbed
+              ? 'Images / Technique / Video modes are present with an approved privacy-enhanced video embed. Visual player presentation still requires screenshot review.'
+              : 'The approved media hierarchy or configured exercise video was not found.',
           profile,
         );
       }
@@ -1000,6 +1005,16 @@
   }
 
   function replaceExternalFrameState(root) {
+    for (const localVideo of root.querySelectorAll('.exercise-video-embed video')) {
+      const placeholder = root.ownerDocument.createElement('div');
+      placeholder.className = 'review-external-frame-placeholder';
+      placeholder.innerHTML = [
+        '<span aria-hidden="true">▶</span>',
+        '<strong>Local exercise video</strong>',
+        '<small>Playback is supplied by the MP4 stored in Home Assistant media.</small>',
+      ].join('');
+      localVideo.replaceWith(placeholder);
+    }
     for (const videoFrame of root.querySelectorAll('.exercise-video-embed iframe')) {
       const placeholder = root.ownerDocument.createElement('div');
       placeholder.className = 'review-external-frame-placeholder';
