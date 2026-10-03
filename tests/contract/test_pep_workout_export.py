@@ -294,3 +294,49 @@ def test_pep_machine_transport_unknown_person_has_no_cross_person_fallback(tmp_p
         assert body["records"] == []
     finally:
         engine.dispose()
+
+
+def test_pep_machine_transport_requires_explicit_service_person_scope(tmp_path: Path) -> None:
+    from hwa.main import create_app
+
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
+    session.close()
+    credential = "qa-only-machine-credential"
+    app = create_app(engine=engine, pep_bridge_token=credential)
+    app.state.pep_bridge_allowed_person_ids = frozenset({"person_a"})
+    client = TestClient(app)
+    headers = {"Authorization": f"Bearer {credential}"}
+    try:
+        allowed = client.get(
+            "/api/integrations/pep/v1/workouts/person_a",
+            headers=headers,
+        )
+        assert allowed.status_code == 200
+
+        denied = client.get(
+            "/api/integrations/pep/v1/workouts/person_b",
+            headers=headers,
+        )
+        assert denied.status_code == 403
+        assert denied.json()["detail"]["code"] == "PEP_BRIDGE_PERSON_NOT_ALLOWED"
+    finally:
+        engine.dispose()
+
+
+def test_pep_machine_transport_empty_service_scope_fails_closed(tmp_path: Path) -> None:
+    from hwa.main import create_app
+
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
+    session.close()
+    credential = "qa-only-machine-credential"
+    app = create_app(engine=engine, pep_bridge_token=credential)
+    app.state.pep_bridge_allowed_person_ids = frozenset()
+    try:
+        response = TestClient(app).get(
+            "/api/integrations/pep/v1/workouts/person_a",
+            headers={"Authorization": f"Bearer {credential}"},
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"]["code"] == "PEP_BRIDGE_PERSON_NOT_ALLOWED"
+    finally:
+        engine.dispose()
