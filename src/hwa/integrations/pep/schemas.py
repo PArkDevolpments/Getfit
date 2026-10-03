@@ -65,3 +65,18 @@ class PepWorkoutSourceReadiness(StrictPepExportModel):
     state: Literal["READY", "UNAVAILABLE"]
     reason: str = Field(min_length=1)
     source_authority: Literal["WORKOUT_EVENT_SOURCE"] = "WORKOUT_EVENT_SOURCE"
+
+
+class PepWorkoutSourceExportV1(StrictPepExportModel):
+    """Authenticated machine export envelope consumed by Pep Health."""
+
+    schema_name: Literal["home-workout-assistant.pep-workout-export"] = Field(
+        default="home-workout-assistant.pep-workout-export",
+        alias="schema",
+        serialization_alias="schema",
+    )
+    schema_version: Literal[1] = 1
+    person_id: str = Field(min_length=1)
+    readiness: PepWorkoutSourceReadiness
+    records: tuple[PepWorkoutSourceRecordV1, ...]
+    automatic_action: Literal[False] = False

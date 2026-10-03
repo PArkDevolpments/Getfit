@@ -1,6 +1,8 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
+from fastapi.testclient import TestClient
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
@@ -52,8 +54,8 @@ def _event(
     )
 
 
-def _session() -> tuple[Session, Engine]:
-    engine = create_engine(DatabaseSettings(database_url="sqlite:///:memory:"))
+def _session(database_url: str = "sqlite:///:memory:") -> tuple[Session, Engine]:
+    engine = create_engine(DatabaseSettings(database_url=database_url))
     Base.metadata.create_all(engine)
     session = Session(engine)
     session.add_all(
@@ -194,4 +196,101 @@ def test_provider_does_not_cross_person_fallback() -> None:
         assert provider.records("person_b") == ()
     finally:
         session.close()
+        engine.dispose()
+
+
+def _machine_client(session_engine: Engine, credential: str | None) -> TestClient:
+    from hwa.main import create_app
+
+    app = create_app(engine=session_engine)
+    app.state.pep_bridge_token = credential
+    return TestClient(app)
+
+
+def test_pep_machine_transport_fails_closed_without_configuration(tmp_path: Path) -> None:
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
+    session.close()
+    try:
+        response = _machine_client(engine, None).get(
+            "/api/integrations/pep/v1/workouts/person_a"
+        )
+        assert response.status_code == 503
+        assert response.json()["detail"]["code"] == "PEP_BRIDGE_NOT_CONFIGURED"
+    finally:
+        engine.dispose()
+
+
+def test_pep_machine_transport_rejects_missing_wrong_and_ingress_only_auth(tmp_path: Path) -> None:
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
+    session.close()
+    credential = "qa-only-machine-credential"
+    client = _machine_client(engine, credential)
+    try:
+        missing = client.get("/api/integrations/pep/v1/workouts/person_a")
+        wrong = client.get(
+            "/api/integrations/pep/v1/workouts/person_a",
+            headers={"Authorization": "Bearer not-the-credential"},
+        )
+        ingress_only = client.get(
+            "/api/integrations/pep/v1/workouts/person_a",
+            headers={"X-Remote-User-Id": "ha-admin"},
+        )
+        for response in (missing, wrong, ingress_only):
+            assert response.status_code == 401
+            assert response.json()["detail"]["code"] == "PEP_BRIDGE_AUTH_REQUIRED"
+    finally:
+        engine.dispose()
+
+
+def test_pep_machine_transport_returns_only_requested_person_and_no_secret(tmp_path: Path) -> None:
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
+    session.close()
+    credential = "qa-only-machine-credential"
+    client = _machine_client(engine, credential)
+    headers = {"Authorization": f"Bearer {credential}"}
+    try:
+        kris = client.get(
+            "/api/integrations/pep/v1/workouts/person_a",
+            headers=headers,
+        )
+        assert kris.status_code == 200
+        body = kris.json()
+        assert body["schema"] == "home-workout-assistant.pep-workout-export"
+        assert body["schema_version"] == 1
+        assert body["person_id"] == "person_a"
+        assert body["readiness"]["ready"] is True
+        assert [row["person_id"] for row in body["records"]] == ["person_a"]
+        assert [row["event_id"] for row in body["records"]] == ["event-001"]
+        assert credential not in str(body)
+        assert kris.headers["cache-control"] == "no-store"
+
+        kirsty = client.get(
+            "/api/integrations/pep/v1/workouts/person_b",
+            headers=headers,
+        )
+        other = kirsty.json()
+        assert kirsty.status_code == 200
+        assert other["person_id"] == "person_b"
+        assert other["readiness"]["ready"] is True
+        assert other["records"] == []
+    finally:
+        engine.dispose()
+
+
+def test_pep_machine_transport_unknown_person_has_no_cross_person_fallback(tmp_path: Path) -> None:
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
+    session.close()
+    credential = "qa-only-machine-credential"
+    try:
+        response = _machine_client(engine, credential).get(
+            "/api/integrations/pep/v1/workouts/person_unknown",
+            headers={"Authorization": f"Bearer {credential}"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["person_id"] == "person_unknown"
+        assert body["readiness"]["ready"] is False
+        assert body["readiness"]["reason"] == "PERSON_NOT_MAPPED"
+        assert body["records"] == []
+    finally:
         engine.dispose()

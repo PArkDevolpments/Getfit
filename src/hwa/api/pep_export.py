@@ -1,12 +1,16 @@
-"""In-process Pep WORKOUT_EVENT_SOURCE provider boundary.
+"""Pep WORKOUT_EVENT_SOURCE provider and trusted machine transport boundary."""
 
-Transport/authentication is intentionally not exposed here. A later trusted integration
-may transport this provider, but Task 8 does not add an unauthenticated HTTP endpoint.
-"""
+from __future__ import annotations
 
+import hmac
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
+from hwa.api.dependencies import get_session
 from hwa.integrations.pep.schemas import (
+    PepWorkoutSourceExportV1,
     PepWorkoutSourceReadiness,
     PepWorkoutSourceRecordV1,
 )
@@ -44,3 +48,58 @@ class PepWorkoutSourceProvider:
         if not readiness.ready:
             return ()
         return export_workouts_for_pep(self._session, person_id)
+
+
+router = APIRouter(prefix="/api/integrations/pep/v1", tags=["pep-integration"])
+
+
+def _machine_credential(request: Request) -> str | None:
+    raw = getattr(request.app.state, "pep_bridge_token", None)
+    if raw is None:
+        return None
+    value = str(raw).strip()
+    return value or None
+
+
+def require_pep_machine_auth(
+    request: Request,
+    authorization: Annotated[str | None, Header()] = None,
+) -> None:
+    """Require the separately configured Pep machine credential; ingress identity is irrelevant."""
+
+    expected = _machine_credential(request)
+    if expected is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "PEP_BRIDGE_NOT_CONFIGURED"},
+        )
+    scheme, _, supplied = (authorization or "").partition(" ")
+    if scheme.lower() != "bearer" or not supplied or not hmac.compare_digest(supplied, expected):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "PEP_BRIDGE_AUTH_REQUIRED"},
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+@router.get(
+    "/workouts/{person_id}",
+    response_model=PepWorkoutSourceExportV1,
+    dependencies=[Depends(require_pep_machine_auth)],
+)
+def pep_workout_machine_export(
+    person_id: str,
+    response: Response,
+    session: Annotated[Session, Depends(get_session)],
+) -> PepWorkoutSourceExportV1:
+    """Return the effective read-only workout source for one explicit Pep person."""
+
+    response.headers["Cache-Control"] = "no-store"
+    provider = PepWorkoutSourceProvider(session)
+    readiness = provider.readiness(person_id)
+    records = provider.records(person_id) if readiness.ready else ()
+    return PepWorkoutSourceExportV1(
+        person_id=person_id.strip(),
+        readiness=readiness,
+        records=records,
+    )

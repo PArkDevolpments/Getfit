@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import Engine
 
+from hwa.api.pep_export import router as pep_export_router
 from hwa.api.routes.me import router as me_router
 from hwa.api.routes.workouts import router as workouts_router
 from hwa.auth.ha_ingress import HomeAssistantIngressPrincipalProvider
@@ -29,6 +30,7 @@ def create_app(
     pep_health_reader: PepHealthReader | None = None,
     menu_nutrition_reader: MenuNutritionReader | None = None,
     equipment_profile: InstallationEquipmentProfile | None = None,
+    pep_bridge_token: str | None = None,
 ) -> FastAPI:
     """Create the HWA application with explicit injectable trust boundaries."""
 
@@ -41,6 +43,7 @@ def create_app(
     application.state.pep_health_reader = pep_health_reader
     application.state.menu_nutrition_reader = menu_nutrition_reader
     application.state.equipment_profile = equipment_profile
+    application.state.pep_bridge_token = pep_bridge_token.strip() if pep_bridge_token else None
     application.add_exception_handler(
         WebIdentitySetupRequired,
         setup_required_exception_handler,
@@ -56,6 +59,7 @@ def create_app(
         name="exercise-videos",
     )
     application.include_router(me_router)
+    application.include_router(pep_export_router)
     application.include_router(workouts_router)
     application.include_router(product_web_router)
 
