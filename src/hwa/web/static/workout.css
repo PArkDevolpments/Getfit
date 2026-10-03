@@ -1593,3 +1593,12 @@
     font-size: .72rem;
   }
 }
+
+
+.set-effort-scale {
+  margin: 0;
+  padding: 0 .7rem .7rem;
+  color: #7897aa;
+  font-size: .6rem;
+  line-height: 1.4;
+}
