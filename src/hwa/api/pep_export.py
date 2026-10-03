@@ -62,13 +62,14 @@ def _machine_credential(request: Request) -> str | None:
 
 
 def _allowed_pep_person_ids(request: Request) -> frozenset[str]:
-    raw = getattr(request.app.state, "pep_bridge_allowed_person_ids", frozenset())
-    if isinstance(raw, frozenset):
-        return raw
-    try:
-        return frozenset(str(value).strip() for value in raw if str(value).strip())
-    except TypeError:
+    raw: object = getattr(request.app.state, "pep_bridge_allowed_person_ids", None)
+    if not isinstance(raw, frozenset):
         return frozenset()
+    return frozenset(
+        value.strip()
+        for value in raw
+        if isinstance(value, str) and value.strip()
+    )
 
 
 def require_pep_person_scope(request: Request, person_id: str) -> None:
