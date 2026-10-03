@@ -61,3 +61,22 @@ def test_runtime_bootstrap_config_allows_both_home_assistant_ids_to_be_unconfigu
 
     assert config.kris_ha_user_id is None
     assert config.kirsty_ha_user_id is None
+
+
+def test_runtime_pep_bridge_token_is_optional_and_validated(monkeypatch) -> None:
+    monkeypatch.delenv("HWA_PEP_BRIDGE_TOKEN", raising=False)
+    assert runtime.build_pep_bridge_token() is None
+
+    monkeypatch.setenv("HWA_PEP_BRIDGE_TOKEN", "   ")
+    assert runtime.build_pep_bridge_token() is None
+
+    monkeypatch.setenv("HWA_PEP_BRIDGE_TOKEN", "  qa-only-machine-credential  ")
+    assert runtime.build_pep_bridge_token() == "qa-only-machine-credential"
+
+    monkeypatch.setenv("HWA_PEP_BRIDGE_TOKEN", "too-short")
+    try:
+        runtime.build_pep_bridge_token()
+    except ValueError as exc:
+        assert "HWA_PEP_BRIDGE_TOKEN" in str(exc)
+    else:
+        raise AssertionError("weak Pep bridge credential must fail closed")
