@@ -80,8 +80,10 @@ def test_review_pack_exports_acceptance_spec_and_results() -> None:
     assert "acceptance_storage_key" in template
 
 
-def test_settings_exposes_specification_acceptance_tool() -> None:
+def test_internal_acceptance_tool_is_not_exposed_in_normal_settings() -> None:
     settings = _text(TEMPLATES / "settings.html")
+    acceptance = _text(TEMPLATES / "acceptance_review.html")
 
-    assert "Specification & Acceptance" in settings
-    assert "/review-spec" in settings
+    assert "Specification & Acceptance" in acceptance
+    assert "Specification & Acceptance" not in settings
+    assert "/review-spec" not in settings
