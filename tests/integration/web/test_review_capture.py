@@ -63,6 +63,10 @@ def test_review_capture_is_authenticated_person_scoped_tool(tmp_path) -> None:
         assert "person_1" not in html
         assert "hwa-kris" not in html
         assert "/static/review-capture.js" in html
+        assert "Exercise video — Dumbbell Floor Press · PureGym" in html
+        assert "Exercise video — Supported Reverse Lunge · Body By Finn Fitness" in html
+        assert "Exercise video — Dumbbell Lateral Raise · Max Euceda" in html
+        assert html.count('"media_tab": "video"') == 3
     finally:
         client.close()
         engine.dispose()

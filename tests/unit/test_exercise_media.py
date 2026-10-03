@@ -41,6 +41,52 @@ def test_approved_external_video_must_be_https() -> None:
     assert media.approved_external_video_url is None
 
 
+def test_approved_youtube_video_gets_privacy_enhanced_embed() -> None:
+    media = ExerciseMedia(
+        exercise_id="goblet-squat",
+        external_video_url="https://www.youtube.com/watch?v=zBV3ceGyAxw",
+        external_video_approved=True,
+    )
+    assert (
+        media.approved_external_video_embed_url
+        == "https://www.youtube-nocookie.com/embed/zBV3ceGyAxw"
+    )
+
+
+def test_non_youtube_external_video_is_not_embedded() -> None:
+    media = ExerciseMedia(
+        exercise_id="goblet-squat",
+        external_video_url="https://example.com/demo",
+        external_video_approved=True,
+    )
+    assert media.approved_external_video_url == "https://example.com/demo"
+    assert media.approved_external_video_embed_url is None
+
+
+def test_week_one_exercises_have_reviewed_external_technique_videos() -> None:
+    expected_sources = {
+        "dumbbell_floor_press": "PureGym",
+        "one_arm_dumbbell_row": "PureGym",
+        "seated_dumbbell_shoulder_press": "PureGym",
+        "dumbbell_biceps_curl": "PureGym",
+        "overhead_triceps_extension": "PureGym",
+        "goblet_squat": "PureGym",
+        "dumbbell_romanian_deadlift": "PureGym",
+        "supported_reverse_lunge": "Body By Finn Fitness",
+        "standing_calf_raise": "PureGym",
+        "dead_bug": "PureGym",
+        "forearm_plank": "PureGym",
+        "dumbbell_lateral_raise": "Max Euceda",
+        "hammer_curl": "PureGym",
+    }
+
+    for exercise_id, source in expected_sources.items():
+        media = resolve_exercise_media(exercise_id)
+        assert media.external_video_source == source
+        assert media.approved_external_video_url is not None
+        assert media.approved_external_video_embed_url is not None
+
+
 def test_approved_exercise_media_uses_local_photorealistic_raster_assets() -> None:
     exercise_ids = (
         "dumbbell_floor_press",
@@ -74,3 +120,34 @@ def test_three_stage_technique_media_is_photorealistic_and_local() -> None:
             assert "data:image/webp;base64," in media
             assert "<path" not in media
             assert "<circle" not in media
+
+
+def test_week_one_videos_use_fixed_local_mp4_filenames() -> None:
+    exercise_ids = (
+        "dumbbell_floor_press",
+        "one_arm_dumbbell_row",
+        "seated_dumbbell_shoulder_press",
+        "dumbbell_biceps_curl",
+        "overhead_triceps_extension",
+        "goblet_squat",
+        "dumbbell_romanian_deadlift",
+        "supported_reverse_lunge",
+        "standing_calf_raise",
+        "dead_bug",
+        "forearm_plank",
+        "dumbbell_lateral_raise",
+        "hammer_curl",
+    )
+
+    for exercise_id in exercise_ids:
+        media = resolve_exercise_media(exercise_id)
+        assert media.local_video_filename == f"{exercise_id}.mp4"
+        assert media.local_video_path == f"/exercise-videos/{exercise_id}.mp4"
+
+
+def test_local_video_filename_rejects_path_traversal() -> None:
+    media = ExerciseMedia(
+        exercise_id="unsafe",
+        local_video_filename="../unsafe.mp4",
+    )
+    assert media.local_video_path is None

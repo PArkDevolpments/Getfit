@@ -124,6 +124,21 @@
 
     await nextFrame();
     await sleep(500);
+
+    if (target.media_tab) {
+      const documentRef = frame.contentDocument;
+      const tab = documentRef?.querySelector(
+        `[data-media-tab="${target.media_tab}"]`,
+      );
+      if (!tab) {
+        throw new Error(
+          `Review target ${target.label} could not activate media tab ${target.media_tab}.`,
+        );
+      }
+      tab.click();
+      await nextFrame();
+      await sleep(350);
+    }
   }
 
   function detectPageState(target) {
@@ -152,6 +167,13 @@
     }
     if (criterionId.startsWith('STRENGTH-')) return ['strength-active'];
 
+    if (criterionId === 'TECH-04') {
+      return [
+        'exercise-video-floor-press',
+        'exercise-video-supported-reverse-lunge',
+        'exercise-video-lateral-raise',
+      ];
+    }
     if (criterionId.startsWith('TECH-')) return ['exercise-detail'];
 
     if (criterionId === 'CARDIO-02') return ['treadmill'];
@@ -181,6 +203,9 @@
         'interval-recovery',
         'library',
         'exercise-detail',
+        'exercise-video-floor-press',
+        'exercise-video-supported-reverse-lunge',
+        'exercise-video-lateral-raise',
         'settings',
       ];
     }
@@ -514,11 +539,20 @@
       }
       if (criterionId === 'TECH-04') {
         const modes = ['Images', 'Technique', 'Video'].every((value) => text.includes(value));
+        const localVideo = documentRef.querySelector('.exercise-local-video source');
+        const localSource = localVideo?.getAttribute('src') || localVideo?.dataset.videoSrc || '';
+        const localConfigured = localSource.includes('/exercise-videos/');
+        const videoFrame = documentRef.querySelector('.exercise-video-embed iframe');
+        const privacyEmbed = Boolean(
+          videoFrame?.getAttribute('src')?.startsWith('https://www.youtube-nocookie.com/embed/'),
+        );
         return automatedResult(
-          modes ? 'REVIEW_REQUIRED' : 'FAIL',
-          modes
-            ? 'Images / Technique / Video modes are present.'
-            : 'The approved Images / Technique / Video hierarchy was not found.',
+          modes && (localConfigured || privacyEmbed) ? 'REVIEW_REQUIRED' : 'FAIL',
+          modes && localConfigured
+            ? 'Images / Technique / Video modes are present with a configured local MP4 exercise video. Visual playback still requires screenshot/device review.'
+            : modes && privacyEmbed
+              ? 'Images / Technique / Video modes are present with an approved privacy-enhanced video embed. Visual player presentation still requires screenshot review.'
+              : 'The approved media hierarchy or configured exercise video was not found.',
           profile,
         );
       }
@@ -970,6 +1004,29 @@
     }));
   }
 
+  function replaceExternalFrameState(root) {
+    for (const localVideo of root.querySelectorAll('.exercise-video-embed video')) {
+      const placeholder = root.ownerDocument.createElement('div');
+      placeholder.className = 'review-external-frame-placeholder';
+      placeholder.innerHTML = [
+        '<span aria-hidden="true">▶</span>',
+        '<strong>Local exercise video</strong>',
+        '<small>Playback is supplied by the MP4 stored in Home Assistant media.</small>',
+      ].join('');
+      localVideo.replaceWith(placeholder);
+    }
+    for (const videoFrame of root.querySelectorAll('.exercise-video-embed iframe')) {
+      const placeholder = root.ownerDocument.createElement('div');
+      placeholder.className = 'review-external-frame-placeholder';
+      placeholder.innerHTML = [
+        '<span aria-hidden="true">▶</span>',
+        '<strong>Approved YouTube embed</strong>',
+        '<small>Live playback is intentionally omitted from the offline vector snapshot.</small>',
+      ].join('');
+      videoFrame.replaceWith(placeholder);
+    }
+  }
+
   function removeNonVisualNodes(root) {
     root.querySelectorAll('script, iframe, video, audio').forEach((node) => node.remove());
   }
@@ -994,6 +1051,7 @@
     copyDocumentAttributes(documentRef, clonedBody);
     syncFormState(documentRef.body, clonedBody);
     replaceCanvasState(documentRef.body, clonedBody);
+    replaceExternalFrameState(clonedBody);
     removeNonVisualNodes(clonedBody);
     await inlineImages(documentRef.body, clonedBody);
 
@@ -1018,6 +1076,10 @@
       ':root{color-scheme:normal;}',
       'html,body{margin:0!important;width:100%!important;min-height:100%!important;}',
       '*{animation:none!important;transition:none!important;caret-color:transparent!important;}',
+      '.review-external-frame-placeholder{width:100%;height:100%;min-height:160px;display:grid;place-items:center;align-content:center;gap:8px;padding:20px;box-sizing:border-box;background:#07111a;color:#eaf6ff;text-align:center;}',
+      '.review-external-frame-placeholder span{width:52px;height:52px;display:grid;place-items:center;border-radius:50%;background:#1fcf72;color:#04170f;font-weight:900;font-size:20px;}',
+      '.review-external-frame-placeholder strong{font-size:16px;}',
+      '.review-external-frame-placeholder small{max-width:320px;color:#9eb8ca;font-size:12px;line-height:1.4;}',
       css,
     ].join('\n');
     wrapper.appendChild(style);

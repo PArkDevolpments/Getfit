@@ -110,6 +110,14 @@ def test_library_and_progress_hide_implementation_ids_and_use_product_cards() ->
     assert "exercise.media.phase_labels[loop.index0]" in detail
     assert 'data-media-panel="technique"' in detail
     assert 'data-media-panel="video"' in detail
+    assert "exercise.media.local_video_path" in detail
+    assert 'class="exercise-video-embed"' in detail
+    assert 'class="exercise-local-video"' in detail
+    assert 'class="exercise-local-video"' in detail
+    assert 'data-video-src="{{ ingress_url(request, exercise.media.local_video_path) }}"' in detail
+    assert "video source[data-video-src]" in _text(STATIC / "media.js")
+    assert "iframe[data-video-src]" in _text(STATIC / "media.js")
+    assert "videoFrame.setAttribute('src'" in _text(STATIC / "media.js")
     assert 'class="progress-kpi-grid' in progress
     assert 'data-progress-chart' in progress
     assert 'class="recent-progression-list"' in progress
@@ -122,3 +130,13 @@ def test_settings_uses_safe_status_cards() -> None:
     assert 'class="settings-grid' in settings
     assert 'class="equipment-card' in settings
     assert 'class="integration-card' in settings
+
+
+def test_exercise_video_tab_is_player_only() -> None:
+    detail = _text(TEMPLATES / "exercise_detail.html")
+
+    assert 'class="exercise-video-embed"' in detail
+    assert "Approved technique video" not in detail
+    assert "Watch the movement" not in detail
+    assert "Source:" not in detail
+    assert "Open on YouTube" not in detail

@@ -1,5 +1,5 @@
 name: "Getfit"
-version: "0.1.20"
+version: "0.1.21"
 slug: "getfit"
 description: "Local-first Home Workout Assistant"
 url: "https://github.com/ktgregson93-collab/Getfit"
@@ -17,6 +17,9 @@ panel_title: "Getfit"
 panel_admin: false
 backup: cold
 image: "ghcr.io/ktgregson93-collab/getfit"
+map:
+  - type: media
+    read_only: true
 options:
   treadmill_available: true
   treadmill_max_incline_percent: 20

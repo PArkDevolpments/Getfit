@@ -409,6 +409,24 @@ def review_capture(
             "label": "Exercise detail — Dumbbell Floor Press",
             "url": ingress_url(request, "/library/dumbbell_floor_press"),
         },
+        {
+            "key": "exercise-video-floor-press",
+            "label": "Exercise video — Dumbbell Floor Press · PureGym",
+            "url": ingress_url(request, "/library/dumbbell_floor_press"),
+            "media_tab": "video",
+        },
+        {
+            "key": "exercise-video-supported-reverse-lunge",
+            "label": "Exercise video — Supported Reverse Lunge · Body By Finn Fitness",
+            "url": ingress_url(request, "/library/supported_reverse_lunge"),
+            "media_tab": "video",
+        },
+        {
+            "key": "exercise-video-lateral-raise",
+            "label": "Exercise video — Dumbbell Lateral Raise · Max Euceda",
+            "url": ingress_url(request, "/library/dumbbell_lateral_raise"),
+            "media_tab": "video",
+        },
         {"key": "settings", "label": "Settings", "url": ingress_url(request, "/settings")},
     ]
 

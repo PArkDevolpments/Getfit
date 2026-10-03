@@ -3054,6 +3054,28 @@ body[data-profile="female"] .home-context-rail__icon {
   font-size: 1.35rem;
 }
 
+.exercise-video-embed {
+  width: min(100%, 760px);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid rgba(107, 157, 190, .16);
+  border-radius: 14px;
+  background: #07111a;
+  box-shadow: 0 12px 28px rgba(5, 22, 34, .14);
+}
+
+.exercise-video-embed iframe,
+.exercise-video-embed video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+}
+
+.exercise-video-embed video {
+  object-fit: contain;
+  background: #07111a;
+}
 .exercise-video-panel__icon {
   width: 58px;
   height: 58px;
