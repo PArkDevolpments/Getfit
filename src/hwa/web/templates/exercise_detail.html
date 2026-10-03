@@ -78,21 +78,10 @@
               >
             </video>
           </div>
-          {% elif exercise.media.approved_external_video_embed_url %}
-          <div class="exercise-video-embed">
-            <iframe
-              data-video-src="{{ exercise.media.approved_external_video_embed_url }}"
-              title="{{ exercise.display_name }} technique demonstration"
-              loading="lazy"
-              referrerpolicy="strict-origin-when-cross-origin"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-            ></iframe>
-          </div>
           {% else %}
           <div class="exercise-video-panel__icon" aria-hidden="true">▶</div>
-          <h3>No approved external video configured</h3>
-          <p class="muted">The local Images and Technique guidance are available now. Getfit does not invent or silently substitute external links.</p>
+          <h3>Local video not installed yet</h3>
+          <p class="muted">Images and technique cues remain available. Getfit never falls back to remote video.</p>
           {% endif %}
         </div>
       </section>
