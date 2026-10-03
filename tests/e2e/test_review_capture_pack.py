@@ -28,7 +28,7 @@ def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> Non
     assert "detectPageState" in script
     assert "page_state" in script
     assert "No active workout" in script
-    assert "390" in script
+    assert "430" in script
     assert "820" in script
     assert "1440" in script
 
@@ -111,5 +111,6 @@ def test_review_pack_captures_approved_video_states() -> None:
     assert "youtube-nocookie.com/embed/" in script
     assert "replaceExternalFrameState" in script
     assert "Local exercise video" in script
+    assert "youtube-nocookie.com" not in script
     assert "Approved YouTube embed" in script
     assert "Live playback is intentionally omitted from the offline vector snapshot." in script
