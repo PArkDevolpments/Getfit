@@ -1,9 +1,11 @@
 """Application bootstrap for Home Workout Assistant."""
 
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
 from sqlalchemy import Engine
 
 from hwa.api.pep_export import router as pep_export_router
@@ -54,7 +56,10 @@ def create_app(
     )
 
     @application.middleware("http")
-    async def harden_responses(request: Request, call_next):
+    async def harden_responses(
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
         """Apply browser hardening without weakening Home Assistant Ingress."""
 
         response = await call_next(request)
