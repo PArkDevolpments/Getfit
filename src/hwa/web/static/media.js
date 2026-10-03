@@ -29,11 +29,6 @@
             source.closest('video')?.load();
           }
         }
-        for (const videoFrame of panel.querySelectorAll('iframe[data-video-src]')) {
-          if (!videoFrame.getAttribute('src')) {
-            videoFrame.setAttribute('src', videoFrame.dataset.videoSrc || '');
-          }
-        }
       }
     }
   };

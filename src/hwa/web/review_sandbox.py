@@ -58,6 +58,7 @@ def build_review_player(
     day_number = {
         "strength-active": 1,
         "strength-feedback": 1,
+        "strength-pain": 1,
         "strength-rest": 1,
         "bike-finisher": 1,
         "treadmill": 2,
@@ -77,7 +78,7 @@ def build_review_player(
     current_set_number: int | None = 1
     phase = DraftPhase.ACTIVE_SET
 
-    if state in {"strength-feedback", "strength-rest"} and strength:
+    if state in {"strength-feedback", "strength-pain", "strength-rest"} and strength:
         first = strength[0]
         state_data[f"{first.item_id}-set-1-reps"] = first.reps_target or first.reps_min or 10
         if first.load_value is not None:
@@ -85,10 +86,13 @@ def build_review_player(
         state_data[f"{first.item_id}-set-1-rpe"] = 8
         state_data[f"{first.item_id}-set-1-rir"] = 2
         state_data[f"{first.item_id}-set-1-completed"] = True
+        if state == "strength-pain":
+            state_data[f"{first.item_id}-set-1-pain"] = True
+            state_data["__pain_stop_item"] = first.item_id
         phase = (
-            DraftPhase.SET_FEEDBACK
-            if state == "strength-feedback"
-            else DraftPhase.REST_TIMER
+            DraftPhase.REST_TIMER
+            if state == "strength-rest"
+            else DraftPhase.SET_FEEDBACK
         )
 
     if state in {"bike-finisher", "treadmill", "interval-hard", "interval-recovery"}:

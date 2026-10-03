@@ -18,7 +18,7 @@
     ? JSON.parse(acceptanceSpecNode.textContent || '{}')
     : {};
   const fullProfiles = [
-    {key: 'phone', label: 'Phone', width: 390, height: 844},
+    {key: 'phone', label: 'iPhone 16 Pro Max', width: 430, height: 932},
     {key: 'tablet', label: 'Tablet', width: 820, height: 1180},
     {key: 'desktop', label: 'Desktop', width: 1440, height: 1000},
   ];
@@ -147,6 +147,7 @@
     const workoutTargets = new Set([
       'strength-active',
       'strength-feedback',
+      'strength-pain',
       'strength-rest',
       'bike-finisher',
       'treadmill',
@@ -196,6 +197,7 @@
         'today',
         'strength-active',
         'strength-feedback',
+        'strength-pain',
         'strength-rest',
         'bike-finisher',
         'treadmill',
@@ -542,17 +544,11 @@
         const localVideo = documentRef.querySelector('.exercise-local-video source');
         const localSource = localVideo?.getAttribute('src') || localVideo?.dataset.videoSrc || '';
         const localConfigured = localSource.includes('/exercise-videos/');
-        const videoFrame = documentRef.querySelector('.exercise-video-embed iframe');
-        const privacyEmbed = Boolean(
-          videoFrame?.getAttribute('src')?.startsWith('https://www.youtube-nocookie.com/embed/'),
-        );
         return automatedResult(
-          modes && (localConfigured || privacyEmbed) ? 'REVIEW_REQUIRED' : 'FAIL',
+          modes && localConfigured ? 'REVIEW_REQUIRED' : 'FAIL',
           modes && localConfigured
             ? 'Images / Technique / Video modes are present with a configured local MP4 exercise video. Visual playback still requires screenshot/device review.'
-            : modes && privacyEmbed
-              ? 'Images / Technique / Video modes are present with an approved privacy-enhanced video embed. Visual player presentation still requires screenshot review.'
-              : 'The approved media hierarchy or configured exercise video was not found.',
+            : 'The local exercise video route was not found.',
           profile,
         );
       }
@@ -1014,16 +1010,6 @@
         '<small>Playback is supplied by the MP4 stored in Home Assistant media.</small>',
       ].join('');
       localVideo.replaceWith(placeholder);
-    }
-    for (const videoFrame of root.querySelectorAll('.exercise-video-embed iframe')) {
-      const placeholder = root.ownerDocument.createElement('div');
-      placeholder.className = 'review-external-frame-placeholder';
-      placeholder.innerHTML = [
-        '<span aria-hidden="true">▶</span>',
-        '<strong>Approved YouTube embed</strong>',
-        '<small>Live playback is intentionally omitted from the offline vector snapshot.</small>',
-      ].join('');
-      videoFrame.replaceWith(placeholder);
     }
   }
 

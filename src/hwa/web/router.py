@@ -286,6 +286,7 @@ def review_sandbox(
     allowed = {
         "strength-active",
         "strength-feedback",
+        "strength-pain",
         "strength-rest",
         "bike-finisher",
         "treadmill",
@@ -365,6 +366,11 @@ def review_capture(
             "url": ingress_url(request, "/review-sandbox/strength-feedback"),
         },
         {
+            "key": "strength-pain",
+            "label": "Strength — Pain / Stop safety state",
+            "url": ingress_url(request, "/review-sandbox/strength-pain"),
+        },
+        {
             "key": "strength-rest",
             "label": "Strength — rest countdown",
             "url": ingress_url(request, "/review-sandbox/strength-rest"),
@@ -411,19 +417,19 @@ def review_capture(
         },
         {
             "key": "exercise-video-floor-press",
-            "label": "Exercise video — Dumbbell Floor Press · PureGym",
+            "label": "Exercise video — Dumbbell Floor Press · local MP4",
             "url": ingress_url(request, "/library/dumbbell_floor_press"),
             "media_tab": "video",
         },
         {
             "key": "exercise-video-supported-reverse-lunge",
-            "label": "Exercise video — Supported Reverse Lunge · Body By Finn Fitness",
+            "label": "Exercise video — Supported Reverse Lunge · local MP4",
             "url": ingress_url(request, "/library/supported_reverse_lunge"),
             "media_tab": "video",
         },
         {
             "key": "exercise-video-lateral-raise",
-            "label": "Exercise video — Dumbbell Lateral Raise · Max Euceda",
+            "label": "Exercise video — Dumbbell Lateral Raise · local MP4",
             "url": ingress_url(request, "/library/dumbbell_lateral_raise"),
             "media_tab": "video",
         },

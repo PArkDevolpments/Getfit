@@ -28,7 +28,7 @@ def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> Non
     assert "detectPageState" in script
     assert "page_state" in script
     assert "No active workout" in script
-    assert "390" in script
+    assert "430" in script
     assert "820" in script
     assert "1440" in script
 
@@ -75,6 +75,7 @@ def test_automated_audit_measures_core_touch_targets_across_product_states() -> 
     assert "function auditTouchTargets" in script
     assert "rect.height < 44 || rect.width < 44" in script
     assert "'strength-feedback'" in script
+    assert "'strength-pain'" in script
     assert "'interval-hard'" in script
     assert "'exercise-detail'" in script
     assert "'.exercise-media-tab'" in script
@@ -108,8 +109,7 @@ def test_review_pack_captures_approved_video_states() -> None:
     assert '"media_tab": "video"' in router
     assert "if (target.media_tab)" in script
     assert 'data-media-tab="' in script
-    assert "youtube-nocookie.com/embed/" in script
     assert "replaceExternalFrameState" in script
     assert "Local exercise video" in script
-    assert "Approved YouTube embed" in script
-    assert "Live playback is intentionally omitted from the offline vector snapshot." in script
+    assert "youtube-nocookie.com" not in script
+    assert "Approved YouTube embed" not in script

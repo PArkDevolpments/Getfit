@@ -1048,3 +1048,557 @@ body[data-active-nav="workout"] .primary-action {
     font-size: .62rem;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* Getfit 0.1.22 premium production UI                                       */
+/* Mockup direction: calm dark coach, green actions, iPhone 16 Pro Max first */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --refresh-green: #2ee68a;
+  --refresh-green-strong: #20c96f;
+  --refresh-green-soft: rgba(46, 230, 138, .12);
+  --refresh-ink: #f4fbf7;
+  --refresh-muted: #91a8a0;
+  --refresh-canvas: #061219;
+  --refresh-surface: #0b1b24;
+  --refresh-surface-soft: #0f232d;
+  --refresh-line: rgba(157, 200, 182, .14);
+  --refresh-dark: #071116;
+  --refresh-dark-soft: #0b1a20;
+  --refresh-shadow: 0 18px 46px rgba(0, 0, 0, .28);
+  --colour-bg: #061219;
+  --colour-text: #f4fbf7;
+  --colour-text-muted: #91a8a0;
+  --colour-border: rgba(157, 200, 182, .14);
+  --colour-border-strong: rgba(46, 230, 138, .34);
+}
+
+html,
+body {
+  background: #061219;
+}
+
+body {
+  color: #f4fbf7;
+  background:
+    radial-gradient(circle at 80% -10%, rgba(46,230,138,.09), transparent 30rem),
+    linear-gradient(180deg, #07151d 0%, #061219 58%, #050e13 100%);
+}
+
+body:not([data-active-nav="workout"]) .content,
+body:not([data-active-nav="workout"]) .muted {
+  color: inherit;
+}
+
+body:not([data-active-nav="workout"]) .muted {
+  color: var(--refresh-muted);
+}
+
+body:not([data-active-nav="workout"]) .card,
+body:not([data-active-nav="workout"]) .surface-card,
+.coach-dashboard-card,
+.workout-selection,
+.library-hero,
+.exercise-media-card,
+.exercise-coaching-card,
+.progress-hero,
+.progress-chart-card,
+.recent-progression-card,
+.settings-profile-card,
+.settings-grid .equipment-card,
+.settings-grid .integration-card,
+.settings-grid .settings-card,
+body:not([data-active-nav="workout"]) .history-row {
+  color: #f4fbf7;
+  border-color: var(--refresh-line);
+  background:
+    linear-gradient(145deg, rgba(14, 34, 43, .96), rgba(7, 22, 29, .96));
+  box-shadow: var(--refresh-shadow);
+}
+
+body:not([data-active-nav="workout"]) .card h2,
+body:not([data-active-nav="workout"]) .card h3,
+.coach-dashboard-card__header h2,
+.coach-progress-snapshot__heading h3,
+.workout-selection h2,
+.library-hero h2,
+.exercise-detail-heading h2,
+.exercise-media-card h3,
+.exercise-coaching-card h3,
+.settings-profile-card h2,
+.progress-hero h2,
+.progress-chart-card h2,
+.recent-progression-card h2 {
+  color: #f7fcfa;
+}
+
+body:not([data-active-nav="workout"]) .primary-action {
+  color: #04170d;
+  border-color: #4af09a;
+  background: linear-gradient(135deg, #4bf4a0, #2ee68a 58%, #24cc74);
+  box-shadow: 0 12px 28px rgba(46,230,138,.20);
+}
+
+body:not([data-active-nav="workout"]) .secondary-action {
+  color: #dff9eb;
+  border-color: rgba(46,230,138,.32);
+  background: rgba(46,230,138,.08);
+}
+
+body:not([data-active-nav="workout"]) .ghost-action {
+  color: #c5d8d0;
+  border-color: var(--refresh-line);
+  background: rgba(255,255,255,.025);
+}
+
+.app-header {
+  border-color: rgba(255,255,255,.065);
+  background:
+    radial-gradient(circle at 10% -10%, rgba(46,230,138,.11), transparent 18rem),
+    linear-gradient(135deg, #07151b, #09181d);
+}
+
+.brand-mark {
+  border-color: rgba(46,230,138,.30);
+  background: rgba(46,230,138,.09);
+  box-shadow: none;
+}
+
+.brand-mark svg {
+  stroke: #89f6bb;
+}
+
+.app-header__avatar {
+  color: #052016;
+  background: linear-gradient(145deg, #71f4ad, #2ee68a);
+}
+
+.primary-nav {
+  border-color: rgba(255,255,255,.06);
+  background: rgba(5, 17, 22, .95);
+}
+
+.primary-nav__item {
+  color: #8ea69e;
+}
+
+.primary-nav__item.is-active {
+  color: #dffbed;
+  border-color: rgba(46,230,138,.24);
+  background: rgba(46,230,138,.12);
+  box-shadow: inset 0 -2px #2ee68a;
+}
+
+.primary-nav__icon {
+  color: currentColor;
+}
+
+.coach-dashboard-card,
+.workout-selection {
+  background:
+    radial-gradient(circle at 90% -10%, rgba(46,230,138,.06), transparent 18rem),
+    linear-gradient(145deg, #0c2029, #081821);
+}
+
+.coach-dashboard-card__header h2,
+.coach-progress-snapshot__heading h3,
+.coach-target-row strong,
+.coach-dashboard-card .weekly-cardio__heading strong {
+  color: #f5fcf8;
+}
+
+.coach-greeting,
+.coach-dashboard-card .action-status,
+.coach-dashboard-card .card-kicker,
+.coach-status-copy--muted,
+.coach-status-copy,
+.coach-target-row span,
+.coach-dashboard-card .weekly-cardio__heading {
+  color: #93aba2;
+}
+
+.coach-dashboard-card__settings {
+  color: #8df4b8;
+  border-color: rgba(46,230,138,.23);
+  background: rgba(46,230,138,.07);
+}
+
+.coach-status-block,
+.coach-progress-snapshot {
+  border-color: var(--refresh-line);
+  background: rgba(255,255,255,.025);
+}
+
+.coach-target-list,
+.coach-target-row {
+  border-color: rgba(255,255,255,.06);
+}
+
+.workout-select-row {
+  border-color: var(--refresh-line);
+  color: #f4fbf7;
+  background: rgba(255,255,255,.025);
+  box-shadow: none;
+}
+
+.workout-select-row.is-current {
+  border-color: rgba(46,230,138,.42);
+  background: rgba(46,230,138,.055);
+}
+
+.workout-select-row__photo {
+  background: #10242c;
+}
+
+.weekly-goal {
+  color: #dff9eb;
+  border-color: rgba(46,230,138,.22);
+  background: rgba(46,230,138,.07);
+}
+
+.weekly-goal__icon {
+  color: #7af2ad;
+  background: rgba(46,230,138,.12);
+}
+
+.exercise-card--visual {
+  border-color: var(--refresh-line);
+  color: #f4fbf7;
+  background: #0b1d26;
+  box-shadow: 0 10px 26px rgba(0,0,0,.22);
+}
+
+.exercise-card--visual h3 {
+  color: #f4fbf7;
+}
+
+.exercise-card--visual .exercise-card__meta,
+.library-hero__badge span {
+  color: #91a8a0;
+}
+
+.library-hero__badge {
+  border-color: rgba(46,230,138,.24);
+  background: rgba(46,230,138,.08);
+}
+
+.library-hero__badge strong,
+.exercise-card__open {
+  color: #63efa4;
+}
+
+.exercise-media-tabs {
+  border-color: var(--refresh-line);
+  background: rgba(255,255,255,.025);
+}
+
+.exercise-media-tab {
+  color: #91a8a0;
+}
+
+.exercise-media-tab.is-active {
+  color: #dffbed;
+  border-color: rgba(46,230,138,.25);
+  background: rgba(46,230,138,.09);
+  box-shadow: inset 0 -3px #2ee68a;
+}
+
+.exercise-phase {
+  border-color: var(--refresh-line);
+  background: #0a1a22;
+}
+
+.exercise-phase figcaption,
+.exercise-coaching-card .cue-list--checks li,
+.exercise-technique-panel .cue-list--checks li {
+  color: #d7e7e0;
+}
+
+.exercise-phase figcaption span {
+  background: #20c96f;
+}
+
+.exercise-history-section {
+  border-color: var(--refresh-line);
+}
+
+.progress-hero,
+.progress-chart-card,
+.recent-progression-card,
+body:not([data-active-nav="workout"]) .history-row {
+  background:
+    radial-gradient(circle at 90% -20%, rgba(46,230,138,.06), transparent 20rem),
+    #0b1d26;
+}
+
+.progress-kpi {
+  border-color: var(--refresh-line);
+  background: rgba(255,255,255,.025);
+}
+
+.progress-kpi__value,
+.progress-kpi strong {
+  color: #f5fcf8;
+}
+
+.progress-kpi__label,
+.progress-chart-empty,
+.recent-progression-row,
+.recent-progression-row span {
+  color: #91a8a0;
+}
+
+.progress-ring {
+  background:
+    radial-gradient(circle, #0a1b22 58%, transparent 59%),
+    conic-gradient(#2ee68a calc(var(--progress, 0) * 1%), rgba(137, 174, 159, .12) 0);
+}
+
+.progress-chart-wrap,
+.progress-chart-empty,
+.recent-progression-row {
+  border-color: var(--refresh-line);
+  background: rgba(255,255,255,.025);
+}
+
+.progress-chart__grid line {
+  stroke: rgba(157,200,182,.12);
+}
+
+.progress-chart > text,
+.progress-chart__point text {
+  fill: #8fa79e !important;
+}
+
+.progress-chart__point text:last-child {
+  fill: #e9f7f0 !important;
+}
+
+.progress-empty-copy {
+  max-width: 760px;
+}
+
+.progress-empty-copy h2 {
+  max-width: 18ch;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+}
+
+.progress-empty-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .8fr);
+  gap: .65rem;
+  margin-top: 1rem;
+}
+
+.progress-kpi-grid--empty .progress-kpi {
+  min-height: 132px;
+}
+
+.progress-empty-icon {
+  width: 42px;
+  height: 42px;
+  margin-bottom: .55rem;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #78f2ad;
+  background: rgba(46,230,138,.10);
+  font-size: 1.15rem;
+}
+
+.settings-profile-card,
+.settings-grid .equipment-card,
+.settings-grid .integration-card,
+.settings-grid .settings-card {
+  background: #0b1d26;
+}
+
+.settings-profile-card .muted,
+.settings-grid .muted,
+.equipment-card__notes {
+  color: #91a8a0;
+}
+
+.settings-safety-note {
+  border-color: rgba(46,230,138,.20);
+  background: rgba(46,230,138,.06);
+}
+
+.settings-safety-note strong {
+  color: #7af2ad;
+}
+
+.settings-safety-note span {
+  color: #9eb5ad;
+}
+
+.settings-review-tools {
+  display: none !important;
+}
+
+.main-rest-panel[hidden],
+.set-feedback-panel[hidden],
+.pain-stop-panel[hidden] {
+  display: none !important;
+}
+
+.set-feedback-panel {
+  color: #f4fbf7;
+  border-color: rgba(157,200,182,.16);
+  background:
+    radial-gradient(circle at 50% -10%, rgba(46,230,138,.08), transparent 17rem),
+    #0b1b23;
+}
+
+.set-feedback-panel h3 {
+  color: #f7fcfa;
+}
+
+.set-feedback-panel .eyebrow {
+  color: #59e99b;
+}
+
+.set-feedback-help {
+  color: #8ea69e;
+}
+
+.set-feedback-options button {
+  color: #e4f2ec;
+  border-color: rgba(157,200,182,.14);
+  background: rgba(255,255,255,.025);
+}
+
+.set-feedback-options button:hover,
+.set-feedback-options button.is-selected {
+  border-color: rgba(46,230,138,.42);
+  background: rgba(46,230,138,.07);
+}
+
+.set-feedback-options span {
+  color: #bdebd1;
+  background: rgba(46,230,138,.08);
+}
+
+.set-feedback-options [data-set-feedback="about-right"] span {
+  color: #052016;
+  background: #57ee9d;
+}
+
+.set-feedback-options [data-set-feedback="pain"] span {
+  color: #ffe6eb;
+  background: rgba(251,113,133,.26);
+}
+
+body[data-active-nav="workout"] .workout-end-action {
+  color: #ffced7;
+  border-color: rgba(251,113,133,.25);
+  background: rgba(251,113,133,.06);
+}
+
+@media (max-width: 700px) {
+  .app-shell {
+    padding: .45rem .5rem 6.3rem;
+  }
+
+  .app-header {
+    min-height: 54px;
+    padding: .42rem .55rem;
+    align-items: center;
+    border-radius: 15px;
+  }
+
+  .brand-mark {
+    display: none;
+  }
+
+  .brand-copy h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    letter-spacing: -.035em;
+  }
+
+  .brand-copy p {
+    display: none;
+  }
+
+  .app-header__person {
+    margin-left: auto;
+  }
+
+  .app-header__avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .primary-nav {
+    left: .45rem;
+    right: .45rem;
+    bottom: max(.42rem, env(safe-area-inset-bottom));
+    padding: .28rem;
+    border-radius: 17px;
+    background: rgba(5,17,22,.965);
+  }
+
+  .primary-nav__item {
+    min-height: 52px;
+    padding: .28rem .12rem;
+    font-size: .58rem;
+  }
+
+  .primary-nav__icon,
+  .primary-nav__icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .coach-dashboard-card,
+  .workout-selection,
+  .library-hero,
+  .exercise-media-card,
+  .exercise-coaching-card,
+  .progress-hero,
+  .settings-profile-card,
+  .card,
+  .surface-card {
+    border-radius: 15px;
+  }
+
+  .progress-empty-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .progress-kpi-grid--empty {
+    gap: .55rem;
+  }
+
+  .progress-kpi-grid--empty .progress-kpi {
+    min-height: 104px;
+    padding: .85rem;
+  }
+
+  body[data-active-nav="workout"] .workout-stage__visual--strength img {
+    min-height: 168px;
+    max-height: 188px;
+  }
+
+  .cardio-visual-photo {
+    min-height: 190px;
+    max-height: 220px;
+  }
+
+  .cardio-timer--hero {
+    min-height: 126px;
+  }
+
+  .cardio-timer--hero .cardio-timer__display {
+    font-size: clamp(3.4rem, 16vw, 5rem);
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1099px) {
+  .app-shell {
+    padding-inline: 1rem;
+  }
+}

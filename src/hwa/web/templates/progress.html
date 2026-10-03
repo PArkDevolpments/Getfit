@@ -8,7 +8,35 @@
   Review sandbox: illustrative isolated evidence for component testing only. Nothing is written to training history.
 </span>
 {% endif %}
-<section class="progress-hero card">
+<section class="progress-hero card{% if progress.summary.completed_workouts == 0 %} progress-hero--empty{% endif %}">
+  {% if progress.summary.completed_workouts == 0 %}
+  <div class="progress-empty-copy">
+    <p class="eyebrow">Progress</p>
+    <h2>Your progress story starts with your first logged session.</h2>
+    <p class="muted">Getfit only shows real completed workout evidence — no invented trend lines, fake achievements or guessed progress.</p>
+    <div class="progress-empty-actions">
+      <a class="primary-action" href="{{ ingress_url(request, '/') }}">Start today’s workout</a>
+      <a class="secondary-action" href="{{ ingress_url(request, '/library') }}">Explore exercise library</a>
+    </div>
+  </div>
+  <div class="progress-kpi-grid progress-kpi-grid--empty">
+    <article class="progress-kpi">
+      <span class="progress-empty-icon" aria-hidden="true">▥</span>
+      <strong>Workout activity</strong>
+      <span class="progress-kpi__label">Your weekly training frequency appears after your first completed session.</span>
+    </article>
+    <article class="progress-kpi">
+      <span class="progress-empty-icon" aria-hidden="true">↗</span>
+      <strong>Strength progress</strong>
+      <span class="progress-kpi__label">Repeat key movements and Getfit will chart only the performance you actually record.</span>
+    </article>
+    <article class="progress-kpi">
+      <span class="progress-empty-icon" aria-hidden="true">★</span>
+      <strong>Milestones</strong>
+      <span class="progress-kpi__label">Consistency and completed programme sessions become visible as your history grows.</span>
+    </article>
+  </div>
+  {% else %}
   <div>
     <p class="eyebrow">Progress</p>
     <h2>Your training, moving forward.</h2>
@@ -41,6 +69,7 @@
       {% endif %}
     </article>
   </div>
+  {% endif %}
 </section>
 
 <section class="progress-dashboard">
@@ -90,8 +119,8 @@
     {% else %}
     <div class="progress-chart-empty">
       <div class="progress-chart-empty__icon" aria-hidden="true">↗</div>
-      <strong>No synthetic trend points</strong>
-      <span>Your chart appears only when completed workout evidence exists.</span>
+      <strong>Your first trend is waiting for real workout evidence</strong>
+      <span>Complete a strength session, then repeat a movement in a later session to create a genuine progression line.</span>
     </div>
     {% endif %}
   </article>
@@ -117,7 +146,7 @@
         </div>
       </a>
       {% else %}
-      <div class="empty-state">Complete a strength session to build recent progression.</div>
+      <div class="empty-state">Finish your first strength session and your latest exercise evidence will appear here.</div>
       {% endfor %}
     </div>
   </article>
@@ -146,7 +175,7 @@
         </div>
       </article>
     {% else %}
-      <div class="empty-state">Your completed workouts will appear here.</div>
+      <div class="empty-state">Completed sessions will build your personal training history here.</div>
     {% endfor %}
   </div>
 </section>

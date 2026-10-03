@@ -63,22 +63,26 @@ def test_review_capture_is_authenticated_person_scoped_tool(tmp_path) -> None:
         assert "person_1" not in html
         assert "hwa-kris" not in html
         assert "/static/review-capture.js" in html
-        assert "Exercise video — Dumbbell Floor Press · PureGym" in html
-        assert "Exercise video — Supported Reverse Lunge · Body By Finn Fitness" in html
-        assert "Exercise video — Dumbbell Lateral Raise · Max Euceda" in html
+        assert "Exercise video — Dumbbell Floor Press · local MP4" in html
+        assert "Exercise video — Supported Reverse Lunge · local MP4" in html
+        assert "Exercise video — Dumbbell Lateral Raise · local MP4" in html
         assert html.count('"media_tab": "video"') == 3
     finally:
         client.close()
         engine.dispose()
 
 
-def test_settings_links_to_review_capture_without_changing_primary_navigation(tmp_path) -> None:
+def test_settings_hides_internal_review_tools_from_normal_product_ui(tmp_path) -> None:
     client, engine = _client(tmp_path)
     try:
         response = client.get("/settings")
         assert response.status_code == 200
-        assert "UI Review Pack" in response.text
-        assert 'href="/review-capture"' in response.text
+        assert "UI Review Pack" not in response.text
+        assert 'href="/review-capture"' not in response.text
+
+        review = client.get("/review-capture")
+        assert review.status_code == 200
+        assert "UI Review Pack" in review.text
     finally:
         client.close()
         engine.dispose()

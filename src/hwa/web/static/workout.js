@@ -4,6 +4,7 @@
 
   const reviewMode = player.dataset.reviewMode === 'true';
   const reviewState = player.dataset.reviewState || '';
+  const draftPhase = player.dataset.draftPhase || 'ACTIVE_SET';
   const saveStatus = document.getElementById('save-status');
   const completionStatus = document.getElementById('completion-status');
   const completeButton = document.getElementById('complete-workout');
@@ -33,6 +34,7 @@
   let restRemaining = 0;
   let restInterval = null;
   let feedbackSet = null;
+  let restoredUiState = {};
   const cardioTimers = [];
 
   const valueOf = (name) => document.querySelector(`[name="${name}"]`);
@@ -56,6 +58,17 @@
       if (!input.name) continue;
       state[input.name] = input.type === 'checkbox' ? input.checked : input.value;
     }
+    if (player.classList.contains('is-pain-stop')) {
+      state.__pain_stop_item = stages[stageIndex]?.dataset.itemId || null;
+    }
+    if (player.classList.contains('is-resting')) {
+      state.__rest_remaining = restRemaining;
+      state.__rest_total = restSeconds;
+    }
+    const selectedFeedback = stages[stageIndex]?.querySelector(
+      '[data-set-feedback][aria-pressed="true"]',
+    );
+    if (selectedFeedback) state.__feedback_choice = selectedFeedback.dataset.setFeedback || null;
     return state;
   }
 
@@ -68,6 +81,7 @@
     } catch (_) {
       return;
     }
+    restoredUiState = state;
     for (const input of formInputs) {
       if (!input.name || !Object.prototype.hasOwnProperty.call(state, input.name)) continue;
       if (input.type === 'checkbox') input.checked = state[input.name] === true;
@@ -93,6 +107,7 @@
             phase: player.classList.contains('is-resting')
               ? 'REST_TIMER'
               : player.classList.contains('is-set-feedback')
+                || player.classList.contains('is-pain-stop')
                 ? 'SET_FEEDBACK'
                 : 'ACTIVE_SET',
             current_item_kind: stages[stageIndex]?.dataset.kind || null,
@@ -277,6 +292,8 @@
     }
 
     const active = stages[stageIndex];
+    player.classList.toggle('is-strength-stage', active.dataset.kind === 'STRENGTH');
+    player.classList.toggle('is-cardio-stage', active.dataset.kind === 'CARDIO');
     updateCurrentSet(active);
     const progress = Math.round(((stageIndex + 1) / stages.length) * 100);
     if (progressBar) progressBar.style.width = `${progress}%`;
@@ -338,7 +355,9 @@
       if (paused) return;
       restRemaining = Math.max(0, restRemaining - 1);
       renderRestTimer();
+      if (restRemaining > 0 && restRemaining % 15 === 0) queueAutosave();
       if (restRemaining === 0) {
+        queueAutosave();
         clearRestInterval();
         if (restStartButton) restStartButton.textContent = 'Start';
         if (restLabel) restLabel.textContent = 'Rest complete. Start the next set when you are ready.';
@@ -373,43 +392,77 @@
     return stage?.querySelector('[data-main-rest-panel]') || null;
   }
 
+  function painPanelFor(stage) {
+    return stage?.querySelector('[data-pain-stop-panel]') || null;
+  }
+
   function showFeedback(stage, set) {
     if (!stage) return;
     feedbackSet = set;
     player.classList.add('is-set-feedback');
-    player.classList.remove('is-resting');
+    player.classList.remove('is-resting', 'is-pain-stop');
     const feedbackPanel = feedbackPanelFor(stage);
     const mainRestPanel = restPanelFor(stage);
+    const painPanel = painPanelFor(stage);
     if (feedbackPanel) feedbackPanel.hidden = false;
     if (mainRestPanel) mainRestPanel.hidden = true;
+    if (painPanel) painPanel.hidden = true;
+    for (const button of feedbackPanel?.querySelectorAll('[data-set-feedback]') || []) {
+      button.setAttribute('aria-pressed', 'false');
+    }
+    const continueButton = feedbackPanel?.querySelector('[data-feedback-continue]');
+    if (continueButton) continueButton.disabled = true;
     const stack = stage.querySelector('.set-stack');
     if (stack) stack.setAttribute('aria-hidden', 'true');
   }
 
-  function showRest(stage) {
+  function showPainStop(stage) {
     if (!stage) return;
-    player.classList.remove('is-set-feedback');
+    clearRestInterval();
+    player.classList.remove('is-set-feedback', 'is-resting');
+    player.classList.add('is-pain-stop');
+    const feedbackPanel = feedbackPanelFor(stage);
+    const mainRestPanel = restPanelFor(stage);
+    const painPanel = painPanelFor(stage);
+    if (feedbackPanel) feedbackPanel.hidden = true;
+    if (mainRestPanel) mainRestPanel.hidden = true;
+    if (painPanel) painPanel.hidden = false;
+    stage.querySelector('.set-stack')?.setAttribute('aria-hidden', 'true');
+    queueAutosave();
+  }
+
+  function showRest(stage, remaining = null) {
+    if (!stage) return;
+    player.classList.remove('is-set-feedback', 'is-pain-stop');
     player.classList.add('is-resting');
     const feedbackPanel = feedbackPanelFor(stage);
     const mainRestPanel = restPanelFor(stage);
+    const painPanel = painPanelFor(stage);
     if (feedbackPanel) feedbackPanel.hidden = true;
     if (mainRestPanel) mainRestPanel.hidden = false;
-    const seconds = Number(stage.dataset.restSeconds || 90);
-    restRemaining = seconds;
-    restSeconds = seconds;
+    if (painPanel) painPanel.hidden = true;
+    const prescribed = Number(stage.dataset.restSeconds || 90);
+    restSeconds = remaining === null
+      ? prescribed
+      : Number(restoredUiState.__rest_total || prescribed);
+    restRemaining = remaining === null
+      ? prescribed
+      : Math.max(0, Number(remaining) || 0);
     renderRestTimer();
-    startRestTimer(seconds);
+    if (restRemaining > 0) startRestTimer();
     queueAutosave();
   }
 
   function endRest() {
     clearRestInterval();
     const stage = stages[stageIndex];
-    player.classList.remove('is-resting', 'is-set-feedback');
+    player.classList.remove('is-resting', 'is-set-feedback', 'is-pain-stop');
     const mainRestPanel = restPanelFor(stage);
     const feedbackPanel = feedbackPanelFor(stage);
+    const painPanel = painPanelFor(stage);
     if (mainRestPanel) mainRestPanel.hidden = true;
     if (feedbackPanel) feedbackPanel.hidden = true;
+    if (painPanel) painPanel.hidden = true;
     stage?.querySelector('.set-stack')?.removeAttribute('aria-hidden');
     if (stage) {
       updateCurrentSet(stage);
@@ -420,7 +473,7 @@
   function applyFeedback(choice) {
     const stage = stages[stageIndex];
     const set = feedbackSet || currentCompletedSet(stage);
-    if (!set) return;
+    if (!set || !stage) return;
     const number = Number(set.dataset.setNumber);
     const itemId = stage.dataset.itemId;
     const prefix = `${itemId}-set-${number}`;
@@ -428,20 +481,37 @@
     const rir = valueOf(`${prefix}-rir`);
     const pain = valueOf(`${prefix}-pain`);
 
-    if (choice === 'too-easy') {
-      if (rpe) rpe.value = '6';
-      if (rir) rir.value = '4';
-    } else if (choice === 'about-right') {
-      if (rpe) rpe.value = '8';
-      if (rir) rir.value = '2';
-    } else if (choice === 'too-hard') {
-      if (rpe) rpe.value = '10';
-      if (rir) rir.value = '0';
-    } else if (choice === 'pain') {
+    if (choice === 'pain') {
       if (pain) pain.checked = true;
+      queueAutosave();
+      showPainStop(stage);
+      return;
     }
+
+    const estimates = {
+      'too-easy': {rpe: '6', rir: '4'},
+      'about-right': {rpe: '8', rir: '2'},
+      'too-hard': {rpe: '10', rir: '0'},
+    };
+    const estimate = estimates[choice];
+    if (!estimate) return;
+
+    // Quick feedback is an explicit estimate. Manual RPE/RIR always wins.
+    const manualEffort = checked(`${prefix}-effort-manual`);
+    if (!manualEffort) {
+      if (rpe) rpe.value = estimate.rpe;
+      if (rir) rir.value = estimate.rir;
+    }
+
+    const feedbackPanel = feedbackPanelFor(stage);
+    for (const button of feedbackPanel?.querySelectorAll('[data-set-feedback]') || []) {
+      const selected = button.dataset.setFeedback === choice;
+      button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      button.classList.toggle('is-selected', selected);
+    }
+    const continueButton = feedbackPanel?.querySelector('[data-feedback-continue]');
+    if (continueButton) continueButton.disabled = false;
     queueAutosave();
-    showRest(stage);
   }
 
   function initCardioTimers() {
@@ -545,18 +615,38 @@
   initCardioTimers();
   setActiveStage(initialStageIndex());
 
-  if (reviewState === 'strength-feedback') {
-    const stage = stages[stageIndex];
-    showFeedback(stage, currentCompletedSet(stage));
-  } else if (reviewState === 'strength-rest') {
-    const stage = stages[stageIndex];
-    feedbackSet = currentCompletedSet(stage);
-    showRest(stage);
+  const restoredStage = stages[stageIndex];
+  if (
+    restoredUiState.__pain_stop_item
+    && restoredUiState.__pain_stop_item === restoredStage?.dataset.itemId
+  ) {
+    feedbackSet = currentCompletedSet(restoredStage);
+    showPainStop(restoredStage);
+  } else if (reviewState === 'strength-feedback' || draftPhase === 'SET_FEEDBACK') {
+    showFeedback(restoredStage, currentCompletedSet(restoredStage));
+    if (restoredUiState.__feedback_choice) {
+      applyFeedback(restoredUiState.__feedback_choice);
+    }
+  } else if (reviewState === 'strength-rest' || draftPhase === 'REST_TIMER') {
+    feedbackSet = currentCompletedSet(restoredStage);
+    const remaining = Object.prototype.hasOwnProperty.call(restoredUiState, '__rest_remaining')
+      ? restoredUiState.__rest_remaining
+      : null;
+    showRest(restoredStage, remaining);
   }
 
   for (const input of formInputs) {
     input.addEventListener('input', queueAutosave);
     input.addEventListener('change', () => queueAutosave());
+  }
+
+  for (const input of document.querySelectorAll('[data-effort-value]')) {
+    const markManual = () => {
+      const marker = valueOf(input.dataset.effortManualName || '');
+      if (marker) marker.checked = true;
+    };
+    input.addEventListener('input', markManual);
+    input.addEventListener('change', markManual);
   }
 
   for (const button of document.querySelectorAll('[data-complete-set]')) {
@@ -573,6 +663,21 @@
 
   for (const button of document.querySelectorAll('[data-set-feedback]')) {
     button.addEventListener('click', () => applyFeedback(button.dataset.setFeedback));
+  }
+  for (const button of document.querySelectorAll('[data-feedback-continue]')) {
+    button.addEventListener('click', () => showRest(stages[stageIndex]));
+  }
+  for (const button of document.querySelectorAll('[data-pain-skip]')) {
+    button.addEventListener('click', () => {
+      const stage = stages[stageIndex];
+      endRest();
+      queueAutosave();
+      if (stageIndex < stages.length - 1) setActiveStage(stageIndex + 1, {scroll: true});
+      else document.querySelector('.workout-summary-controls')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    });
   }
 
   previousButton?.addEventListener('click', () => setActiveStage(stageIndex - 1, {scroll: true}));
@@ -599,12 +704,17 @@
       startRestTimer();
     }
   });
-  stopButton?.addEventListener('click', async () => {
+  async function endWorkout() {
     if (reviewMode) return;
-    stopButton.disabled = true;
+    if (stopButton) stopButton.disabled = true;
     await autosave();
     window.location.assign(player.dataset.todayUrl || './');
-  });
+  }
+
+  stopButton?.addEventListener('click', () => void endWorkout());
+  for (const button of document.querySelectorAll('[data-pain-end]')) {
+    button.addEventListener('click', () => void endWorkout());
+  }
   restStartButton?.addEventListener('click', () => {
     if (restInterval) pauseRestTimer();
     else startRestTimer();
@@ -616,5 +726,9 @@
   for (const button of document.querySelectorAll('[data-end-rest]')) {
     button.addEventListener('click', endRest);
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') void autosave();
+  });
   completeButton?.addEventListener('click', () => void completeWorkout());
 })();

@@ -81,7 +81,12 @@ def test_workout_has_guided_stage_hierarchy_and_large_live_controls() -> None:
     assert "About right" in workout
     assert "Too hard" in workout
     assert "Pain / Stop" in workout
-    assert "View Technique" in workout
+    assert "data-pain-stop-panel" in workout
+    assert "data-pain-skip" in workout
+    assert "data-pain-end" in workout
+    assert "data-feedback-continue" in workout
+    assert 'class="set-effort-panel"' in workout
+    assert "View video" in workout
     assert "interval-state-banner--hard" in workout
     assert "interval-state-banner--recovery" in workout
     for control in ("previous-stage", "pause-workout", "skip-stage", "next-stage", "stop-workout"):
@@ -116,8 +121,8 @@ def test_library_and_progress_hide_implementation_ids_and_use_product_cards() ->
     assert 'class="exercise-local-video"' in detail
     assert 'data-video-src="{{ ingress_url(request, exercise.media.local_video_path) }}"' in detail
     assert "video source[data-video-src]" in _text(STATIC / "media.js")
-    assert "iframe[data-video-src]" in _text(STATIC / "media.js")
-    assert "videoFrame.setAttribute('src'" in _text(STATIC / "media.js")
+    assert "iframe[data-video-src]" not in _text(STATIC / "media.js")
+    assert "youtube-nocookie.com" not in detail
     assert 'class="progress-kpi-grid' in progress
     assert 'data-progress-chart' in progress
     assert 'class="recent-progression-list"' in progress
@@ -140,3 +145,27 @@ def test_exercise_video_tab_is_player_only() -> None:
     assert "Watch the movement" not in detail
     assert "Source:" not in detail
     assert "Open on YouTube" not in detail
+
+
+def test_strength_feedback_estimates_are_explicit_and_pain_stops_normal_rest_flow() -> None:
+    workout = _text(TEMPLATES / "workout.html")
+    script = _text(STATIC / "workout.js")
+
+    assert "RPE 6 · about 4 reps left" in workout
+    assert "RPE 8 · about 2 reps left" in workout
+    assert "RPE 10 · no reps left" in workout
+    assert "data-effort-manual-name" in workout
+    assert "data-pain-stop-panel" in workout
+
+    pain_branch = script.split("if (choice === 'pain')", 1)[1].split("const estimates", 1)[0]
+    assert "showPainStop(stage)" in pain_branch
+    assert "showRest(stage)" not in pain_branch
+    assert "const manualEffort = checked" in script
+    assert "if (!manualEffort)" in script
+
+
+def test_settings_does_not_expose_internal_review_tools() -> None:
+    settings = _text(TEMPLATES / "settings.html")
+
+    assert "Quality & build review tools" not in settings
+    assert "Run review pack" not in settings
