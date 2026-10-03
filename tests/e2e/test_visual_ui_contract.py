@@ -81,6 +81,9 @@ def test_workout_has_guided_stage_hierarchy_and_large_live_controls() -> None:
     assert "About right" in workout
     assert "Too hard" in workout
     assert "Pain / Stop" in workout
+    assert "data-pain-stop-panel" in workout
+    assert "data-feedback-continue" in workout
+    assert 'class="set-effort-panel"' in workout
     assert "View Technique" in workout
     assert "interval-state-banner--hard" in workout
     assert "interval-state-banner--recovery" in workout
@@ -116,8 +119,8 @@ def test_library_and_progress_hide_implementation_ids_and_use_product_cards() ->
     assert 'class="exercise-local-video"' in detail
     assert 'data-video-src="{{ ingress_url(request, exercise.media.local_video_path) }}"' in detail
     assert "video source[data-video-src]" in _text(STATIC / "media.js")
-    assert "iframe[data-video-src]" in _text(STATIC / "media.js")
-    assert "videoFrame.setAttribute('src'" in _text(STATIC / "media.js")
+    assert "iframe[data-video-src]" not in _text(STATIC / "media.js")
+    assert "youtube-nocookie.com" not in detail
     assert 'class="progress-kpi-grid' in progress
     assert 'data-progress-chart' in progress
     assert 'class="recent-progression-list"' in progress
