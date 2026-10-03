@@ -22,6 +22,13 @@
     }
     for (const panel of panels) {
       panel.hidden = panel.dataset.mediaPanel !== key;
+      if (panel.dataset.mediaPanel === 'video' && key === 'video') {
+        for (const videoFrame of panel.querySelectorAll('iframe[data-video-src]')) {
+          if (!videoFrame.getAttribute('src')) {
+            videoFrame.setAttribute('src', videoFrame.dataset.videoSrc || '');
+          }
+        }
+      }
     }
   };
 
