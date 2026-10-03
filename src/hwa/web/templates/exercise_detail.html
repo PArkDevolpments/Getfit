@@ -66,7 +66,7 @@
           {% if exercise.media.approved_external_video_embed_url %}
           <div class="exercise-video-embed">
             <iframe
-              src="{{ exercise.media.approved_external_video_embed_url }}"
+              data-video-src="{{ exercise.media.approved_external_video_embed_url }}"
               title="{{ exercise.display_name }} technique demonstration"
               loading="lazy"
               referrerpolicy="strict-origin-when-cross-origin"
