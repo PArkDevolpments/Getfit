@@ -286,6 +286,7 @@ def review_sandbox(
     allowed = {
         "strength-active",
         "strength-feedback",
+        "strength-pain",
         "strength-rest",
         "bike-finisher",
         "treadmill",
@@ -363,6 +364,11 @@ def review_capture(
             "key": "strength-feedback",
             "label": "Strength — Set Complete feedback",
             "url": ingress_url(request, "/review-sandbox/strength-feedback"),
+        },
+        {
+            "key": "strength-pain",
+            "label": "Strength — Pain / Stop safety state",
+            "url": ingress_url(request, "/review-sandbox/strength-pain"),
         },
         {
             "key": "strength-rest",
