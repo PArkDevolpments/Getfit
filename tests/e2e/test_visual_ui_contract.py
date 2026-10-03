@@ -110,9 +110,12 @@ def test_library_and_progress_hide_implementation_ids_and_use_product_cards() ->
     assert "exercise.media.phase_labels[loop.index0]" in detail
     assert 'data-media-panel="technique"' in detail
     assert 'data-media-panel="video"' in detail
-    assert "approved_external_video_embed_url" in detail
+    assert "exercise.media.local_video_path" in detail
     assert 'class="exercise-video-embed"' in detail
-    assert 'data-video-src="{{ exercise.media.approved_external_video_embed_url }}"' in detail
+    assert 'class="exercise-local-video"' in detail
+    assert 'class="exercise-local-video"' in detail
+    assert 'data-video-src="{{ ingress_url(request, exercise.media.local_video_path) }}"' in detail
+    assert "video source[data-video-src]" in _text(STATIC / "media.js")
     assert "iframe[data-video-src]" in _text(STATIC / "media.js")
     assert "videoFrame.setAttribute('src'" in _text(STATIC / "media.js")
     assert 'class="progress-kpi-grid' in progress
