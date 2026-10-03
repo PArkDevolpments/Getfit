@@ -110,5 +110,6 @@ def test_review_pack_captures_approved_video_states() -> None:
     assert 'data-media-tab="' in script
     assert "youtube-nocookie.com/embed/" in script
     assert "replaceExternalFrameState" in script
+    assert "Local exercise video" in script
     assert "Approved YouTube embed" in script
     assert "Live playback is intentionally omitted from the offline vector snapshot." in script
