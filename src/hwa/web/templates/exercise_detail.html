@@ -63,7 +63,22 @@
 
       <section class="exercise-media-panel" data-media-panel="video" hidden>
         <div class="exercise-video-panel">
-          {% if exercise.media.approved_external_video_embed_url %}
+          {% if exercise.media.local_video_path %}
+          <div class="exercise-video-embed">
+            <video
+              class="exercise-local-video"
+              controls
+              preload="metadata"
+              playsinline
+              aria-label="{{ exercise.display_name }} technique demonstration"
+            >
+              <source
+                data-video-src="{{ ingress_url(request, exercise.media.local_video_path) }}"
+                type="video/mp4"
+              >
+            </video>
+          </div>
+          {% elif exercise.media.approved_external_video_embed_url %}
           <div class="exercise-video-embed">
             <iframe
               data-video-src="{{ exercise.media.approved_external_video_embed_url }}"
