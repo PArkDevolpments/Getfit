@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import Engine
 
@@ -19,7 +19,7 @@ from hwa.web.dependencies import WebIdentitySetupRequired
 from hwa.web.router import router as product_web_router
 from hwa.web.setup import setup_required_exception_handler
 
-APP_VERSION = "0.1.21"
+APP_VERSION = "0.1.22"
 _WEB_DIR = Path(__file__).parent / "web"
 _LOCAL_VIDEO_DIR = Path("/media/getfit/videos")
 
@@ -48,6 +48,35 @@ def create_app(
         WebIdentitySetupRequired,
         setup_required_exception_handler,
     )
+
+    @application.middleware("http")
+    async def harden_responses(request: Request, call_next):
+        """Apply browser hardening without weakening Home Assistant Ingress."""
+
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+        response.headers.setdefault("Referrer-Policy", "same-origin")
+        response.headers.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        )
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; "
+            "img-src 'self' data:; "
+            "media-src 'self'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "script-src 'self'; "
+            "connect-src 'self'; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'; "
+            "frame-ancestors 'self'",
+        )
+        if request.url.path.startswith("/api/"):
+            response.headers.setdefault("Cache-Control", "no-store")
+        return response
     application.mount(
         "/static",
         StaticFiles(directory=str(_WEB_DIR / "static")),
