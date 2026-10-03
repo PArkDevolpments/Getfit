@@ -183,6 +183,7 @@
   data-current-item-kind="{{ player.snapshot.current_item_kind or '' }}"
   data-current-sequence="{{ player.snapshot.current_sequence or '' }}"
   data-current-set-number="{{ player.snapshot.current_set_number or '' }}"
+  data-draft-phase="{{ player.snapshot.phase.value }}"
   {% if not review_mode|default(false) %}
   data-autosave-url="{{ ingress_url(request, '/api/v1/workouts/drafts/' ~ player.draft_id) }}"
   data-complete-url="{{ ingress_url(request, '/api/v1/workouts/drafts/' ~ player.draft_id ~ '/complete') }}"
