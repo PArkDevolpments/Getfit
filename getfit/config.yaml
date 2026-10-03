@@ -28,6 +28,8 @@ options:
   kris_ha_user_id: ""
   kirsty_ha_user_id: ""
   pep_bridge_token: ""
+  pep_bridge_allow_person_a: false
+  pep_bridge_allow_person_b: false
 schema:
   treadmill_available: bool
   treadmill_max_incline_percent: "int(0,20)"
@@ -35,4 +37,6 @@ schema:
   adjustable_dumbbells_available: bool
   kris_ha_user_id: str
   kirsty_ha_user_id: str
-  pep_bridge_token: str
+  pep_bridge_token: password
+  pep_bridge_allow_person_a: bool
+  pep_bridge_allow_person_b: bool
