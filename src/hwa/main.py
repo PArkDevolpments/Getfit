@@ -5,8 +5,8 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import Response
 from sqlalchemy import Engine
+from starlette.responses import Response
 
 from hwa.api.pep_export import router as pep_export_router
 from hwa.api.routes.me import router as me_router
