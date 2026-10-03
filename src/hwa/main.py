@@ -20,6 +20,7 @@ from hwa.web.setup import setup_required_exception_handler
 
 APP_VERSION = "0.1.20"
 _WEB_DIR = Path(__file__).parent / "web"
+_LOCAL_VIDEO_DIR = Path("/media/getfit/videos")
 
 
 def create_app(
@@ -48,6 +49,11 @@ def create_app(
         "/static",
         StaticFiles(directory=str(_WEB_DIR / "static")),
         name="static",
+    )
+    application.mount(
+        "/exercise-videos",
+        StaticFiles(directory=str(_LOCAL_VIDEO_DIR), check_dir=False),
+        name="exercise-videos",
     )
     application.include_router(me_router)
     application.include_router(workouts_router)
