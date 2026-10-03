@@ -1,4 +1,5 @@
 from decimal import Decimal
+from pathlib import Path
 
 import hwa.runtime as runtime
 from hwa.domain.equipment import EquipmentKind
@@ -80,3 +81,29 @@ def test_runtime_pep_bridge_token_is_optional_and_validated(monkeypatch) -> None
         assert "HWA_PEP_BRIDGE_TOKEN" in str(exc)
     else:
         raise AssertionError("weak Pep bridge credential must fail closed")
+
+
+def test_addon_masks_pep_bridge_token() -> None:
+    config = (Path(__file__).resolve().parents[2] / "getfit" / "config.yaml").read_text(
+        encoding="utf-8"
+    )
+    assert "  pep_bridge_token: password" in config
+
+
+def test_pep_bridge_person_scope_defaults_to_deny_all(monkeypatch) -> None:
+    monkeypatch.delenv("HWA_PEP_BRIDGE_ALLOW_PERSON_A", raising=False)
+    monkeypatch.delenv("HWA_PEP_BRIDGE_ALLOW_PERSON_B", raising=False)
+
+    assert runtime.build_pep_bridge_allowed_person_ids() == frozenset()
+
+
+def test_pep_bridge_person_scope_is_explicit_per_person(monkeypatch) -> None:
+    monkeypatch.setenv("HWA_PEP_BRIDGE_ALLOW_PERSON_A", "true")
+    monkeypatch.setenv("HWA_PEP_BRIDGE_ALLOW_PERSON_B", "false")
+
+    assert runtime.build_pep_bridge_allowed_person_ids() == frozenset({"person_a"})
+
+    monkeypatch.setenv("HWA_PEP_BRIDGE_ALLOW_PERSON_B", "true")
+    assert runtime.build_pep_bridge_allowed_person_ids() == frozenset(
+        {"person_a", "person_b"}
+    )

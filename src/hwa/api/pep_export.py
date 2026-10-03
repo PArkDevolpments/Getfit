@@ -61,6 +61,27 @@ def _machine_credential(request: Request) -> str | None:
     return value or None
 
 
+def _allowed_pep_person_ids(request: Request) -> frozenset[str]:
+    raw: object = getattr(request.app.state, "pep_bridge_allowed_person_ids", None)
+    if not isinstance(raw, frozenset):
+        return frozenset()
+    return frozenset(
+        value.strip()
+        for value in raw
+        if isinstance(value, str) and value.strip()
+    )
+
+
+def require_pep_person_scope(request: Request, person_id: str) -> None:
+    """Require the machine service to be explicitly scoped to this Pep person."""
+
+    if person_id.strip() not in _allowed_pep_person_ids(request):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "PEP_BRIDGE_PERSON_NOT_ALLOWED"},
+        )
+
+
 def require_pep_machine_auth(
     request: Request,
     authorization: Annotated[str | None, Header()] = None,
@@ -89,12 +110,14 @@ def require_pep_machine_auth(
 )
 def pep_workout_machine_export(
     person_id: str,
+    request: Request,
     response: Response,
     session: Annotated[Session, Depends(get_session)],
 ) -> PepWorkoutSourceExportV1:
     """Return the effective read-only workout source for one explicit Pep person."""
 
     response.headers["Cache-Control"] = "no-store"
+    require_pep_person_scope(request, person_id)
     provider = PepWorkoutSourceProvider(session)
     readiness = provider.readiness(person_id)
     records = provider.records(person_id) if readiness.ready else ()
