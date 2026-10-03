@@ -27,6 +27,7 @@ options:
   adjustable_dumbbells_available: true
   kris_ha_user_id: ""
   kirsty_ha_user_id: ""
+  pep_bridge_token: ""
 schema:
   treadmill_available: bool
   treadmill_max_incline_percent: "int(0,20)"
@@ -34,3 +35,4 @@ schema:
   adjustable_dumbbells_available: bool
   kris_ha_user_id: str
   kirsty_ha_user_id: str
+  pep_bridge_token: str
