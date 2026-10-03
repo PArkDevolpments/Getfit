@@ -110,6 +110,9 @@ def test_library_and_progress_hide_implementation_ids_and_use_product_cards() ->
     assert "exercise.media.phase_labels[loop.index0]" in detail
     assert 'data-media-panel="technique"' in detail
     assert 'data-media-panel="video"' in detail
+    assert "approved_external_video_embed_url" in detail
+    assert 'class="exercise-video-embed"' in detail
+    assert "Getfit's local cues and prescribed targets remain authoritative." in detail
     assert 'class="progress-kpi-grid' in progress
     assert 'data-progress-chart' in progress
     assert 'class="recent-progression-list"' in progress
