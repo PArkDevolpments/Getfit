@@ -765,3 +765,42 @@ strong,
     color:var(--pro-ink) !important;
   }
 }
+
+
+/* 0.1.28: the phone Plan is a weekly overview, not a scrolling explainer. */
+@media (max-width: 820px) {
+  body[data-active-nav="plan"] .content {
+    gap: 7px !important;
+    padding-top: 8px !important;
+  }
+
+  body[data-active-nav="plan"] .native-page-heading {
+    padding-bottom: 0 !important;
+  }
+
+  body[data-active-nav="plan"] .native-page-heading h1 {
+    font-size: 1.85rem !important;
+  }
+
+  body[data-active-nav="plan"] .plan-segmented {
+    padding: 3px !important;
+  }
+
+  body[data-active-nav="plan"] .plan-segmented button {
+    min-height: 34px !important;
+  }
+
+  body[data-active-nav="plan"] .plan-card__header {
+    padding: 9px 11px 7px !important;
+  }
+
+  body[data-active-nav="plan"] .plan-session-row {
+    min-height: 57px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+
+  body[data-active-nav="plan"] .plan-note {
+    display: none !important;
+  }
+}

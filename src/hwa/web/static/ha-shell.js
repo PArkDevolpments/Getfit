@@ -18,6 +18,7 @@
     root.style.setProperty('--ha-safe-left', cssLength(insets.left));
     root.dataset.haShellReady = 'true';
     root.dataset.haNarrow = data.narrow ? 'true' : 'false';
+    root.dataset.haPanelHost = String(data.host || 'home-assistant-app-panel');
   }
 
   window.addEventListener('message', (event) => {

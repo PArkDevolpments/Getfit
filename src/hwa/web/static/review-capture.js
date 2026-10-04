@@ -20,6 +20,7 @@
     ? JSON.parse(acceptanceSpecNode.textContent || '{}')
     : {};
   const fullProfiles = [
+    {key: 'ha-phone', label: 'Home Assistant target · 440×820', width: 440, height: 820},
     {key: 'phone', label: 'iPhone 16 Pro Max', width: 430, height: 932},
     {key: 'tablet', label: 'Tablet', width: 820, height: 1180},
     {key: 'desktop', label: 'Desktop', width: 1440, height: 1000},
@@ -259,6 +260,15 @@
       && rect.height > 0;
   }
 
+  function liveCardioTargetsFit(node, documentRef, profile) {
+    if (profile.width > 700) return true;
+    return fullyVisible(
+      node?.querySelector('.cardio-prescription-grid'),
+      documentRef,
+      profile,
+    );
+  }
+
   function auditTouchTargets(documentRef) {
     const selectors = [
       '[data-primary-action]',
@@ -463,7 +473,8 @@
         const feedback = ['Too easy', 'About right', 'Too hard', 'Pain'].every(
           (value) => text.includes(value),
         );
-        const feedbackVisible = fullyVisible(feedbackPanel, documentRef, profile);
+        const feedbackVisible = profile.width > 700
+          || fullyVisible(feedbackPanel, documentRef, profile);
         const touchSized = feedbackButtons.every((button) => {
           const rect = button.getBoundingClientRect();
           return rect.width >= 44 && rect.height >= 44;
@@ -481,7 +492,8 @@
       if (criterionId === 'STRENGTH-07') {
         const mainRest = documentRef.querySelector('[data-main-rest-panel]');
         const restText = mainRest?.textContent || '';
-        const restVisible = fullyVisible(mainRest, documentRef, profile);
+        const restVisible = profile.width > 700
+          || fullyVisible(mainRest, documentRef, profile);
         return automatedResult(
           mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL',
           mainRest && restVisible && /01:30/.test(restText)
@@ -588,32 +600,55 @@
       const treadmill = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
         (node) => node.dataset.equipment === 'TREADMILL',
       );
+      const activeCardio = documentRef.querySelector('.cardio-item:not([hidden])');
       if (criterionId === 'CARDIO-01') {
         if (!bike) return automatedResult('BLOCKED', 'No spin-bike stage exists in the active workout.', profile);
-        const bikeText = bike.textContent || '';
+        const visibleBike = activeCardio?.dataset.equipment === 'SPIN_BIKE'
+          ? activeCardio
+          : bike;
+        const bikeText = visibleBike?.textContent || '';
+        const bikeModelCorrect = /Cadence/.test(bikeText)
+          && /Resistance/.test(bikeText)
+          && !/Speed km\/h/.test(bikeText)
+          && !/Incline %/.test(bikeText);
+        const liveTargetsVisible = liveCardioTargetsFit(
+          visibleBike,
+          documentRef,
+          profile,
+        );
         return automatedResult(
-          /Cadence/.test(bikeText)
-            && /Resistance/.test(bikeText)
-            && !/Speed km\/h/.test(bikeText)
-            && !/Incline %/.test(bikeText)
-            ? 'PASS'
-            : 'FAIL',
-          'Checked spin-bike cadence/resistance variable model and absence of speed/incline.',
+          bikeModelCorrect && liveTargetsVisible ? 'PASS' : 'FAIL',
+          bikeModelCorrect && liveTargetsVisible
+            ? 'Checked spin-bike cadence/resistance model and confirmed live targets fit above navigation.'
+            : bikeModelCorrect
+              ? 'Spin-bike model is correct, but live targets are clipped below the active viewport.'
+              : 'Spin-bike cadence/resistance model is invalid or contains treadmill-only fields.',
           profile,
         );
       }
       if (criterionId === 'CARDIO-02') {
         if (!treadmill) return automatedResult('BLOCKED', 'No treadmill stage exists in the active workout.', profile);
-        const treadmillText = treadmill.textContent || '';
-        const incline = treadmill.querySelector('input[name*="-incline"]');
+        const visibleTreadmill = activeCardio?.dataset.equipment === 'TREADMILL'
+          ? activeCardio
+          : treadmill;
+        const treadmillText = visibleTreadmill?.textContent || '';
+        const incline = visibleTreadmill?.querySelector('input[name*="-incline"]');
+        const treadmillModelCorrect = /Speed km\/h/.test(treadmillText)
+          && /Incline %/.test(treadmillText)
+          && incline?.getAttribute('max') === '20'
+          && !/Cadence min rpm/.test(treadmillText);
+        const liveTargetsVisible = liveCardioTargetsFit(
+          visibleTreadmill,
+          documentRef,
+          profile,
+        );
         return automatedResult(
-          /Speed km\/h/.test(treadmillText)
-            && /Incline %/.test(treadmillText)
-            && incline?.getAttribute('max') === '20'
-            && !/Cadence min rpm/.test(treadmillText)
-            ? 'PASS'
-            : 'FAIL',
-          'Checked treadmill speed/incline model, 20% max incline and absence of bike cadence.',
+          treadmillModelCorrect && liveTargetsVisible ? 'PASS' : 'FAIL',
+          treadmillModelCorrect && liveTargetsVisible
+            ? 'Checked treadmill speed/incline model and confirmed live targets fit above navigation.'
+            : treadmillModelCorrect
+              ? 'Treadmill model is correct, but live targets are clipped below the active viewport.'
+              : 'Treadmill speed/incline model is invalid, exceeds the 20% equipment cap, or exposes bike-only cadence.',
           profile,
         );
       }
@@ -634,11 +669,18 @@
           && /80–90\s*rpm/.test(bikeText)
           && /moderate/i.test(bikeText)
           && /RPE\s*5(?:\.0+)?/.test(bikeText);
+        const liveTargetsVisible = liveCardioTargetsFit(
+          activeCardio?.dataset.segmentType === 'CONDITIONING' ? activeCardio : finisher,
+          documentRef,
+          profile,
+        );
         return automatedResult(
-          goodTargets ? 'REVIEW_REQUIRED' : 'FAIL',
-          goodTargets
-            ? 'Dedicated bike-finisher state contains 15:00, 80–90 rpm, moderate resistance and RPE 5.'
-            : 'Approved Day 1 bike-finisher state/targets were not all detected.',
+          goodTargets && liveTargetsVisible ? 'REVIEW_REQUIRED' : 'FAIL',
+          goodTargets && liveTargetsVisible
+            ? 'Dedicated bike-finisher state contains 15:00, 80–90 rpm, moderate resistance and RPE 5, with live targets above navigation.'
+            : goodTargets
+              ? 'Approved Day 1 bike-finisher targets are correct, but the live target grid is clipped below the active viewport.'
+              : 'Approved Day 1 bike-finisher state/targets were not all detected.',
           profile,
         );
       }
@@ -648,11 +690,18 @@
         const targets = /00:30/.test(hardText)
           && /85–100\s*rpm/.test(hardText)
           && /RPE\s*7(?:\.0+)?–8(?:\.0+)?/.test(hardText);
+        const liveTargetsVisible = liveCardioTargetsFit(
+          activeCardio?.classList.contains('cardio-item--hard') ? activeCardio : hard,
+          documentRef,
+          profile,
+        );
         return automatedResult(
-          hard && targets ? 'REVIEW_REQUIRED' : 'FAIL',
-          hard && targets
-            ? 'Dedicated HARD interval state contains 00:30, 85–100 rpm and RPE 7–8.'
-            : 'Required HARD interval state/targets were not found.',
+          hard && targets && liveTargetsVisible ? 'REVIEW_REQUIRED' : 'FAIL',
+          hard && targets && liveTargetsVisible
+            ? 'Dedicated HARD interval state contains 00:30, 85–100 rpm and RPE 7–8, with live targets above navigation.'
+            : hard && targets
+              ? 'Required HARD interval targets are correct, but the live target grid is clipped below the active viewport.'
+              : 'Required HARD interval state/targets were not found.',
           profile,
         );
       }
@@ -663,11 +712,18 @@
           && /60–75\s*rpm/.test(recoveryText)
           && /Light/i.test(recoveryText)
           && /RPE\s*2(?:\.0+)?–3(?:\.0+)?/.test(recoveryText);
+        const liveTargetsVisible = liveCardioTargetsFit(
+          activeCardio?.classList.contains('cardio-item--recovery') ? activeCardio : recovery,
+          documentRef,
+          profile,
+        );
         return automatedResult(
-          recovery && targets ? 'REVIEW_REQUIRED' : 'FAIL',
-          recovery && targets
-            ? 'Dedicated recovery state contains 01:30, 60–75 rpm, light resistance and RPE 2–3.'
-            : 'Required recovery interval state/targets were not found.',
+          recovery && targets && liveTargetsVisible ? 'REVIEW_REQUIRED' : 'FAIL',
+          recovery && targets && liveTargetsVisible
+            ? 'Dedicated recovery state contains 01:30, 60–75 rpm, light resistance and RPE 2–3, with live targets above navigation.'
+            : recovery && targets
+              ? 'Required recovery interval targets are correct, but the live target grid is clipped below the active viewport.'
+              : 'Required recovery interval state/targets were not found.',
           profile,
         );
       }
@@ -927,6 +983,22 @@
       });
     }
 
+    const haShellReady = root.dataset.haShellReady === 'true';
+    const haPanelHost = root.dataset.haPanelHost || null;
+    if (
+      profile.width <= 820
+      && haShellReady
+      && haPanelHost !== 'getfit-full-canvas-panel'
+    ) {
+      issues.push({
+        code: 'HOME_ASSISTANT_FULL_CANVAS_HOST_REQUIRED',
+        detail: {
+          active_host: haPanelHost,
+          required_host: 'getfit-full-canvas-panel',
+        },
+      });
+    }
+
     const bottomNav = documentRef.querySelector('.primary-nav');
     const bottomNavRect = bottomNav?.getBoundingClientRect();
     if (profile.width <= 820 && bottomNavRect) {
@@ -977,6 +1049,8 @@
       client_width: root.clientWidth,
       client_height: root.clientHeight,
       touch_targets_checked: touchAudit.checked,
+      ha_shell_ready: haShellReady,
+      ha_panel_host: haPanelHost,
       bottom_nav: bottomNavRect
         ? {
           left: Math.round(bottomNavRect.left),

@@ -294,6 +294,7 @@
     const active = stages[stageIndex];
     player.classList.toggle('is-strength-stage', active.dataset.kind === 'STRENGTH');
     player.classList.toggle('is-cardio-stage', active.dataset.kind === 'CARDIO');
+    player.classList.toggle('is-last-stage', stageIndex === stages.length - 1);
     updateCurrentSet(active);
     const progress = Math.round(((stageIndex + 1) / stages.length) * 100);
     if (progressBar) progressBar.style.width = `${progress}%`;
