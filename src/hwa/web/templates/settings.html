@@ -1,15 +1,41 @@
 {% extends "base.html" %}
 
-{% block title %}Settings · Getfit{% endblock %}
+{% block title %}More · Getfit{% endblock %}
 
 {% block content %}
+<section class="native-page-heading">
+  <div>
+    <p class="eyebrow">Getfit</p>
+    <h1>More</h1>
+  </div>
+</section>
+
 <section class="settings-profile-card">
   <div class="settings-avatar" aria-hidden="true">{{ person.display_name[:1] }}</div>
   <div>
-    <p class="eyebrow">Your setup</p>
+    <p class="eyebrow">Signed in</p>
     <h2>{{ person.display_name }}</h2>
-    <p class="muted">Getfit automatically uses your signed-in Home Assistant profile, so your workouts, targets and history stay with the right person.</p>
+    <p class="muted">Your Home Assistant identity keeps workouts, targets and history person-scoped.</p>
   </div>
+</section>
+
+<section class="card more-links-card" aria-label="Getfit tools">
+  <a class="more-link-row" href="{{ ingress_url(request, '/library') }}">
+    <div><strong>Exercise Library</strong><span>Technique, local demos and movement coaching</span></div>
+    <span class="more-link-row__arrow" aria-hidden="true">›</span>
+  </a>
+  <a class="more-link-row" href="#equipment-settings">
+    <div><strong>Equipment</strong><span>Dumbbells, treadmill and spin bike capabilities</span></div>
+    <span class="more-link-row__arrow" aria-hidden="true">›</span>
+  </a>
+  <a class="more-link-row" href="#integration-settings">
+    <div><strong>Integrations</strong><span>Optional Health and Menu context</span></div>
+    <span class="more-link-row__arrow" aria-hidden="true">›</span>
+  </a>
+  <a class="more-link-row" href="#device-review">
+    <div><strong>Diagnostics</strong><span>Auto-review this Home Assistant device</span></div>
+    <span class="more-link-row__arrow" aria-hidden="true">›</span>
+  </a>
 </section>
 
 <section class="settings-grid">
