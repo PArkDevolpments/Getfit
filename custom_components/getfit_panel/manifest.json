@@ -1,0 +1,14 @@
+{
+  "domain": "getfit_panel",
+  "name": "Getfit Full-Canvas Panel",
+  "version": "0.1.28",
+  "documentation": "https://github.com/ktgregson93-collab/Getfit",
+  "issue_tracker": "https://github.com/ktgregson93-collab/Getfit/issues",
+  "codeowners": ["@ktgregson93-collab"],
+  "config_flow": true,
+  "dependencies": ["panel_custom"],
+  "after_dependencies": ["hassio"],
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "requirements": []
+}
