@@ -1537,3 +1537,148 @@
     color: var(--pro-muted) !important;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* 0.1.31 real-device polish from 440x956 iPhone / Home Assistant review      */
+/* -------------------------------------------------------------------------- */
+
+@media (prefers-color-scheme: light) and (max-width: 700px) {
+  /* Remove the old active-set accent line that survived the v2 de-boxing pass. */
+  body[data-active-nav="workout"] .set-entry.is-current-set {
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Feedback/rest/safety states should still feel like the same light product. */
+  .set-feedback-panel,
+  .main-rest-panel {
+    color: #172019 !important;
+    border-color: rgba(39, 51, 41, .12) !important;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(47,191,113,.10), transparent 18rem),
+      #fffdf8 !important;
+  }
+
+  .set-feedback-panel h3,
+  .main-rest-panel h3,
+  .main-rest-ring strong,
+  .set-feedback-options button strong {
+    color: #172019 !important;
+  }
+
+  .set-feedback-help,
+  .set-feedback-options button small,
+  .main-rest-panel .muted,
+  .main-rest-panel p {
+    color: #667169 !important;
+  }
+
+  .set-feedback-options button {
+    color: #172019 !important;
+    border-color: rgba(39, 51, 41, .12) !important;
+    background: #f3f0e8 !important;
+  }
+
+  .set-feedback-options button[aria-pressed="true"],
+  .set-feedback-options button.is-selected {
+    color: #fff !important;
+    border-color: #25a960 !important;
+    background: #25a960 !important;
+  }
+
+  .main-rest-ring {
+    color: #172019 !important;
+    border-color: rgba(47,191,113,.15) !important;
+    border-top-color: #2fbf71 !important;
+    background: #fbfaf6 !important;
+  }
+
+  .pain-stop-panel {
+    color: #301b1f !important;
+    border-color: rgba(173, 67, 81, .22) !important;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(190,65,80,.10), transparent 18rem),
+      #fffaf8 !important;
+  }
+
+  .pain-stop-panel h3 {
+    color: #301b1f !important;
+  }
+
+  .pain-stop-panel p:not(.eyebrow) {
+    color: #725b60 !important;
+  }
+
+  .pain-stop-panel__icon {
+    color: #9b3442 !important;
+    background: rgba(190,65,80,.12) !important;
+  }
+
+  .pain-stop-actions .primary-action {
+    color: #fff !important;
+  }
+
+  .pain-stop-actions .ghost-action {
+    color: #843643 !important;
+    border-color: rgba(173,67,81,.24) !important;
+    background: rgba(190,65,80,.045) !important;
+  }
+
+  /* Interval-next context was too pale on the real light-mode device. */
+  .interval-next-card {
+    color: #607168 !important;
+    border-color: rgba(39,51,41,.10) !important;
+    background: #f7f4ed !important;
+  }
+
+  .interval-next-card strong {
+    color: #172019 !important;
+  }
+}
+
+/* The locked board is 440x820, but the physical iPhone capture is 440x956.
+   On taller phones, use the extra space deliberately instead of leaving a large
+   empty cream field between the active workout and navigation. */
+@media (max-width: 700px) and (min-height: 900px) {
+  .workout-player.is-strength-stage:not(.is-set-feedback):not(.is-resting):not(.is-pain-stop) .strength-item {
+    min-height: calc(100dvh - var(--mobile-nav-total-height) - 118px) !important;
+  }
+
+  .workout-player.is-strength-stage:not(.is-set-feedback):not(.is-resting):not(.is-pain-stop) .strength-coach-grid {
+    min-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .workout-player.is-strength-stage:not(.is-set-feedback):not(.is-resting):not(.is-pain-stop) .set-stack,
+  .workout-player.is-strength-stage:not(.is-set-feedback):not(.is-resting):not(.is-pain-stop) .set-entry.is-current-set {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .workout-player.is-strength-stage:not(.is-set-feedback):not(.is-resting):not(.is-pain-stop) .complete-set-button {
+    margin-top: auto !important;
+  }
+
+  .workout-player.is-cardio-stage .cardio-item:not([hidden]) {
+    min-height: calc(100dvh - var(--mobile-nav-total-height) - 118px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .workout-player.is-cardio-stage .cardio-item:not([hidden]) .cardio-completion-toggle {
+    margin-top: auto !important;
+  }
+
+  .workout-player.is-cardio-stage .cardio-item:not([hidden]) .cardio-timer--hero {
+    width: 224px !important;
+    min-height: 224px !important;
+    height: 224px !important;
+  }
+
+  .workout-player.is-cardio-stage .cardio-item:not([hidden]) .cardio-timer__display {
+    font-size: 3.2rem !important;
+  }
+}
