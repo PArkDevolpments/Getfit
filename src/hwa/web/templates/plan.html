@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Plan · Getfit{% endblock %}
+
+{% block content %}
+<section class="native-page-heading">
+  <div>
+    <p class="eyebrow">Your programme</p>
+    <h1>Your Plan</h1>
+  </div>
+  {% if today_view.week_number is not none %}
+  <span class="plan-week-chip">Week {{ today_view.week_number }}</span>
+  {% endif %}
+</section>
+
+<section class="plan-segmented" aria-label="Plan period">
+  <button class="is-active" type="button" aria-pressed="true">Week</button>
+  <button type="button" disabled>Month</button>
+  <button type="button" disabled>Year</button>
+</section>
+
+<section class="plan-card" aria-labelledby="plan-week-title">
+  <header class="plan-card__header">
+    <div>
+      <p class="card-kicker">Current block</p>
+      <h2 id="plan-week-title">Week {{ today_view.week_number or 1 }}</h2>
+      {% if days %}<span>{{ days[0].block.replace('_', ' ').title() }}</span>{% endif %}
+    </div>
+    <span class="status-pill status-pill--ready">{{ days|length }} approved sessions</span>
+  </header>
+
+  <div class="plan-session-list">
+    {% if home %}
+      {% for session in home.sessions %}
+      <article class="plan-session-row{% if session.current %} is-current{% endif %}{% if session.completed %} is-complete{% endif %}">
+        <div class="plan-session-row__day">
+          <span>Day</span>
+          <strong>{{ session.day_number }}</strong>
+        </div>
+        <div class="plan-session-row__media" aria-hidden="true">
+          {% if session.day_number == 1 %}
+          <img src="{{ ingress_url(request, '/static/media/exercises/dumbbell_floor_press.svg') }}" alt="">
+          {% elif session.day_number == 2 %}
+          <img src="{{ ingress_url(request, '/static/media/exercises/goblet_squat.svg') }}" alt="">
+          {% elif session.day_number == 3 %}
+          <img src="{{ ingress_url(request, '/static/media/exercises/dumbbell_romanian_deadlift.svg') }}" alt="">
+          {% else %}
+          <img src="{{ ingress_url(request, '/static/media/exercises/seated_dumbbell_shoulder_press.svg') }}" alt="">
+          {% endif %}
+        </div>
+        <div class="plan-session-row__copy">
+          <strong>{{ session.title }}</strong>
+          <span>{{ session.duration_label or "Approved session" }} · {{ session.workout_type.replace('_', ' ').title() }}</span>
+        </div>
+        <div class="plan-session-row__state" aria-label="{% if session.completed %}Completed{% elif session.current %}Current session{% else %}Upcoming{% endif %}">
+          {% if session.completed %}✓{% elif session.current %}→{% else %}○{% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">No approved programme week is available yet.</div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="plan-note card">
+  <p class="eyebrow">Programme authority</p>
+  <h2>Only approved training appears here.</h2>
+  <p class="muted">Getfit does not invent rest days, extra sessions or progression. Upcoming training follows the approved programme and your completed workout evidence.</p>
+</section>
+{% endblock %}
