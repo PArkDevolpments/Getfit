@@ -135,3 +135,12 @@ def test_device_review_uses_actual_home_assistant_viewport_and_can_autorun() -> 
     assert "{viewportOnly: true}" in script
     assert "prepareZipDownload" in script
     assert "autoDownload: !deviceMode" in script
+
+
+def test_device_review_measures_bottom_navigation_against_the_viewport() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "BOTTOM_NAV_NOT_VIEWPORT_FIT" in script
+    assert "bottom_nav:" in script
+    assert "documentRef.querySelector('.primary-nav')" in script
+    assert "viewportHeight - navRect.top" in script

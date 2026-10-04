@@ -186,3 +186,18 @@ def test_home_assistant_mobile_shell_uses_full_ingress_viewport() -> None:
     assert "right: 8px" in refresh
     assert "bottom: max(8px, env(safe-area-inset-bottom))" in refresh
     assert "padding: 0 0 calc(96px + env(safe-area-inset-bottom))" in refresh
+
+
+def test_mobile_bottom_navigation_fits_the_home_assistant_screen_edge() -> None:
+    refresh = _text(STATIC / "visual-refresh.css")
+    workout = _text(STATIC / "workout.css")
+
+    assert "--mobile-nav-content-height: 64px" in refresh
+    assert ".primary-nav {" in refresh
+    assert "left: 0;" in refresh
+    assert "right: 0;" in refresh
+    assert "bottom: 0;" in refresh
+    assert "width: 100%;" in refresh
+    assert "border-radius: 14px 14px 0 0" in refresh
+    assert "padding-bottom: var(--mobile-nav-total-height)" in refresh
+    assert "var(--mobile-nav-content-height, 64px)" in workout

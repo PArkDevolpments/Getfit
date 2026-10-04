@@ -245,7 +245,13 @@
     const viewportHeight = documentRef.documentElement.clientHeight
       || documentRef.defaultView?.innerHeight
       || profile.height;
-    const mobileReserve = profile.width <= 700 ? 76 : 0;
+    const nav = profile.width <= 820
+      ? documentRef.querySelector('.primary-nav')
+      : null;
+    const navRect = nav?.getBoundingClientRect();
+    const mobileReserve = navRect
+      ? Math.max(0, viewportHeight - navRect.top)
+      : 0;
     return rect.top >= 0
       && rect.bottom <= viewportHeight - mobileReserve
       && rect.width > 0
@@ -920,6 +926,26 @@
       });
     }
 
+    const bottomNav = documentRef.querySelector('.primary-nav');
+    const bottomNavRect = bottomNav?.getBoundingClientRect();
+    if (profile.width <= 820 && bottomNavRect) {
+      const navFitsViewport = Math.abs(bottomNavRect.left) <= 1
+        && Math.abs(bottomNavRect.right - root.clientWidth) <= 1
+        && Math.abs(bottomNavRect.bottom - root.clientHeight) <= 1;
+      if (!navFitsViewport) {
+        issues.push({
+          code: 'BOTTOM_NAV_NOT_VIEWPORT_FIT',
+          detail: {
+            left: Math.round(bottomNavRect.left),
+            right: Math.round(bottomNavRect.right),
+            bottom: Math.round(bottomNavRect.bottom),
+            viewport_width: root.clientWidth,
+            viewport_height: root.clientHeight,
+          },
+        });
+      }
+    }
+
     const mustBeVisible = {
       'strength-active': '.complete-set-button',
       'strength-feedback': '[data-set-feedback-panel]',
@@ -946,6 +972,16 @@
       client_width: root.clientWidth,
       client_height: root.clientHeight,
       touch_targets_checked: touchAudit.checked,
+      bottom_nav: bottomNavRect
+        ? {
+          left: Math.round(bottomNavRect.left),
+          right: Math.round(bottomNavRect.right),
+          top: Math.round(bottomNavRect.top),
+          bottom: Math.round(bottomNavRect.bottom),
+          width: Math.round(bottomNavRect.width),
+          height: Math.round(bottomNavRect.height),
+        }
+        : null,
       issues,
     };
   }
