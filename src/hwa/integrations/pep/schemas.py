@@ -67,8 +67,34 @@ class PepWorkoutSourceReadiness(StrictPepExportModel):
     source_authority: Literal["WORKOUT_EVENT_SOURCE"] = "WORKOUT_EVENT_SOURCE"
 
 
+
+
+class PepWorkoutSnapshotCoverage(StrictPepExportModel):
+    """Occurrence-time coverage of one complete full-replacement snapshot."""
+
+    start_at: AwareDatetime | None = None
+    end_at: AwareDatetime | None = None
+
+
+class PepWorkoutSnapshotV1(StrictPepExportModel):
+    """Versioned lifecycle metadata for one full-replacement export."""
+
+    schema_name: Literal["home-workout-assistant.pep-workout-snapshot"] = Field(
+        default="home-workout-assistant.pep-workout-snapshot",
+        alias="schema",
+        serialization_alias="schema",
+    )
+    schema_version: Literal[1] = 1
+    mode: Literal["FULL_REPLACEMENT"] = "FULL_REPLACEMENT"
+    complete: bool
+    generation: int | None = Field(default=None, ge=0)
+    generated_at: AwareDatetime
+    record_count: int = Field(ge=0)
+    coverage: PepWorkoutSnapshotCoverage
+
+
 class PepWorkoutSourceExportV1(StrictPepExportModel):
-    """Authenticated machine export envelope consumed by Pep Health."""
+    """Backward-compatible authenticated machine export consumed by Pep Health."""
 
     schema_name: Literal["home-workout-assistant.pep-workout-export"] = Field(
         default="home-workout-assistant.pep-workout-export",
@@ -77,6 +103,7 @@ class PepWorkoutSourceExportV1(StrictPepExportModel):
     )
     schema_version: Literal[1] = 1
     person_id: str = Field(min_length=1)
+    snapshot: PepWorkoutSnapshotV1
     readiness: PepWorkoutSourceReadiness
     records: tuple[PepWorkoutSourceRecordV1, ...]
     automatic_action: Literal[False] = False

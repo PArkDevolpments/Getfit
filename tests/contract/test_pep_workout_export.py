@@ -19,6 +19,7 @@ def _event(
     event_id: str = "event-001",
     person_id: str = "hwa-kris",
     session_rpe: Decimal | None = Decimal("6.0"),
+    completed: bool = True,
 ) -> CanonicalWorkoutEventV1:
     start = datetime(2026, 10, 1, 17, 0, tzinfo=UTC)
     end = start + timedelta(minutes=10)
@@ -41,7 +42,7 @@ def _event(
             "heart_rate_response": {"status": "UNAVAILABLE"},
             "training_load": {"status": "UNAVAILABLE"},
             "performance": {
-                "completed": True,
+                "completed": completed,
                 "strength": [],
                 "cardio": [],
             },
@@ -266,6 +267,18 @@ def test_pep_machine_transport_returns_only_requested_person_and_no_secret(tmp_p
         assert body["schema"] == "home-workout-assistant.pep-workout-export"
         assert body["schema_version"] == 1
         assert body["person_id"] == "person_a"
+        snapshot = body["snapshot"]
+        assert snapshot["schema"] == "home-workout-assistant.pep-workout-snapshot"
+        assert snapshot["schema_version"] == 1
+        assert snapshot["mode"] == "FULL_REPLACEMENT"
+        assert snapshot["complete"] is True
+        assert snapshot["generation"] == 1
+        assert snapshot["record_count"] == 1
+        assert snapshot["coverage"] == {
+            "start_at": "2026-10-01T17:00:00Z",
+            "end_at": "2026-10-01T17:10:00Z",
+        }
+        assert isinstance(snapshot["generated_at"], str) and snapshot["generated_at"]
         assert body["readiness"]["ready"] is True
         assert [row["person_id"] for row in body["records"]] == ["person_a"]
         assert [row["event_id"] for row in body["records"]] == ["event-001"]
@@ -279,6 +292,17 @@ def test_pep_machine_transport_returns_only_requested_person_and_no_secret(tmp_p
         other = kirsty.json()
         assert kirsty.status_code == 200
         assert other["person_id"] == "person_b"
+        assert other["schema_version"] == 1
+        assert other["snapshot"] == {
+            "schema": "home-workout-assistant.pep-workout-snapshot",
+            "schema_version": 1,
+            "mode": "FULL_REPLACEMENT",
+            "complete": True,
+            "generation": 0,
+            "generated_at": other["snapshot"]["generated_at"],
+            "record_count": 0,
+            "coverage": {"start_at": None, "end_at": None},
+        }
         assert other["readiness"]["ready"] is True
         assert other["records"] == []
     finally:
@@ -342,5 +366,138 @@ def test_pep_machine_transport_empty_service_scope_fails_closed(tmp_path: Path) 
         )
         assert response.status_code == 403
         assert response.json()["detail"]["code"] == "PEP_BRIDGE_PERSON_NOT_ALLOWED"
+    finally:
+        engine.dispose()
+
+
+def test_pep_snapshot_generation_counts_all_revisions_not_only_effective_rows(
+    tmp_path: Path,
+) -> None:
+    from hwa.main import create_app
+
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
+    event = session.get(WorkoutEvent, "event-001")
+    assert event is not None
+    original = _event()
+    corrected = _event(session_rpe=Decimal("7.0"))
+    session.add(
+        WorkoutRevision(
+            id="revision-2",
+            event_id="event-001",
+            revision_number=2,
+            supersedes_revision_number=1,
+            canonical_json=corrected.model_dump_json(by_alias=True),
+            recorded_at_utc=corrected.end_at + timedelta(hours=1),
+            correction_reason="QA correction",
+        )
+    )
+    event.effective_revision_number = 2
+    session.commit()
+    session.close()
+
+    credential = "qa-only-machine-credential"
+    client = TestClient(
+        create_app(
+            engine=engine,
+            pep_bridge_token=credential,
+            pep_bridge_allowed_person_ids=frozenset({"person_a"}),
+        )
+    )
+    try:
+        response = client.get(
+            "/api/integrations/pep/v1/workouts/person_a",
+            headers={"Authorization": f"Bearer {credential}"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["snapshot"]["complete"] is True
+        assert body["snapshot"]["generation"] == 2
+        assert body["snapshot"]["record_count"] == 1
+        assert body["records"][0]["revision_number"] == 2
+        assert body["records"][0]["event_id"] == original.event_id
+    finally:
+        engine.dispose()
+
+
+def test_pep_full_snapshot_withdraws_no_longer_completed_effective_workout(
+    tmp_path: Path,
+) -> None:
+    from hwa.main import create_app
+
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
+    logical = session.get(WorkoutEvent, "event-001")
+    assert logical is not None
+    withdrawn = _event(completed=False)
+    session.add(
+        WorkoutRevision(
+            id="revision-withdrawn",
+            event_id="event-001",
+            revision_number=2,
+            supersedes_revision_number=1,
+            canonical_json=withdrawn.model_dump_json(by_alias=True),
+            recorded_at_utc=withdrawn.end_at + timedelta(hours=2),
+            correction_reason="Withdraw incorrectly completed workout",
+        )
+    )
+    logical.effective_revision_number = 2
+    session.commit()
+    session.close()
+
+    credential = "qa-only-machine-credential"
+    client = TestClient(
+        create_app(
+            engine=engine,
+            pep_bridge_token=credential,
+            pep_bridge_allowed_person_ids=frozenset({"person_a"}),
+        )
+    )
+    try:
+        response = client.get(
+            "/api/integrations/pep/v1/workouts/person_a",
+            headers={"Authorization": f"Bearer {credential}"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["schema_version"] == 1
+        assert body["snapshot"]["mode"] == "FULL_REPLACEMENT"
+        assert body["snapshot"]["complete"] is True
+        assert body["snapshot"]["generation"] == 2
+        assert body["snapshot"]["record_count"] == 0
+        assert body["snapshot"]["coverage"] == {"start_at": None, "end_at": None}
+        assert body["records"] == []
+    finally:
+        engine.dispose()
+
+
+def test_pep_snapshot_fails_closed_if_generation_changes_during_read(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    import hwa.api.pep_export as pep_export
+    from hwa.main import create_app
+
+    session, engine = _session(f"sqlite:///{tmp_path / 'hwa.db'}")
+    session.close()
+    observed = iter((1, 2))
+    monkeypatch.setattr(
+        pep_export,
+        "workout_snapshot_generation_for_pep",
+        lambda _session, _person: next(observed),
+    )
+    credential = "qa-only-machine-credential"
+    client = TestClient(
+        create_app(
+            engine=engine,
+            pep_bridge_token=credential,
+            pep_bridge_allowed_person_ids=frozenset({"person_a"}),
+        )
+    )
+    try:
+        response = client.get(
+            "/api/integrations/pep/v1/workouts/person_a",
+            headers={"Authorization": f"Bearer {credential}"},
+        )
+        assert response.status_code == 503
+        assert response.json()["detail"]["code"] == "PEP_WORKOUT_SNAPSHOT_CHANGED_DURING_READ"
     finally:
         engine.dispose()

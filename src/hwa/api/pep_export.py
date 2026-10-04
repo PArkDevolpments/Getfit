@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hmac
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
@@ -10,11 +11,16 @@ from sqlalchemy.orm import Session
 
 from hwa.api.dependencies import get_session
 from hwa.integrations.pep.schemas import (
+    PepWorkoutSnapshotCoverage,
+    PepWorkoutSnapshotV1,
     PepWorkoutSourceExportV1,
     PepWorkoutSourceReadiness,
     PepWorkoutSourceRecordV1,
 )
-from hwa.integrations.pep.workout_export import export_workouts_for_pep
+from hwa.integrations.pep.workout_export import (
+    export_workouts_for_pep,
+    workout_snapshot_generation_for_pep,
+)
 from hwa.repositories.identity import IdentityRepository
 
 
@@ -120,9 +126,36 @@ def pep_workout_machine_export(
     require_pep_person_scope(request, person_id)
     provider = PepWorkoutSourceProvider(session)
     readiness = provider.readiness(person_id)
+    generation_before = (
+        workout_snapshot_generation_for_pep(session, person_id)
+        if readiness.ready
+        else None
+    )
     records = provider.records(person_id) if readiness.ready else ()
+    generation_after = (
+        workout_snapshot_generation_for_pep(session, person_id)
+        if readiness.ready
+        else None
+    )
+    if readiness.ready and generation_before != generation_after:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "PEP_WORKOUT_SNAPSHOT_CHANGED_DURING_READ"},
+        )
+    coverage = PepWorkoutSnapshotCoverage(
+        start_at=min((row.start_at for row in records), default=None),
+        end_at=max((row.end_at for row in records), default=None),
+    )
+    snapshot = PepWorkoutSnapshotV1(
+        complete=readiness.ready,
+        generation=generation_after,
+        generated_at=datetime.now(UTC),
+        record_count=len(records),
+        coverage=coverage,
+    )
     return PepWorkoutSourceExportV1(
         person_id=person_id.strip(),
+        snapshot=snapshot,
         readiness=readiness,
         records=records,
     )
