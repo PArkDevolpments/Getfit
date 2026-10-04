@@ -316,3 +316,39 @@ def test_0129_mockup_polish_restores_light_contrast_and_active_workout_hierarchy
     assert ".cardio-rpe-control" in workout_pro
     assert "background: #fbfaf6 !important;" in workout_pro
     assert "> Technique" in workout
+
+
+def test_0130_locked_v2_authority_drives_active_strength_and_cardio() -> None:
+    authority = _text(ROOT / "docs" / "design" / "2026-10-04-getfit-v2-mobile-authority.md")
+    workout = _text(TEMPLATES / "workout.html")
+    script = _text(STATIC / "workout.js")
+    css = _text(STATIC / "workout-pro.css")
+
+    assert "LOCKED WITH MINOR CHANGES (9/10)" in authority
+    assert "Today · Plan · Workout · Progress · More" in authority
+    assert "Older Home Workout Assistant Design Board / UX Board" in authority
+    assert "historical concept material only" in authority
+
+    for label in ("Easy", "Moderate", "Hard", "Max"):
+        assert f">{label}</button>" in workout
+    assert "data-effort-preset" in workout
+    assert "strength-prescription-line" in workout
+    assert "Exact effort / pain" in workout
+    assert "data-set-pain" in workout
+    assert "applyEffortPreset" in script
+    assert "if (preset) showRest(stage)" in script
+
+    assert "cardio-live-actions" in workout
+    assert "cardio-prescription-card--prescribed-effort" in workout
+    assert "Complete Segment →" in workout
+    assert "0.1.30 locked Getfit v2 mobile authority" in css
+    assert "width: 184px !important;" in css
+    assert "border-radius: 50% !important;" in css
+    assert "conic-gradient(" in css
+    assert ".workout-player.is-cardio-stage .workout-command-bar" in css
+    assert "display: none !important;" in css
+
+    # The v2 override deliberately undoes the detached CTA introduced by earlier iterations.
+    assert "position: static !important;" in css
+    assert ".strength-primary-metrics" in css
+    assert "display: none !important;" in css
