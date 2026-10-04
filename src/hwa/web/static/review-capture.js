@@ -20,6 +20,7 @@
     ? JSON.parse(acceptanceSpecNode.textContent || '{}')
     : {};
   const fullProfiles = [
+    {key: 'ha-phone', label: 'Home Assistant target · 440×820', width: 440, height: 820},
     {key: 'phone', label: 'iPhone 16 Pro Max', width: 430, height: 932},
     {key: 'tablet', label: 'Tablet', width: 820, height: 1180},
     {key: 'desktop', label: 'Desktop', width: 1440, height: 1000},
@@ -591,14 +592,22 @@
       if (criterionId === 'CARDIO-01') {
         if (!bike) return automatedResult('BLOCKED', 'No spin-bike stage exists in the active workout.', profile);
         const bikeText = bike.textContent || '';
+        const bikeModelCorrect = /Cadence/.test(bikeText)
+          && /Resistance/.test(bikeText)
+          && !/Speed km\/h/.test(bikeText)
+          && !/Incline %/.test(bikeText);
+        const liveTargetsVisible = fullyVisible(
+          bike.querySelector('.cardio-prescription-grid'),
+          documentRef,
+          profile,
+        );
         return automatedResult(
-          /Cadence/.test(bikeText)
-            && /Resistance/.test(bikeText)
-            && !/Speed km\/h/.test(bikeText)
-            && !/Incline %/.test(bikeText)
-            ? 'PASS'
-            : 'FAIL',
-          'Checked spin-bike cadence/resistance variable model and absence of speed/incline.',
+          bikeModelCorrect && liveTargetsVisible ? 'PASS' : 'FAIL',
+          bikeModelCorrect && liveTargetsVisible
+            ? 'Checked spin-bike cadence/resistance model and confirmed live targets fit above navigation.'
+            : bikeModelCorrect
+              ? 'Spin-bike model is correct, but live targets are clipped below the active viewport.'
+              : 'Spin-bike cadence/resistance model is invalid or contains treadmill-only fields.',
           profile,
         );
       }
@@ -606,14 +615,22 @@
         if (!treadmill) return automatedResult('BLOCKED', 'No treadmill stage exists in the active workout.', profile);
         const treadmillText = treadmill.textContent || '';
         const incline = treadmill.querySelector('input[name*="-incline"]');
+        const treadmillModelCorrect = /Speed km\/h/.test(treadmillText)
+          && /Incline %/.test(treadmillText)
+          && incline?.getAttribute('max') === '20'
+          && !/Cadence min rpm/.test(treadmillText);
+        const liveTargetsVisible = fullyVisible(
+          treadmill.querySelector('.cardio-prescription-grid'),
+          documentRef,
+          profile,
+        );
         return automatedResult(
-          /Speed km\/h/.test(treadmillText)
-            && /Incline %/.test(treadmillText)
-            && incline?.getAttribute('max') === '20'
-            && !/Cadence min rpm/.test(treadmillText)
-            ? 'PASS'
-            : 'FAIL',
-          'Checked treadmill speed/incline model, 20% max incline and absence of bike cadence.',
+          treadmillModelCorrect && liveTargetsVisible ? 'PASS' : 'FAIL',
+          treadmillModelCorrect && liveTargetsVisible
+            ? 'Checked treadmill speed/incline model and confirmed live targets fit above navigation.'
+            : treadmillModelCorrect
+              ? 'Treadmill model is correct, but live targets are clipped below the active viewport.'
+              : 'Treadmill speed/incline model is invalid, exceeds the 20% equipment cap, or exposes bike-only cadence.',
           profile,
         );
       }
@@ -634,11 +651,18 @@
           && /80–90\s*rpm/.test(bikeText)
           && /moderate/i.test(bikeText)
           && /RPE\s*5(?:\.0+)?/.test(bikeText);
+        const liveTargetsVisible = fullyVisible(
+          finisher.querySelector('.cardio-prescription-grid'),
+          documentRef,
+          profile,
+        );
         return automatedResult(
-          goodTargets ? 'REVIEW_REQUIRED' : 'FAIL',
-          goodTargets
-            ? 'Dedicated bike-finisher state contains 15:00, 80–90 rpm, moderate resistance and RPE 5.'
-            : 'Approved Day 1 bike-finisher state/targets were not all detected.',
+          goodTargets && liveTargetsVisible ? 'REVIEW_REQUIRED' : 'FAIL',
+          goodTargets && liveTargetsVisible
+            ? 'Dedicated bike-finisher state contains 15:00, 80–90 rpm, moderate resistance and RPE 5, with live targets above navigation.'
+            : goodTargets
+              ? 'Approved Day 1 bike-finisher targets are correct, but the live target grid is clipped below the active viewport.'
+              : 'Approved Day 1 bike-finisher state/targets were not all detected.',
           profile,
         );
       }
@@ -648,11 +672,18 @@
         const targets = /00:30/.test(hardText)
           && /85–100\s*rpm/.test(hardText)
           && /RPE\s*7(?:\.0+)?–8(?:\.0+)?/.test(hardText);
+        const liveTargetsVisible = fullyVisible(
+          hard?.querySelector('.cardio-prescription-grid'),
+          documentRef,
+          profile,
+        );
         return automatedResult(
-          hard && targets ? 'REVIEW_REQUIRED' : 'FAIL',
-          hard && targets
-            ? 'Dedicated HARD interval state contains 00:30, 85–100 rpm and RPE 7–8.'
-            : 'Required HARD interval state/targets were not found.',
+          hard && targets && liveTargetsVisible ? 'REVIEW_REQUIRED' : 'FAIL',
+          hard && targets && liveTargetsVisible
+            ? 'Dedicated HARD interval state contains 00:30, 85–100 rpm and RPE 7–8, with live targets above navigation.'
+            : hard && targets
+              ? 'Required HARD interval targets are correct, but the live target grid is clipped below the active viewport.'
+              : 'Required HARD interval state/targets were not found.',
           profile,
         );
       }
@@ -663,11 +694,18 @@
           && /60–75\s*rpm/.test(recoveryText)
           && /Light/i.test(recoveryText)
           && /RPE\s*2(?:\.0+)?–3(?:\.0+)?/.test(recoveryText);
+        const liveTargetsVisible = fullyVisible(
+          recovery?.querySelector('.cardio-prescription-grid'),
+          documentRef,
+          profile,
+        );
         return automatedResult(
-          recovery && targets ? 'REVIEW_REQUIRED' : 'FAIL',
-          recovery && targets
-            ? 'Dedicated recovery state contains 01:30, 60–75 rpm, light resistance and RPE 2–3.'
-            : 'Required recovery interval state/targets were not found.',
+          recovery && targets && liveTargetsVisible ? 'REVIEW_REQUIRED' : 'FAIL',
+          recovery && targets && liveTargetsVisible
+            ? 'Dedicated recovery state contains 01:30, 60–75 rpm, light resistance and RPE 2–3, with live targets above navigation.'
+            : recovery && targets
+              ? 'Required recovery interval targets are correct, but the live target grid is clipped below the active viewport.'
+              : 'Required recovery interval state/targets were not found.',
           profile,
         );
       }
