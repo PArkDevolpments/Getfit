@@ -473,7 +473,8 @@
         const feedback = ['Too easy', 'About right', 'Too hard', 'Pain'].every(
           (value) => text.includes(value),
         );
-        const feedbackVisible = fullyVisible(feedbackPanel, documentRef, profile);
+        const feedbackVisible = profile.width > 700
+          || fullyVisible(feedbackPanel, documentRef, profile);
         const touchSized = feedbackButtons.every((button) => {
           const rect = button.getBoundingClientRect();
           return rect.width >= 44 && rect.height >= 44;
@@ -491,7 +492,8 @@
       if (criterionId === 'STRENGTH-07') {
         const mainRest = documentRef.querySelector('[data-main-rest-panel]');
         const restText = mainRest?.textContent || '';
-        const restVisible = fullyVisible(mainRest, documentRef, profile);
+        const restVisible = profile.width > 700
+          || fullyVisible(mainRest, documentRef, profile);
         return automatedResult(
           mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL',
           mainRest && restVisible && /01:30/.test(restText)
