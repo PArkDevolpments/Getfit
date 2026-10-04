@@ -32,6 +32,8 @@ def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> Non
     assert "430" in script
     assert "820" in script
     assert "1440" in script
+    assert "Home Assistant target · 440×820" in script
+    assert "width: 440, height: 820" in script
 
     # The capture utility must not depend on a third-party CDN or upload endpoint.
     assert "https://" not in template
@@ -65,6 +67,8 @@ def test_automated_audit_tracks_current_workout_dom_contracts() -> None:
     assert "Dedicated 01:30 rest state" in script
     assert "mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL'" in script
     assert "clipped below the active viewport" in script
+    assert "live targets are clipped below the active viewport" in script
+    assert "live target grid is clipped below the active viewport" in script
     assert "clipped below the phone viewport" not in script
     assert "node.dataset.segmentType === 'CONDITIONING'" in script
     assert r"/RPE\s*7(?:\.0+)?–8(?:\.0+)?/" in script
