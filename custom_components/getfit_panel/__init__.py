@@ -45,22 +45,27 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Register the trusted full-canvas panel after Home Assistant startup."""
 
-    del entry
-    frontend_root = Path(__file__).parent / "frontend"
-    await hass.http.async_register_static_paths(
-        [StaticPathConfig(WEB_ROOT_URL_PATH, str(frontend_root), False)]
-    )
+    runtime = hass.data.setdefault(DOMAIN, {})
+    if not runtime.get("static_registered"):
+        frontend_root = Path(__file__).parent / "frontend"
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(WEB_ROOT_URL_PATH, str(frontend_root), False)]
+        )
+        runtime["static_registered"] = True
 
     async def register(_hass: HomeAssistant) -> None:
         await _async_register_panel(_hass)
 
-    async_at_started(hass, register)
+    runtime[entry.entry_id] = async_at_started(hass, register)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove the companion panel. The built-in app panel returns after HA restart."""
 
-    del entry
+    runtime = hass.data.get(DOMAIN, {})
+    cancel = runtime.pop(entry.entry_id, None)
+    if callable(cancel):
+        cancel()
     frontend.async_remove_panel(hass, PANEL_URL_PATH)
     return True
