@@ -164,8 +164,11 @@ def test_strength_feedback_estimates_are_explicit_and_pain_stops_normal_rest_flo
     assert "if (!manualEffort)" in script
 
 
-def test_settings_does_not_expose_internal_review_tools() -> None:
+def test_settings_exposes_device_diagnostics_but_not_internal_build_tools() -> None:
     settings = _text(TEMPLATES / "settings.html")
 
+    assert "Auto-review this device" in settings
+    assert "?device=1&autorun=1" in settings
     assert "Quality & build review tools" not in settings
+    assert "Specification & Acceptance" not in settings
     assert "Run review pack" not in settings
