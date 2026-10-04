@@ -1,0 +1,14 @@
+{
+  "title": "Getfit Full-Canvas Panel",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Enable the Getfit full-canvas panel",
+        "description": "Adds a Getfit sidebar panel that uses the Home Assistant phone canvas directly while the Getfit app remains protected by Supervisor Ingress."
+      }
+    },
+    "abort": {
+      "already_configured": "The Getfit full-canvas panel is already configured."
+    }
+  }
+}
