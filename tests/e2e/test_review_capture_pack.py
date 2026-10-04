@@ -161,3 +161,11 @@ def test_0127_device_review_covers_plan_and_more_surfaces() -> None:
     assert '{"key": "more", "label": "More", "url": ingress_url(request, "/more")}' in router
     assert "if (criterionId.startsWith('SETTINGS-')) return ['more'];" in script
     assert "if (criterionId === 'REGRESSION-06') return ['more'];" in script
+
+
+def test_0128_real_device_review_requires_full_canvas_panel_host() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "HOME_ASSISTANT_FULL_CANVAS_HOST_REQUIRED" in script
+    assert "haPanelHost !== 'getfit-full-canvas-panel'" in script
+    assert "&& haShellReady" in script
