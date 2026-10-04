@@ -97,6 +97,7 @@ def test_strength_feedback_and_rest_audit_require_active_viewport_visibility() -
     script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
 
     assert "function fullyVisible" in script
+    assert "profile.width > 700" in script
     assert "const feedbackPanel = documentRef.querySelector('[data-set-feedback-panel]')" in script
     assert "feedbackVisible && feedbackButtons.length === 4" in script
     assert "const restVisible = fullyVisible(mainRest, documentRef, profile)" in script
