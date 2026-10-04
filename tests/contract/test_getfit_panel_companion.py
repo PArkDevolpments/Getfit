@@ -15,8 +15,10 @@ def test_full_canvas_panel_companion_is_packaged_without_broad_app_permissions()
     assert '"config_flow": true' in manifest
     assert '"panel_custom"' in manifest
 
-    assert 'PANEL_URL_PATH = "getfit"' in init
-    assert 'frontend.async_remove_panel(hass, PANEL_URL_PATH)' in init
+    assert 'PANEL_URL_PATH = "getfit-full"' in init
+    assert 'BUILTIN_PANEL_URL_PATH = "getfit"' in init
+    assert "frontend.async_panel_exists(hass, BUILTIN_PANEL_URL_PATH)" in init
+    assert "EVENT_PANELS_UPDATED" in init
     assert "handle_safe_area=True" in init
     assert "embed_iframe=False" in init
     assert "require_admin=False" in init
