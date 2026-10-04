@@ -55,7 +55,8 @@ def test_review_capture_is_authenticated_person_scoped_tool(tmp_path) -> None:
         html = response.text
         assert "UI Review Pack" in html
         assert "Kris" in html
-        assert "Run automated specification audit" in html
+        assert "Run full responsive audit" in html
+        assert "Auto-review this device" in html
         assert "Phone" in html
         assert "Tablet" in html
         assert "Desktop" in html
@@ -72,17 +73,20 @@ def test_review_capture_is_authenticated_person_scoped_tool(tmp_path) -> None:
         engine.dispose()
 
 
-def test_settings_hides_internal_review_tools_from_normal_product_ui(tmp_path) -> None:
+def test_settings_exposes_safe_device_review_without_internal_build_tools(tmp_path) -> None:
     client, engine = _client(tmp_path)
     try:
         response = client.get("/settings")
         assert response.status_code == 200
-        assert "UI Review Pack" not in response.text
-        assert 'href="/review-capture"' not in response.text
+        assert "Auto-review this device" in response.text
+        assert "/review-capture" in response.text
+        assert "Quality & build review tools" not in response.text
+        assert "Specification & Acceptance" not in response.text
 
         review = client.get("/review-capture")
         assert review.status_code == 200
         assert "UI Review Pack" in review.text
+        assert "Auto-review this device" in review.text
     finally:
         client.close()
         engine.dispose()
