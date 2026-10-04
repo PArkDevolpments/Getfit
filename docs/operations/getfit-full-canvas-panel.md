@@ -36,7 +36,7 @@ It contains:
 5. Search for **Getfit Full-Canvas Panel** and add it.
 6. Open **Getfit** from the Home Assistant sidebar.
 
-The companion deliberately registers at the existing `/getfit` panel path after Home Assistant has started. It removes the built-in Getfit app-frame panel in memory and registers the full-canvas panel at the same route.
+The companion registers its full-canvas host at `/getfit-full` and suppresses the built-in Supervisor `/getfit` sidebar panel while the companion is loaded. Keeping separate internal routes avoids registration collisions when Supervisor refreshes app metadata, while the sidebar still presents a single **Getfit** destination.
 
 ## What the browser host does
 
