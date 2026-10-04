@@ -89,6 +89,29 @@
       </section>
     </div>
 
+    <section class="recent-workouts-card" aria-labelledby="recent-workouts-title">
+      <div class="recent-workouts-card__heading">
+        <h3 id="recent-workouts-title">Recent workouts</h3>
+        <a class="coach-link" href="{{ ingress_url(request, '/progress') }}">See all</a>
+      </div>
+      <div class="recent-workouts-list">
+        {% for row in recent_workouts %}
+        <a class="recent-workout-row" href="{{ ingress_url(request, '/progress') }}">
+          <div class="recent-workout-row__media" aria-hidden="true">
+            <img src="{{ ingress_url(request, '/static/media/exercises/dumbbell_floor_press.svg') }}" alt="">
+          </div>
+          <div>
+            <strong>{% if row.programme_week and row.programme_day %}Week {{ row.programme_week }} · Day {{ row.programme_day }}{% else %}Workout{% endif %}</strong>
+            <span>{{ (row.duration_seconds / 60) | round | int }} min · {{ row.start_at.strftime('%d %b') }}</span>
+          </div>
+          <span class="recent-workout-row__state" aria-hidden="true">✓</span>
+        </a>
+        {% else %}
+        <p class="coach-empty-copy">Completed sessions will appear here.</p>
+        {% endfor %}
+      </div>
+    </section>
+
     <section class="coach-progress-snapshot" aria-labelledby="progress-snapshot-title">
       <div class="coach-progress-snapshot__heading">
         <h3 id="progress-snapshot-title">Progress Snapshot</h3>

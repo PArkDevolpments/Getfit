@@ -18,10 +18,10 @@ def _person() -> PersonContext:
 def test_product_navigation_has_exactly_five_approved_surfaces() -> None:
     assert [(item.key, item.path) for item in NAV_ITEMS] == [
         ("today", "/"),
+        ("plan", "/plan"),
         ("workout", "/workout"),
         ("progress", "/progress"),
-        ("library", "/library"),
-        ("settings", "/settings"),
+        ("more", "/more"),
     ]
 
 

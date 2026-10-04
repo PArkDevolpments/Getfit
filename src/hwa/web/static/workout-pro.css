@@ -1,0 +1,502 @@
+/* Getfit 0.1.27 active-workout design authority.
+   Active training is a task surface, not a dashboard. */
+
+.workout-player,
+.workout-stage,
+.workout-progress,
+.workout-command-bar,
+.workout-side-card,
+.actual-entry-panel,
+.set-effort-panel {
+  border-color: var(--pro-line) !important;
+  color: var(--pro-ink) !important;
+}
+
+.workout-progress,
+.workout-side-card,
+.actual-entry-panel,
+.set-effort-panel {
+  background: var(--pro-card-soft) !important;
+}
+
+.workout-stage {
+  background: var(--pro-card) !important;
+  box-shadow: var(--pro-shadow) !important;
+}
+
+.workout-session-header h2,
+.strength-heading-row h2,
+.cardio-coach-main h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--pro-ink) !important;
+}
+
+.workout-end-action {
+  color: #a13b48 !important;
+  border-color: rgba(190,65,80,.22) !important;
+  background: rgba(190,65,80,.06) !important;
+}
+
+.progress-track {
+  background: rgba(47,191,113,.12) !important;
+}
+.progress-track__fill {
+  background: var(--pro-green) !important;
+}
+
+.workout-stage__visual--strength {
+  border-color: var(--pro-line) !important;
+  background: #e7e4dc !important;
+}
+
+.strength-primary-metrics > div,
+.cardio-prescription-grid > div {
+  border-color: var(--pro-line) !important;
+  background: var(--pro-card-soft) !important;
+}
+.strength-primary-metrics strong,
+.cardio-prescription-grid strong {
+  color: var(--pro-ink) !important;
+}
+
+.stepper-control {
+  display: grid;
+  grid-template-columns: 44px minmax(52px,1fr) 44px;
+  gap: 5px;
+  align-items: center;
+}
+.stepper-control button {
+  width:44px;
+  height:44px;
+  min-width:44px;
+  min-height:44px;
+  padding:0;
+  border:1px solid var(--pro-line);
+  border-radius:10px;
+  color:var(--pro-ink);
+  background:var(--pro-card-soft);
+  font-size:1.2rem;
+  font-weight:800;
+}
+.stepper-control input {
+  width:100%;
+  min-width:0;
+  min-height:44px;
+  padding:0 5px !important;
+  border:1px solid var(--pro-line) !important;
+  border-radius:10px !important;
+  color:var(--pro-ink) !important;
+  background:var(--pro-card) !important;
+  text-align:center;
+  font-size:.95rem;
+  font-weight:850;
+}
+.set-stepper-label > span {
+  display:block;
+  margin-bottom:4px;
+  color:var(--pro-muted);
+  font-size:.62rem;
+  font-weight:750;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+.cardio-rpe-control {
+  margin-top:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.cardio-rpe-control > span {
+  color:var(--pro-muted);
+  font-size:.67rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.stepper-control--rpe {
+  width:min(100%,180px);
+}
+
+.set-feedback-options button {
+  border-color:var(--pro-line) !important;
+  background:var(--pro-card-soft) !important;
+  color:var(--pro-ink) !important;
+}
+.set-feedback-options button[aria-pressed="true"] {
+  border-color:rgba(47,191,113,.45) !important;
+  background:var(--pro-green-soft) !important;
+}
+.main-rest-ring {
+  border-color:rgba(47,191,113,.14) !important;
+  border-top-color:var(--pro-green) !important;
+  border-right-color:var(--pro-green) !important;
+}
+
+@media (max-width: 700px) {
+  body[data-active-nav="workout"] .content {
+    padding: 6px 8px 10px !important;
+  }
+
+  .workout-player {
+    gap: 6px !important;
+  }
+
+  .workout-session-header {
+    min-height: 42px !important;
+    padding: 0 2px !important;
+    gap: 6px !important;
+  }
+  .workout-session-header .eyebrow {
+    margin:0 !important;
+    font-size:.52rem !important;
+  }
+  .workout-session-header h2 {
+    max-width:225px;
+    margin:2px 0 0 !important;
+    overflow:hidden;
+    font-size:1.03rem !important;
+    line-height:1 !important;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+  .workout-session-actions {
+    gap:5px !important;
+  }
+  .workout-session-actions .status-pill {
+    min-height:30px !important;
+    padding:4px 8px !important;
+    font-size:.62rem !important;
+  }
+  .workout-end-action {
+    min-width:44px !important;
+    min-height:44px !important;
+    padding:5px 8px !important;
+    font-size:.66rem !important;
+  }
+
+  .workout-progress {
+    gap:3px !important;
+    padding:6px 8px !important;
+    border-radius:11px !important;
+  }
+  .workout-progress__meta {
+    font-size:.62rem !important;
+  }
+
+  .workout-stage {
+    padding:8px !important;
+    border-radius:15px !important;
+  }
+
+  .strength-coach-grid {
+    gap:6px !important;
+  }
+  .strength-media-column {
+    display:block !important;
+  }
+  .workout-stage__visual--strength,
+  .workout-stage__visual--strength img {
+    width:100% !important;
+    min-height:132px !important;
+    max-height:148px !important;
+    border-radius:12px !important;
+    object-fit:cover !important;
+  }
+  .movement-media-missing {
+    min-height:132px !important;
+  }
+
+  .strength-heading-row {
+    margin-top:2px;
+    gap:7px !important;
+    align-items:center !important;
+  }
+  .strength-heading-row .eyebrow {
+    display:none !important;
+  }
+  .strength-heading-row h2 {
+    margin:0 !important;
+    font-size:1.2rem !important;
+  }
+  .strength-heading-row .technique-action {
+    min-width:92px !important;
+    min-height:44px !important;
+    padding:6px 8px !important;
+    border-radius:10px !important;
+    color:#176d42 !important;
+    border-color:rgba(47,191,113,.26) !important;
+    background:var(--pro-green-soft) !important;
+    font-size:.62rem !important;
+  }
+
+  .strength-primary-metrics {
+    gap:5px !important;
+  }
+  .strength-primary-metrics > div {
+    min-height:48px !important;
+    padding:5px !important;
+    border-radius:10px !important;
+  }
+  .strength-primary-metrics strong {
+    font-size:.76rem !important;
+  }
+  .strength-primary-metrics span {
+    margin-top:2px !important;
+    font-size:.48rem !important;
+  }
+
+  .strength-secondary-prescription {
+    margin:4px 0 !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    font-size:.61rem !important;
+  }
+
+  .set-entry.is-current-set {
+    padding:7px !important;
+    border-radius:12px !important;
+    background:var(--pro-card-soft) !important;
+  }
+  .set-entry.is-current-set legend {
+    padding:0 3px !important;
+    color:var(--pro-ink) !important;
+    font-size:.65rem !important;
+    font-weight:850 !important;
+  }
+  .set-entry__fields {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+  }
+  .set-entry__fields input {
+    min-height:44px !important;
+  }
+
+  .set-effort-panel {
+    margin-top:6px !important;
+    border-radius:10px !important;
+  }
+  .set-effort-panel summary {
+    min-height:44px !important;
+    padding:6px 8px !important;
+  }
+  .set-effort-panel summary strong { font-size:.66rem !important; }
+  .set-effort-panel summary small { display:none !important; }
+  .set-effort-scale { font-size:.58rem !important; }
+
+  /* Primary set action is always reachable above product navigation. */
+  .workout-player.is-strength-stage .strength-item {
+    padding-bottom:68px !important;
+  }
+  .workout-player.is-strength-stage .complete-set-button {
+    position:fixed !important;
+    z-index:85 !important;
+    left:12px !important;
+    right:12px !important;
+    bottom:calc(var(--mobile-nav-total-height) + 8px) !important;
+    width:auto !important;
+    min-height:54px !important;
+    margin:0 !important;
+    border-radius:12px !important;
+    color:#fff !important;
+    border:0 !important;
+    background:linear-gradient(180deg,#3bd083,#28ad65) !important;
+    box-shadow:0 10px 28px rgba(0,0,0,.22) !important;
+    font-weight:900 !important;
+  }
+
+  /* Strength navigation becomes the active task, not a second toolbar. */
+  .workout-player.is-strength-stage .workout-command-bar {
+    display:none !important;
+  }
+
+  .set-feedback-panel {
+    min-height:440px !important;
+    padding:12px !important;
+  }
+  .set-feedback-panel__check {
+    width:52px !important;
+    height:52px !important;
+  }
+  .set-feedback-panel h3 {
+    margin:4px 0 5px !important;
+    font-size:1.25rem !important;
+  }
+  .set-feedback-help {
+    margin:0 0 8px !important;
+    font-size:.66rem !important;
+  }
+  .set-feedback-options {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+  }
+  .set-feedback-options button {
+    min-height:64px !important;
+    padding:7px !important;
+    border-radius:11px !important;
+  }
+  .set-feedback-options button span {
+    width:24px !important;
+    height:24px !important;
+  }
+  .set-feedback-options small {
+    font-size:.52rem !important;
+  }
+  .feedback-continue {
+    min-height:50px !important;
+    margin-top:8px !important;
+  }
+
+  .main-rest-panel {
+    min-height:430px !important;
+    padding:12px !important;
+  }
+  .main-rest-ring {
+    width:148px !important;
+    height:148px !important;
+    margin:8px auto !important;
+  }
+  .main-rest-ring strong { font-size:2.35rem !important; }
+  .main-rest-actions button { min-height:48px !important; }
+
+  /* Cardio is equipment-first: timer and live targets dominate. */
+  .cardio-item {
+    padding:9px !important;
+  }
+  .cardio-visual-card {
+    display:none !important;
+  }
+  .cardio-coach-grid {
+    display:block !important;
+  }
+  .cardio-coach-main > .eyebrow {
+    margin:0 !important;
+    font-size:.55rem !important;
+  }
+  .cardio-coach-main h2 {
+    margin:2px 0 6px !important;
+    font-size:1.25rem !important;
+  }
+
+  .cardio-timer--hero {
+    width:210px !important;
+    min-height:210px !important;
+    margin:4px auto 9px !important;
+    padding:28px 12px 16px !important;
+    display:grid !important;
+    place-items:center !important;
+    align-content:center !important;
+    border:10px solid rgba(47,191,113,.12) !important;
+    border-top-color:var(--pro-green) !important;
+    border-right-color:var(--pro-green) !important;
+    border-radius:50% !important;
+    background:transparent !important;
+  }
+  .cardio-timer--hero .metric-caption {
+    font-size:.58rem !important;
+  }
+  .cardio-timer--hero .cardio-timer__display {
+    margin:3px 0 !important;
+    color:var(--pro-ink) !important;
+    font-size:3.25rem !important;
+    line-height:.95 !important;
+    letter-spacing:-.07em !important;
+  }
+  .cardio-timer--hero .timer-actions {
+    position:absolute;
+    left:12px;
+    right:12px;
+    bottom:-64px;
+    display:grid !important;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+  }
+  .cardio-timer--hero .timer-actions button {
+    min-height:44px !important;
+  }
+
+  .cardio-prescription-grid {
+    margin-top:64px !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:6px !important;
+  }
+  .workout-player--review .cardio-prescription-grid {
+    margin-top:8px !important;
+  }
+  .cardio-prescription-grid > div {
+    min-height:58px !important;
+    padding:7px !important;
+    border-radius:11px !important;
+  }
+  .cardio-prescription-grid span { font-size:.5rem !important; }
+  .cardio-prescription-grid strong { font-size:.82rem !important; }
+
+  .cardio-rpe-control {
+    min-height:48px;
+    margin-top:7px;
+    padding:0 2px;
+  }
+  .stepper-control--rpe { width:170px; }
+
+  .interval-state-banner {
+    margin-bottom:5px !important;
+    padding:6px 8px !important;
+  }
+  .interval-next-card {
+    margin-top:6px !important;
+    padding:6px 8px !important;
+  }
+
+  .actual-entry-panel {
+    margin-top:7px !important;
+    border-radius:10px !important;
+  }
+  .actual-entry-panel summary {
+    min-height:44px !important;
+    padding:7px 9px !important;
+  }
+
+  .cardio-completion-toggle {
+    width:100% !important;
+    min-height:50px !important;
+    margin-top:7px !important;
+  }
+
+  .workout-player.is-cardio-stage .workout-command-bar {
+    grid-template-columns:1fr 1fr !important;
+    gap:7px !important;
+    margin-top:7px !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
+  }
+  .workout-player.is-cardio-stage #previous-stage,
+  .workout-player.is-cardio-stage #skip-stage {
+    display:none !important;
+  }
+  .workout-player.is-cardio-stage #pause-workout,
+  .workout-player.is-cardio-stage #next-stage {
+    display:flex !important;
+    min-height:48px !important;
+  }
+
+  .workout-summary-controls {
+    margin-top:10px !important;
+    padding:12px !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .workout-stage__visual--strength { background:#17211d !important; }
+  .stepper-control button,
+  .stepper-control input {
+    background:#0d1c18 !important;
+    color:var(--pro-ink) !important;
+  }
+  .workout-end-action {
+    color:#f1aab4 !important;
+    background:rgba(190,65,80,.08) !important;
+  }
+}

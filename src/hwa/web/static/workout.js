@@ -640,6 +640,31 @@
     input.addEventListener('change', () => queueAutosave());
   }
 
+  function stepNumericInput(button) {
+    const host = button.closest('.stepper-control');
+    const input = host?.querySelector('input[type="number"]');
+    if (!input || button.disabled) return;
+
+    const delta = Number(button.dataset.delta || 0);
+    const minimum = input.min === '' ? -Infinity : Number(input.min);
+    const maximum = input.max === '' ? Infinity : Number(input.max);
+    const fallback = Number.isFinite(minimum) ? minimum : 0;
+    const current = input.value === '' ? fallback : Number(input.value);
+    if (!Number.isFinite(delta) || !Number.isFinite(current)) return;
+
+    const precision = Math.max(
+      (String(delta).split('.')[1] || '').length,
+      (String(input.step || '').split('.')[1] || '').length,
+    );
+    const next = Math.min(maximum, Math.max(minimum, current + delta));
+    input.value = precision ? next.toFixed(precision).replace(/\.0+$/, '') : String(next);
+    input.dispatchEvent(new Event('input', {bubbles: true}));
+  }
+
+  for (const button of document.querySelectorAll('[data-stepper], [data-cardio-rpe-step]')) {
+    button.addEventListener('click', () => stepNumericInput(button));
+  }
+
   for (const input of document.querySelectorAll('[data-effort-value]')) {
     const markManual = () => {
       const marker = valueOf(input.dataset.effortManualName || '');

@@ -1,0 +1,767 @@
+/* Getfit 0.1.27 locked mobile design authority.
+   Premium consumer fitness UI; truthful training data remains authoritative. */
+
+:root {
+  --pro-green: #2fbf71;
+  --pro-green-strong: #25a960;
+  --pro-green-soft: rgba(47, 191, 113, .12);
+  --pro-cream: #f6f2e9;
+  --pro-paper: #fffdf8;
+  --pro-ink: #161914;
+  --pro-muted: #6f756c;
+  --pro-line: rgba(30, 39, 30, .12);
+  --pro-card: rgba(255, 253, 248, .94);
+  --pro-card-soft: #f1eee6;
+  --pro-shadow: 0 12px 30px rgba(36, 34, 27, .08);
+  --pro-radius: 18px;
+  --ha-safe-top: env(safe-area-inset-top, 0px);
+  --ha-safe-right: env(safe-area-inset-right, 0px);
+  --ha-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ha-safe-left: env(safe-area-inset-left, 0px);
+  --mobile-nav-content-height: 62px;
+  --mobile-nav-total-height: calc(var(--mobile-nav-content-height) + var(--ha-safe-bottom));
+  color-scheme: light dark;
+}
+
+html,
+body {
+  background: var(--pro-cream) !important;
+}
+
+body {
+  color: var(--pro-ink) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 88% -8%, rgba(47, 191, 113, .08), transparent 28rem),
+    linear-gradient(180deg, #fbf8f1, var(--pro-cream)) !important;
+}
+
+h1, h2, h3,
+.brand-copy h1,
+.coach-dashboard-card h2,
+.native-page-heading h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 650;
+  letter-spacing: -.035em;
+}
+
+button,
+input,
+strong,
+.cardio-timer__display,
+.rest-timer__display,
+.main-rest-ring strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.app-header {
+  border-color: var(--pro-line) !important;
+  color: var(--pro-ink) !important;
+  background: rgba(255,253,248,.88) !important;
+  box-shadow: none !important;
+}
+
+.brand-mark {
+  border-color: rgba(47,191,113,.24) !important;
+  background: var(--pro-green-soft) !important;
+  box-shadow: none !important;
+}
+.brand-mark svg { stroke: var(--pro-green-strong) !important; }
+.brand-copy h1 { color: var(--pro-ink) !important; }
+.brand-copy p { color: var(--pro-muted) !important; }
+.app-header__person {
+  border-color: var(--pro-line) !important;
+  color: var(--pro-ink) !important;
+  background: var(--pro-card-soft) !important;
+}
+.app-header__avatar {
+  color: #fff !important;
+  background: var(--pro-green) !important;
+}
+
+.content { color: var(--pro-ink); }
+.muted { color: var(--pro-muted) !important; }
+
+.eyebrow,
+.card-kicker {
+  color: var(--pro-green-strong) !important;
+  letter-spacing: .12em;
+}
+
+.card,
+.surface-card,
+.coach-dashboard-card,
+.workout-selection,
+.library-hero,
+.exercise-media-card,
+.exercise-coaching-card,
+.progress-hero,
+.progress-chart-card,
+.recent-progression-card,
+.settings-profile-card,
+.settings-grid .card,
+.plan-card {
+  border: 1px solid var(--pro-line) !important;
+  color: var(--pro-ink) !important;
+  background: var(--pro-card) !important;
+  box-shadow: var(--pro-shadow) !important;
+}
+
+.primary-action {
+  color: #fff !important;
+  border-color: transparent !important;
+  background: linear-gradient(180deg, #38c97d, #26ad64) !important;
+  box-shadow: 0 8px 18px rgba(37,169,96,.18) !important;
+}
+.secondary-action {
+  color: var(--pro-ink) !important;
+  border-color: rgba(47,191,113,.36) !important;
+  background: var(--pro-green-soft) !important;
+}
+.ghost-action {
+  color: var(--pro-ink) !important;
+  border-color: var(--pro-line) !important;
+  background: rgba(255,255,255,.35) !important;
+}
+
+.status-pill {
+  color: var(--pro-muted) !important;
+  border-color: var(--pro-line) !important;
+  background: var(--pro-card-soft) !important;
+}
+.status-pill--ready {
+  color: #176d42 !important;
+  border-color: rgba(47,191,113,.26) !important;
+  background: rgba(47,191,113,.11) !important;
+}
+
+/* Five-tab native-style product navigation. */
+.primary-nav {
+  border-color: var(--pro-line) !important;
+  background: rgba(255,253,248,.94) !important;
+  box-shadow: 0 10px 30px rgba(23, 28, 23, .09) !important;
+}
+.primary-nav__item {
+  color: #747b72 !important;
+  background: transparent !important;
+}
+.primary-nav__item.is-active {
+  color: #167241 !important;
+  border-color: transparent !important;
+  background: rgba(47,191,113,.11) !important;
+  box-shadow: none !important;
+}
+
+/* Today ------------------------------------------------------------------ */
+.coach-dashboard-card {
+  --coach-card-bg: var(--pro-card);
+  padding: 18px !important;
+}
+.coach-dashboard-card__header { align-items: center; }
+.coach-greeting { color: var(--pro-muted) !important; }
+.coach-dashboard-card__header h2 { color: var(--pro-ink) !important; }
+.coach-dashboard-card__settings {
+  color: var(--pro-ink) !important;
+  border-color: var(--pro-line) !important;
+  background: var(--pro-card-soft) !important;
+}
+
+.next-workout-card {
+  overflow: hidden;
+  min-height: 150px !important;
+  border: 1px solid var(--pro-line) !important;
+  border-radius: 16px !important;
+  background: #1d2a21 !important;
+}
+.next-workout-card__photo {
+  min-height: 150px !important;
+}
+.next-workout-card__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(.88) contrast(1.03);
+}
+.next-workout-card__copy {
+  color: #fff !important;
+}
+.next-workout-card__copy .card-kicker { color: #9be3bb !important; }
+.next-workout-card__duration { color: #d2dfd6 !important; }
+
+.home-primary-action .primary-action {
+  min-height: 48px;
+  border-radius: 12px !important;
+}
+.action-status { color: var(--pro-muted) !important; }
+
+.coach-status-grid {
+  gap: 10px !important;
+}
+.coach-status-block {
+  border-color: var(--pro-line) !important;
+  background: var(--pro-card-soft) !important;
+}
+.week-status-dot {
+  border-color: var(--pro-line) !important;
+  background: #e8e6de !important;
+}
+.week-status-dot.is-complete,
+.week-status-dot.is-current {
+  color: #fff !important;
+  border-color: var(--pro-green) !important;
+  background: var(--pro-green) !important;
+}
+
+.home-context-rail > article {
+  border-color: var(--pro-line) !important;
+  background: var(--pro-card) !important;
+}
+
+/* Shared native headings ------------------------------------------------- */
+.native-page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.native-page-heading h1 {
+  margin: 2px 0 0;
+  font-size: clamp(2rem, 7vw, 2.8rem);
+  line-height: .98;
+}
+.plan-week-chip {
+  min-height: 32px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  color: #176d42;
+  background: var(--pro-green-soft);
+  font-size: .75rem;
+  font-weight: 800;
+}
+
+/* Plan ------------------------------------------------------------------- */
+.plan-segmented {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--pro-line);
+  border-radius: 12px;
+  background: var(--pro-card-soft);
+}
+.plan-segmented button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--pro-muted);
+  background: transparent;
+  font-weight: 750;
+}
+.plan-segmented button.is-active {
+  color: #fff;
+  background: var(--pro-green-strong);
+}
+.plan-segmented button:disabled { opacity: .55; }
+
+.plan-card {
+  overflow: hidden;
+  border-radius: var(--pro-radius);
+}
+.plan-card__header {
+  padding: 16px 16px 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.plan-card__header h2 { margin: 2px 0; font-size: 1.45rem; }
+.plan-card__header > div > span { color: var(--pro-muted); font-size: .76rem; }
+.plan-session-list { display: grid; }
+.plan-session-row {
+  min-height: 64px;
+  padding: 8px 14px;
+  display: grid;
+  grid-template-columns: 34px 54px minmax(0,1fr) 28px;
+  gap: 9px;
+  align-items: center;
+  border-top: 1px solid var(--pro-line);
+}
+.plan-session-row.is-current {
+  background: rgba(47,191,113,.08);
+}
+.plan-session-row.is-complete { opacity: .78; }
+.plan-session-row__day {
+  color: var(--pro-muted);
+  text-align: center;
+}
+.plan-session-row__day span { display:block; font-size:.55rem; text-transform:uppercase; }
+.plan-session-row__day strong { display:block; color:var(--pro-ink); font-size:.9rem; }
+.plan-session-row__media {
+  width:54px; height:46px; overflow:hidden; border-radius:9px; background:#ddd;
+}
+.plan-session-row__media img { width:100%; height:100%; object-fit:cover; }
+.plan-session-row__copy { min-width:0; }
+.plan-session-row__copy strong,
+.plan-session-row__copy span { display:block; }
+.plan-session-row__copy strong { font-size:.8rem; }
+.plan-session-row__copy span {
+  margin-top:2px; color:var(--pro-muted); font-size:.62rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.plan-session-row__state {
+  color: var(--pro-green-strong);
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-align:center;
+}
+.plan-note { padding: 15px !important; }
+
+/* Library ---------------------------------------------------------------- */
+.library-hero {
+  padding: 16px !important;
+  border-radius: var(--pro-radius) !important;
+}
+.library-hero h2 { margin: 3px 0 5px; }
+.exercise-grid--visual {
+  gap: 10px !important;
+}
+.exercise-card--visual {
+  border-color: var(--pro-line) !important;
+  background: var(--pro-card) !important;
+  box-shadow: none !important;
+}
+.exercise-card__media {
+  background: var(--pro-card-soft) !important;
+}
+.exercise-card__movement {
+  color: #176d42 !important;
+  background: rgba(246,242,233,.92) !important;
+}
+.exercise-card__body h3 { color:var(--pro-ink) !important; }
+.exercise-card__meta { color:var(--pro-muted) !important; }
+
+/* Progress --------------------------------------------------------------- */
+.progress-hero,
+.progress-chart-card,
+.recent-progression-card {
+  border-radius: var(--pro-radius) !important;
+}
+.progress-kpi {
+  border-color: var(--pro-line) !important;
+  background: var(--pro-card-soft) !important;
+}
+.progress-kpi strong { color:var(--pro-ink) !important; }
+.progress-chart {
+  color: var(--pro-green-strong) !important;
+}
+.history-row,
+.recent-progression-row {
+  border-color: var(--pro-line) !important;
+  background: rgba(255,255,255,.22) !important;
+}
+
+/* More ------------------------------------------------------------------- */
+.settings-profile-card {
+  align-items: center !important;
+  padding: 14px !important;
+  border-radius: var(--pro-radius) !important;
+}
+.settings-avatar {
+  color: #fff !important;
+  background: var(--pro-green-strong) !important;
+}
+.settings-grid { gap: 10px !important; }
+.settings-grid .card { padding: 14px !important; border-radius: 15px !important; }
+.equipment-card,
+.integration-card,
+.settings-safety-note {
+  border-color: var(--pro-line) !important;
+  background: var(--pro-card-soft) !important;
+}
+.more-link-row {
+  min-height: 56px;
+  padding: 8px 0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:var(--pro-ink);
+  text-decoration:none;
+  border-top:1px solid var(--pro-line);
+}
+.more-link-row:first-child { border-top:0; }
+.more-link-row strong,
+.more-link-row span { display:block; }
+.more-link-row span { margin-top:2px; color:var(--pro-muted); font-size:.68rem; }
+.more-link-row__arrow { color:var(--pro-muted); font-size:1.1rem; }
+
+/* Mobile is authoritative ------------------------------------------------ */
+@media (max-width: 820px) {
+  html,
+  body {
+    width: 100%;
+    min-width: 320px;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  .app-shell {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100dvh !important;
+    margin: 0 !important;
+    padding:
+      var(--ha-safe-top)
+      var(--ha-safe-right)
+      var(--mobile-nav-total-height)
+      var(--ha-safe-left) !important;
+  }
+
+  .app-header {
+    display: none !important;
+  }
+
+  .content {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 12px 12px 16px !important;
+    gap: 10px !important;
+  }
+
+  .primary-nav {
+    position: fixed !important;
+    z-index: 90 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    min-height: var(--mobile-nav-total-height) !important;
+    margin: 0 !important;
+    padding: 5px 8px calc(5px + var(--ha-safe-bottom)) !important;
+    display: grid !important;
+    grid-template-columns: repeat(5,minmax(0,1fr)) !important;
+    gap: 2px !important;
+    border-width: 1px 0 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    backdrop-filter: blur(22px) !important;
+  }
+
+  .primary-nav__item {
+    min-width: 0 !important;
+    min-height: 52px !important;
+    padding: 4px 1px !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    font-size: .58rem !important;
+    font-weight: 720 !important;
+  }
+
+  .primary-nav__icon,
+  .primary-nav__icon svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .home-dashboard {
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .coach-dashboard-card {
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .coach-dashboard-card__header {
+    margin-bottom: 8px !important;
+  }
+  .coach-greeting { margin:0; font-size:.72rem; }
+  .coach-dashboard-card__header h2 { margin:0; font-size:1.6rem; }
+  .coach-dashboard-card__settings { width:44px; height:44px; }
+
+  .next-workout-card {
+    min-height: 138px !important;
+    grid-template-columns: minmax(0,1fr) 130px !important;
+  }
+  .next-workout-card__photo {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-height: 138px !important;
+  }
+  .next-workout-card__copy {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    padding: 12px !important;
+  }
+  .next-workout-card__copy h3 { font-size:.7rem !important; }
+  .next-workout-card__title { font-family:Georgia,"Times New Roman",serif; font-size:1.25rem !important; line-height:1.02; }
+  .next-workout-card__duration { margin-top:8px !important; }
+
+  .home-primary-action { margin-top: 8px !important; }
+  .home-primary-action .primary-action { min-height:48px !important; }
+  .home-primary-action .action-status { display:none; }
+
+  .coach-status-grid {
+    grid-template-columns: 1fr 1fr !important;
+    margin-top: 10px !important;
+  }
+  .coach-status-block { min-height:76px !important; padding:9px !important; }
+  .week-status-dots { gap:4px !important; }
+  .week-status-dot { width:24px !important; height:24px !important; }
+
+  /* Plan owns programme browsing on phone; Today stays focused. */
+  .workout-selection,
+  .coach-progress-snapshot,
+  .weekly-cardio {
+    display: none !important;
+  }
+
+  .home-context-rail {
+    width:100% !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:8px !important;
+  }
+  .home-context-rail > article { min-height:76px !important; padding:10px !important; }
+
+  .native-page-heading { padding: 2px 2px 4px; }
+  .native-page-heading h1 { font-size:2.05rem; }
+
+  .plan-card__header { padding: 12px; }
+  .plan-card__header .status-pill { display:none; }
+  .plan-session-row {
+    min-height: 62px;
+    grid-template-columns: 30px 48px minmax(0,1fr) 24px;
+    padding: 7px 10px;
+    gap: 8px;
+  }
+  .plan-session-row__media { width:48px; height:44px; }
+
+  .library-hero { padding:12px !important; }
+  .library-hero p.muted { display:none; }
+  .library-hero__badge { display:none !important; }
+  .exercise-grid--visual {
+    grid-template-columns:1fr !important;
+  }
+  .exercise-card--visual {
+    min-height: 88px;
+    display:grid !important;
+    grid-template-columns: 96px minmax(0,1fr) !important;
+    border-radius:14px !important;
+  }
+  .exercise-card__media {
+    min-height:88px !important;
+    border-radius:14px 0 0 14px !important;
+  }
+  .exercise-card__media img { height:100% !important; object-fit:cover !important; }
+  .exercise-card__body { padding:10px !important; }
+  .exercise-card__footer .status-pill { display:none !important; }
+
+  .progress-hero { padding:12px !important; }
+  .progress-dashboard { gap:10px !important; }
+  .progress-kpi-grid { gap:8px !important; }
+  .progress-kpi { min-height:82px !important; padding:10px !important; }
+  .progress-chart-card,
+  .recent-progression-card,
+  body[data-active-nav="progress"] > .app-shell .card {
+    padding:12px !important;
+  }
+  .history-row { padding:10px !important; }
+
+  .settings-profile-card { padding:10px 12px !important; }
+  .settings-profile-card p.muted { display:none; }
+  .settings-profile-card h2 { margin:2px 0 !important; }
+  .settings-avatar { width:44px !important; height:44px !important; }
+  .settings-grid .card { padding:12px !important; }
+}
+
+/* Dark mode is deliberately muted rather than neon. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pro-cream: #07110f;
+    --pro-paper: #091512;
+    --pro-ink: #f0f4ef;
+    --pro-muted: #98a69f;
+    --pro-line: rgba(172, 200, 185, .13);
+    --pro-card: rgba(9, 24, 20, .96);
+    --pro-card-soft: #0d1c18;
+    --pro-shadow: 0 12px 30px rgba(0,0,0,.24);
+    --pro-green: #36c985;
+    --pro-green-strong: #2fb878;
+    --pro-green-soft: rgba(54,201,133,.12);
+  }
+
+  html,
+  body {
+    background:#06100e !important;
+  }
+  body {
+    background:
+      radial-gradient(circle at 85% -8%, rgba(54,201,133,.07), transparent 28rem),
+      linear-gradient(180deg,#07120f,#050c0a) !important;
+  }
+  .app-header,
+  .primary-nav,
+  .card,
+  .surface-card,
+  .coach-dashboard-card,
+  .workout-selection,
+  .library-hero,
+  .exercise-card--visual,
+  .progress-hero,
+  .progress-chart-card,
+  .recent-progression-card,
+  .settings-profile-card,
+  .settings-grid .card,
+  .plan-card {
+    background: var(--pro-card) !important;
+  }
+  .primary-nav__item { color:#8fa199 !important; }
+  .primary-nav__item.is-active {
+    color:#70dfa8 !important;
+    background:rgba(54,201,133,.11) !important;
+  }
+  .ghost-action { background:rgba(255,255,255,.025) !important; }
+  .status-pill { background:#0f211c !important; }
+  .coach-status-block,
+  .equipment-card,
+  .integration-card,
+  .settings-safety-note,
+  .progress-kpi,
+  .plan-segmented {
+    background:var(--pro-card-soft) !important;
+  }
+  .week-status-dot { background:#14241f !important; }
+  .exercise-card__movement {
+    color:#b7e7cc !important;
+    background:rgba(7,17,15,.88) !important;
+  }
+  .history-row,
+  .recent-progression-row { background:rgba(255,255,255,.02) !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* Locked Today recent evidence */
+.recent-workouts-card {
+  margin-top: 10px;
+}
+.recent-workouts-card__heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:6px;
+}
+.recent-workouts-card__heading h3 {
+  margin:0;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:1rem;
+}
+.recent-workouts-list { display:grid; gap:6px; }
+.recent-workout-row {
+  min-height:54px;
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr) 24px;
+  gap:8px;
+  align-items:center;
+  color:var(--pro-ink);
+  text-decoration:none;
+}
+.recent-workout-row__media {
+  width:54px;
+  height:48px;
+  overflow:hidden;
+  border-radius:9px;
+  background:var(--pro-card-soft);
+}
+.recent-workout-row__media img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.recent-workout-row strong,
+.recent-workout-row span { display:block; }
+.recent-workout-row strong { font-size:.73rem; }
+.recent-workout-row > div:nth-child(2) span {
+  margin-top:2px;
+  color:var(--pro-muted);
+  font-size:.6rem;
+}
+.recent-workout-row__state {
+  color:var(--pro-green-strong);
+  font-size:1rem;
+  font-weight:900;
+}
+
+/* Compact library controls */
+.library-tools {
+  display:grid;
+  gap:8px;
+}
+.library-search input {
+  width:100%;
+  min-height:44px;
+  padding:0 13px;
+  border:1px solid var(--pro-line);
+  border-radius:12px;
+  color:var(--pro-ink);
+  background:var(--pro-card);
+}
+.library-filter-pills {
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding-bottom:2px;
+  scrollbar-width:none;
+}
+.library-filter-pills::-webkit-scrollbar { display:none; }
+.library-filter-pills button {
+  min-width:58px;
+  min-height:36px;
+  padding:5px 10px;
+  border:1px solid var(--pro-line);
+  border-radius:999px;
+  color:var(--pro-muted);
+  background:var(--pro-card);
+  font-size:.66rem;
+  font-weight:800;
+}
+.library-filter-pills button.is-active {
+  color:#fff;
+  border-color:var(--pro-green-strong);
+  background:var(--pro-green-strong);
+}
+.exercise-card--visual[hidden] { display:none !important; }
+
+@media (max-width: 820px) {
+  .recent-workouts-card { margin-top:8px; }
+  .recent-workout-row { min-height:50px; }
+  .recent-workout-row__media { width:50px; height:44px; }
+  .library-tools { gap:7px; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .library-search input,
+  .library-filter-pills button {
+    background:var(--pro-card) !important;
+    color:var(--pro-ink) !important;
+  }
+}

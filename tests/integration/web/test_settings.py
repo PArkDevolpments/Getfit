@@ -113,7 +113,7 @@ def test_settings_renders_installation_equipment_and_safe_integration_state(tmp_
         response = client.get("/settings")
         assert response.status_code == 200
         html = response.text
-        assert "Settings" in html
+        assert "More" in html
         assert "Kris" in html
         assert "Kirsty" not in html
         assert "Treadmill" in html

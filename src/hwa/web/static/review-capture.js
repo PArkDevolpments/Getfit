@@ -194,7 +194,7 @@
 
     if (criterionId === 'LIBRARY-01') return ['library'];
     if (criterionId === 'LIBRARY-02') return ['exercise-detail'];
-    if (criterionId.startsWith('SETTINGS-')) return ['settings'];
+    if (criterionId.startsWith('SETTINGS-')) return ['more'];
 
     if (criterionId === 'REGRESSION-01' || criterionId === 'REGRESSION-04') {
       return ['today'];
@@ -202,6 +202,7 @@
     if (criterionId === 'REGRESSION-05') {
       return [
         'today',
+        'plan',
         'strength-active',
         'strength-feedback',
         'strength-pain',
@@ -215,12 +216,12 @@
         'exercise-video-floor-press',
         'exercise-video-supported-reverse-lunge',
         'exercise-video-lateral-raise',
-        'settings',
+        'more',
       ];
     }
     if (criterionId === 'REGRESSION-02') return ['strength-active'];
     if (criterionId === 'REGRESSION-03') return ['progress'];
-    if (criterionId === 'REGRESSION-06') return ['settings'];
+    if (criterionId === 'REGRESSION-06') return ['more'];
     return [];
   }
 

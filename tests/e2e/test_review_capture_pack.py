@@ -151,3 +151,13 @@ def test_device_review_requires_live_cardio_targets_in_the_active_viewport() -> 
 
     for target in ("bike-finisher", "treadmill", "interval-hard", "interval-recovery"):
         assert f"'{target}': '.cardio-prescription-grid'" in script
+
+
+def test_0127_device_review_covers_plan_and_more_surfaces() -> None:
+    router = (ROOT / "src" / "hwa" / "web" / "router.py").read_text(encoding="utf-8")
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert '{"key": "plan", "label": "Plan", "url": ingress_url(request, "/plan")}' in router
+    assert '{"key": "more", "label": "More", "url": ingress_url(request, "/more")}' in router
+    assert "if (criterionId.startsWith('SETTINGS-')) return ['more'];" in script
+    assert "if (criterionId === 'REGRESSION-06') return ['more'];" in script
