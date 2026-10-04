@@ -297,7 +297,7 @@ def exercise_detail(
         request=request,
         name="exercise_detail.html",
         context={
-            "page": build_page_context(person, "library"),
+            "page": build_page_context(person, "workout"),
             "person": person,
             "exercise": exercise,
             "exercise_history": get_exercise_history(
