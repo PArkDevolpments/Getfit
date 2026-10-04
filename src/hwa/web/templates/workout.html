@@ -113,6 +113,25 @@
         {% endif %}
       </div>
 
+      <div class="cardio-rpe-control" aria-label="Actual effort">
+        <span>Actual RPE</span>
+        <div class="stepper-control stepper-control--rpe">
+          <button type="button" data-cardio-rpe-step data-delta="-1" aria-label="Decrease actual RPE"{% if review_mode|default(false) %} disabled{% endif %}>−</button>
+          <input
+            name="{{ item.item_id }}-rpe"
+            type="number"
+            min="1"
+            max="10"
+            step="0.5"
+            inputmode="decimal"
+            value=""
+            placeholder="—"
+            aria-label="Actual RPE"
+          >
+          <button type="button" data-cardio-rpe-step data-delta="1" aria-label="Increase actual RPE"{% if review_mode|default(false) %} disabled{% endif %}>+</button>
+        </div>
+      </div>
+
       {% if item.segment_type|upper == "INTERVAL_HARD" %}
       <div class="interval-next-card">
         <span>Next: Recovery</span>
@@ -151,9 +170,6 @@
         <input name="{{ item.item_id }}-resistance" type="text" value="{{ item.resistance or '' }}" placeholder="Light / moderate / hard">
       </label>
       {% endif %}
-      <label>Actual RPE
-        <input name="{{ item.item_id }}-rpe" type="number" min="1" max="10" step="0.5" inputmode="decimal" placeholder="1–10">
-      </label>
     </div>
   </details>
 
@@ -310,14 +326,19 @@
                 <legend>Set {{ set_number }} of {{ item.sets_target }}</legend>
                 <div class="set-entry__fields">
                   {% if item.target_type == "REPS" %}
-                  <label>Actual reps
-                    <input
-                      name="{{ item.item_id }}-set-{{ set_number }}-reps"
-                      type="number"
-                      min="0"
-                      inputmode="numeric"
-                      value="{{ item.reps_target or item.reps_min or '' }}"
-                    >
+                  <label class="set-stepper-label">
+                    <span>Reps</span>
+                    <div class="stepper-control">
+                      <button type="button" data-stepper data-delta="-1" aria-label="Decrease reps">−</button>
+                      <input
+                        name="{{ item.item_id }}-set-{{ set_number }}-reps"
+                        type="number"
+                        min="0"
+                        inputmode="numeric"
+                        value="{{ item.reps_target or item.reps_min or '' }}"
+                      >
+                      <button type="button" data-stepper data-delta="1" aria-label="Increase reps">+</button>
+                    </div>
                   </label>
                   {% else %}
                   <label>Actual seconds
@@ -331,16 +352,21 @@
                   </label>
                   {% endif %}
                   {% if item.load_mode not in ["BODYWEIGHT", "NONE"] %}
-                  <label>Actual load {{ item.load_unit or "KG" }}
-                    <input
-                      name="{{ item.item_id }}-set-{{ set_number }}-load"
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      inputmode="decimal"
-                      value="{{ clean_number(item.load_value) if item.load_value is not none else '' }}"
-                      placeholder="Enter load"
-                    >
+                  <label class="set-stepper-label">
+                    <span>Load {{ item.load_unit or "KG" }}{% if item.load_mode == "EACH_HAND" %} (each){% endif %}</span>
+                    <div class="stepper-control">
+                      <button type="button" data-stepper data-delta="-0.5" aria-label="Decrease load">−</button>
+                      <input
+                        name="{{ item.item_id }}-set-{{ set_number }}-load"
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        inputmode="decimal"
+                        value="{{ clean_number(item.load_value) if item.load_value is not none else '' }}"
+                        placeholder="—"
+                      >
+                      <button type="button" data-stepper data-delta="0.5" aria-label="Increase load">+</button>
+                    </div>
                   </label>
                   {% endif %}
                 </div>
@@ -397,8 +423,8 @@
         <section class="set-feedback-panel" data-set-feedback-panel {% if review_state|default('') != 'strength-feedback' %}hidden{% endif %}>
           <div class="set-feedback-panel__check" aria-hidden="true">✓</div>
           <p class="eyebrow">Set complete</p>
-          <h3>Nice work. How did that set feel?</h3>
-          <p class="set-feedback-help">Quick choices record the effort estimate shown below. Open “How it felt” before completing the set if you want to enter exact RPE/RIR yourself.</p>
+          <h3>How did that set feel?</h3>
+          <p class="set-feedback-help">Choose the closest effort. Exact RPE/RIR entered before completion always takes priority.</p>
           <div class="set-feedback-options">
             <button type="button" data-set-feedback="too-easy" aria-pressed="false">
               <span aria-hidden="true">↓</span><strong>Too easy</strong><small>RPE 6 · about 4 reps left</small>
