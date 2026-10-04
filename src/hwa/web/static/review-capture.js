@@ -977,6 +977,8 @@
       client_width: root.clientWidth,
       client_height: root.clientHeight,
       touch_targets_checked: touchAudit.checked,
+      ha_shell_ready: documentRef.documentElement.dataset.haShellReady === 'true',
+      ha_panel_host: documentRef.documentElement.dataset.haPanelHost || null,
       bottom_nav: bottomNavRect
         ? {
           left: Math.round(bottomNavRect.left),
