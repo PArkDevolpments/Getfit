@@ -72,10 +72,12 @@ def test_all_product_surfaces_are_person_scoped(tmp_path) -> None:
     client, engine = _client(tmp_path, subject="ha-kris")
     surfaces = (
         ("/", "today"),
+        ("/plan", "plan"),
         ("/workout", "workout"),
         ("/progress", "progress"),
-        ("/library", "library"),
-        ("/settings", "settings"),
+        ("/more", "more"),
+        ("/library", "workout"),
+        ("/settings", "more"),
     )
     try:
         for path, active in surfaces:
@@ -84,7 +86,7 @@ def test_all_product_surfaces_are_person_scoped(tmp_path) -> None:
             assert "Kris" in response.text
             assert "Kirsty" not in response.text
             assert f'data-active-nav="{active}"' in response.text
-            for href in ("/", "/workout", "/progress", "/library", "/settings"):
+            for href in ("/", "/plan", "/workout", "/progress", "/more"):
                 assert f'href="{href}"' in response.text
             assert "person_a" not in response.text
             assert "person_b" not in response.text
@@ -96,7 +98,7 @@ def test_all_product_surfaces_are_person_scoped(tmp_path) -> None:
 def test_kirsty_navigation_never_falls_back_to_kris(tmp_path) -> None:
     client, engine = _client(tmp_path, subject="ha-kirsty")
     try:
-        for path in ("/", "/workout", "/progress", "/library", "/settings"):
+        for path in ("/", "/plan", "/workout", "/progress", "/more", "/library", "/settings"):
             response = client.get(path)
             assert response.status_code == 200
             assert "Kirsty" in response.text
