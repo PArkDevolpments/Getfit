@@ -9,7 +9,8 @@ def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> Non
     template = (TEMPLATES / "review_capture.html").read_text(encoding="utf-8")
     script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
 
-    assert "Run automated specification audit" in template
+    assert "Run full responsive audit" in template
+    assert "Auto-review this device" in template
     assert "Visual pack only" in template
     assert "getDisplayMedia" not in script
     assert "preferCurrentTab" not in script
@@ -41,7 +42,8 @@ def test_review_pack_runs_automated_spec_checks_before_building_zip() -> None:
     script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
     template = (TEMPLATES / "review_capture.html").read_text(encoding="utf-8")
 
-    assert "Run automated specification audit" in template
+    assert "Run full responsive audit" in template
+    assert "Auto-review this device" in template
     assert "runAutomatedAudit" in script
     assert "evaluateCriterion" in script
     assert "automated-acceptance-results.json" in script
@@ -113,3 +115,23 @@ def test_review_pack_captures_approved_video_states() -> None:
     assert "Local exercise video" in script
     assert "youtube-nocookie.com" not in script
     assert "Approved YouTube embed" not in script
+
+
+def test_device_review_uses_actual_home_assistant_viewport_and_can_autorun() -> None:
+    template = (TEMPLATES / "review_capture.html").read_text(encoding="utf-8")
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert 'id="run-device-audit"' in template
+    assert "window.visualViewport?.width" in script
+    assert "window.visualViewport?.height" in script
+    assert "same-origin-home-assistant-device-dom-vector" in script
+    assert "getfit-device-review" in script
+    assert "params.get('device') === '1'" in script
+    assert "params.get('autorun') === '1'" in script
+    assert "runCapture([profile], {automated: true, deviceMode: true})" in script
+    assert "device-layout-diagnostics.json" in script
+    assert "capture_kind: 'viewport'" in script
+    assert "capture_kind: 'full-page'" in script
+    assert "{viewportOnly: true}" in script
+    assert "prepareZipDownload" in script
+    assert "autoDownload: !deviceMode" in script

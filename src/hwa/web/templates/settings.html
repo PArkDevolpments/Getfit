@@ -68,6 +68,17 @@
     </div>
   </article>
 
+  <article class="card settings-device-review" id="device-review">
+    <p class="eyebrow">Diagnostics</p>
+    <h2>Review this phone automatically</h2>
+    <p class="muted">Getfit can walk every key screen and workout state using the exact viewport reported by this Home Assistant app, capture the rendered UI, run layout checks and package everything into one ZIP.</p>
+    <a
+      class="primary-action"
+      href="{{ ingress_url(request, '/review-capture') }}?device=1&autorun=1"
+    >Auto-review this device</a>
+    <p class="muted">Read-only review states are used, so the test does not create workout history or alter prescriptions.</p>
+  </article>
+
   <article class="card">
     <p class="eyebrow">How your equipment is coached</p>
     <h2>Right variables for the right machine.</h2>

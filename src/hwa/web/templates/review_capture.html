@@ -37,17 +37,23 @@
 
     <div class="review-instructions">
       <strong>No screen sharing required</strong>
-      <span>Getfit captures its own rendered pages directly in the browser and packages them locally into a ZIP.</span>
+      <span>Getfit captures its own rendered app surfaces directly inside Home Assistant and packages them locally into one ZIP.</span>
     </div>
 
     <div class="review-actions">
-      <button class="review-button review-button--primary" id="run-automated-audit" type="button">Run automated specification audit</button>
+      <button class="review-button review-button--device" id="run-device-audit" type="button">Auto-review this device</button>
+      <button class="review-button review-button--primary" id="run-automated-audit" type="button">Run full responsive audit</button>
       <button class="review-button review-button--secondary" id="capture-responsive" type="button">Visual pack only</button>
       <button class="review-button review-button--quiet" id="cancel-capture" type="button" hidden>Cancel</button>
+      <a class="review-button review-button--secondary" id="download-review" href="#" hidden>Download latest review ZIP</a>
     </div>
 
     <p class="review-mode-note">
-      <strong>Automated audit</strong> runs deterministic specification checks, captures Phone, Tablet and Desktop views, builds a results report and downloads one ZIP. No manual pass/fail entry is required before the ZIP is created.
+      <strong>Auto-review this device</strong> walks every important Getfit screen and workout state at the exact viewport reported by the Home Assistant app, runs the automated checks and creates one ZIP. No manual screenshots are needed.
+    </p>
+
+    <p class="review-mode-note">
+      <strong>Full responsive audit</strong> runs the automated specification audit and also captures the fixed iPhone 16 Pro Max, Tablet and Desktop review sizes for regression coverage. No manual pass/fail entry is required before the ZIP is created.
     </p>
 
     <div class="review-progress" aria-live="polite">
