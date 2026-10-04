@@ -927,6 +927,22 @@
       });
     }
 
+    const haShellReady = root.dataset.haShellReady === 'true';
+    const haPanelHost = root.dataset.haPanelHost || null;
+    if (
+      profile.width <= 820
+      && haShellReady
+      && haPanelHost !== 'getfit-full-canvas-panel'
+    ) {
+      issues.push({
+        code: 'HOME_ASSISTANT_FULL_CANVAS_HOST_REQUIRED',
+        detail: {
+          active_host: haPanelHost,
+          required_host: 'getfit-full-canvas-panel',
+        },
+      });
+    }
+
     const bottomNav = documentRef.querySelector('.primary-nav');
     const bottomNavRect = bottomNav?.getBoundingClientRect();
     if (profile.width <= 820 && bottomNavRect) {
@@ -977,8 +993,8 @@
       client_width: root.clientWidth,
       client_height: root.clientHeight,
       touch_targets_checked: touchAudit.checked,
-      ha_shell_ready: documentRef.documentElement.dataset.haShellReady === 'true',
-      ha_panel_host: documentRef.documentElement.dataset.haPanelHost || null,
+      ha_shell_ready: haShellReady,
+      ha_panel_host: haPanelHost,
       bottom_nav: bottomNavRect
         ? {
           left: Math.round(bottomNavRect.left),
