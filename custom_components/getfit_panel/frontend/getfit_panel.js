@@ -189,8 +189,13 @@ class GetfitFullCanvasPanel extends HTMLElement {
   }
 
   _safeAreaValue(name) {
-    const value = getComputedStyle(this).getPropertyValue(name).trim();
-    return value || '0px';
+    return getComputedStyle(this).getPropertyValue(name).trim();
+  }
+
+  _safeArea(primary, fallback = null) {
+    return this._safeAreaValue(primary)
+      || (fallback ? this._safeAreaValue(fallback) : '')
+      || '0px';
   }
 
   _sendProperties() {
@@ -201,10 +206,10 @@ class GetfitFullCanvasPanel extends HTMLElement {
       narrow: this._narrow,
       route: this._route?.path || '',
       safeAreaInsets: {
-        top: this._safeAreaValue('--safe-area-inset-top'),
-        right: this._safeAreaValue('--safe-area-content-inset-right') || this._safeAreaValue('--safe-area-inset-right'),
-        bottom: this._safeAreaValue('--safe-area-inset-bottom'),
-        left: this._safeAreaValue('--safe-area-content-inset-left') || this._safeAreaValue('--safe-area-inset-left'),
+        top: this._safeArea('--safe-area-inset-top'),
+        right: this._safeArea('--safe-area-content-inset-right', '--safe-area-inset-right'),
+        bottom: this._safeArea('--safe-area-inset-bottom'),
+        left: this._safeArea('--safe-area-content-inset-left', '--safe-area-inset-left'),
       },
     }, '*');
   }
