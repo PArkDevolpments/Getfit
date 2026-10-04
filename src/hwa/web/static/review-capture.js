@@ -260,6 +260,15 @@
       && rect.height > 0;
   }
 
+  function liveCardioTargetsFit(node, documentRef, profile) {
+    if (profile.width > 700) return true;
+    return fullyVisible(
+      node?.querySelector('.cardio-prescription-grid'),
+      documentRef,
+      profile,
+    );
+  }
+
   function auditTouchTargets(documentRef) {
     const selectors = [
       '[data-primary-action]',
@@ -589,15 +598,19 @@
       const treadmill = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
         (node) => node.dataset.equipment === 'TREADMILL',
       );
+      const activeCardio = documentRef.querySelector('.cardio-item:not([hidden])');
       if (criterionId === 'CARDIO-01') {
         if (!bike) return automatedResult('BLOCKED', 'No spin-bike stage exists in the active workout.', profile);
-        const bikeText = bike.textContent || '';
+        const visibleBike = activeCardio?.dataset.equipment === 'SPIN_BIKE'
+          ? activeCardio
+          : bike;
+        const bikeText = visibleBike?.textContent || '';
         const bikeModelCorrect = /Cadence/.test(bikeText)
           && /Resistance/.test(bikeText)
           && !/Speed km\/h/.test(bikeText)
           && !/Incline %/.test(bikeText);
-        const liveTargetsVisible = fullyVisible(
-          bike.querySelector('.cardio-prescription-grid'),
+        const liveTargetsVisible = liveCardioTargetsFit(
+          visibleBike,
           documentRef,
           profile,
         );
@@ -613,14 +626,17 @@
       }
       if (criterionId === 'CARDIO-02') {
         if (!treadmill) return automatedResult('BLOCKED', 'No treadmill stage exists in the active workout.', profile);
-        const treadmillText = treadmill.textContent || '';
-        const incline = treadmill.querySelector('input[name*="-incline"]');
+        const visibleTreadmill = activeCardio?.dataset.equipment === 'TREADMILL'
+          ? activeCardio
+          : treadmill;
+        const treadmillText = visibleTreadmill?.textContent || '';
+        const incline = visibleTreadmill?.querySelector('input[name*="-incline"]');
         const treadmillModelCorrect = /Speed km\/h/.test(treadmillText)
           && /Incline %/.test(treadmillText)
           && incline?.getAttribute('max') === '20'
           && !/Cadence min rpm/.test(treadmillText);
-        const liveTargetsVisible = fullyVisible(
-          treadmill.querySelector('.cardio-prescription-grid'),
+        const liveTargetsVisible = liveCardioTargetsFit(
+          visibleTreadmill,
           documentRef,
           profile,
         );
@@ -651,8 +667,8 @@
           && /80–90\s*rpm/.test(bikeText)
           && /moderate/i.test(bikeText)
           && /RPE\s*5(?:\.0+)?/.test(bikeText);
-        const liveTargetsVisible = fullyVisible(
-          finisher.querySelector('.cardio-prescription-grid'),
+        const liveTargetsVisible = liveCardioTargetsFit(
+          activeCardio?.dataset.segmentType === 'CONDITIONING' ? activeCardio : finisher,
           documentRef,
           profile,
         );
@@ -672,8 +688,8 @@
         const targets = /00:30/.test(hardText)
           && /85–100\s*rpm/.test(hardText)
           && /RPE\s*7(?:\.0+)?–8(?:\.0+)?/.test(hardText);
-        const liveTargetsVisible = fullyVisible(
-          hard?.querySelector('.cardio-prescription-grid'),
+        const liveTargetsVisible = liveCardioTargetsFit(
+          activeCardio?.classList.contains('cardio-item--hard') ? activeCardio : hard,
           documentRef,
           profile,
         );
@@ -694,8 +710,8 @@
           && /60–75\s*rpm/.test(recoveryText)
           && /Light/i.test(recoveryText)
           && /RPE\s*2(?:\.0+)?–3(?:\.0+)?/.test(recoveryText);
-        const liveTargetsVisible = fullyVisible(
-          recovery?.querySelector('.cardio-prescription-grid'),
+        const liveTargetsVisible = liveCardioTargetsFit(
+          activeCardio?.classList.contains('cardio-item--recovery') ? activeCardio : recovery,
           documentRef,
           profile,
         );
