@@ -5,9 +5,9 @@
 {% block content %}
 <section class="library-hero">
   <div>
-    <p class="eyebrow">Exercise library</p>
-    <h2>Learn the movement. Then train it.</h2>
-    <p class="muted">Every movement in the approved Week 1 programme has a local visual guide and coaching cues. Your workout targets remain authoritative.</p>
+    <p class="eyebrow">Technique</p>
+    <h2>Exercise Library</h2>
+    <p class="muted">Local movement demos and coaching cues for approved programme exercises.</p>
   </div>
   <div class="library-hero__badge">
     <strong>{{ exercises|length }}</strong>
@@ -15,9 +15,26 @@
   </div>
 </section>
 
+<section class="library-tools" aria-label="Exercise library filters">
+  <label class="library-search">
+    <span class="sr-only">Search exercises</span>
+    <input id="exercise-search" type="search" placeholder="Search exercises…" autocomplete="off">
+  </label>
+  <div class="library-filter-pills" role="group" aria-label="Exercise categories">
+    <button type="button" class="is-active" data-library-filter="all" aria-pressed="true">All</button>
+    <button type="button" data-library-filter="upper" aria-pressed="false">Upper</button>
+    <button type="button" data-library-filter="lower" aria-pressed="false">Lower</button>
+    <button type="button" data-library-filter="core" aria-pressed="false">Core</button>
+  </div>
+</section>
+
 <section class="exercise-grid exercise-grid--visual" aria-label="Programme exercises">
   {% for exercise in exercises %}
-  <article class="exercise-card exercise-card--visual" data-exercise-id="{{ exercise.exercise_id }}">
+  <article
+    class="exercise-card exercise-card--visual"
+    data-exercise-id="{{ exercise.exercise_id }}"
+    data-library-text="{{ (exercise.display_name ~ ' ' ~ exercise.body_area ~ ' ' ~ exercise.movement_family)|lower }}"
+  >
     <a class="exercise-card__media" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}" aria-label="Open {{ exercise.display_name }}">
       {% if exercise.media.local_demo_path %}
       <img src="{{ ingress_url(request, exercise.media.local_demo_path) }}" alt="" loading="lazy">
@@ -49,4 +66,44 @@
   <div class="empty-state">No approved programme exercises are available yet.</div>
   {% endfor %}
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  const search = document.getElementById('exercise-search');
+  const cards = [...document.querySelectorAll('.exercise-card--visual')];
+  const filters = [...document.querySelectorAll('[data-library-filter]')];
+  let active = 'all';
+
+  const category = (text) => {
+    if (/core|trunk/.test(text)) return 'core';
+    if (/quad|glute|calf|leg|posterior|squat|hinge/.test(text)) return 'lower';
+    return 'upper';
+  };
+
+  const apply = () => {
+    const query = (search?.value || '').trim().toLowerCase();
+    for (const card of cards) {
+      const text = card.dataset.libraryText || '';
+      const matchesQuery = !query || text.includes(query);
+      const matchesFilter = active === 'all' || category(text) === active;
+      card.hidden = !(matchesQuery && matchesFilter);
+    }
+  };
+
+  search?.addEventListener('input', apply);
+  for (const button of filters) {
+    button.addEventListener('click', () => {
+      active = button.dataset.libraryFilter || 'all';
+      for (const item of filters) {
+        const selected = item === button;
+        item.classList.toggle('is-active', selected);
+        item.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      }
+      apply();
+    });
+  }
+})();
+</script>
 {% endblock %}
