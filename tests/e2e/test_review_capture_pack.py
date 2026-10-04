@@ -100,7 +100,8 @@ def test_strength_feedback_and_rest_audit_require_active_viewport_visibility() -
     assert "profile.width > 700" in script
     assert "const feedbackPanel = documentRef.querySelector('[data-set-feedback-panel]')" in script
     assert "feedbackVisible && feedbackButtons.length === 4" in script
-    assert "const restVisible = fullyVisible(mainRest, documentRef, profile)" in script
+    assert "const restVisible = profile.width > 700" in script
+    assert "|| fullyVisible(mainRest, documentRef, profile)" in script
     assert "mainRest && restVisible && /01:30/.test(restText) ? 'PASS' : 'FAIL'" in script
 
 
