@@ -1641,24 +1641,24 @@
    On taller phones, use the extra space deliberately instead of leaving a large
    empty cream field between the active workout and navigation. */
 @media (max-width: 700px) and (min-height: 900px) {
-  .workout-player.is-strength-stage .strength-item {
+  .workout-player.is-strength-stage:not(.is-set-feedback):not(.is-resting):not(.is-pain-stop) .strength-item {
     min-height: calc(100dvh - var(--mobile-nav-total-height) - 118px) !important;
   }
 
-  .workout-player.is-strength-stage .strength-coach-grid {
+  .workout-player.is-strength-stage:not(.is-set-feedback):not(.is-resting):not(.is-pain-stop) .strength-coach-grid {
     min-height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
   }
 
-  .workout-player.is-strength-stage .set-stack,
-  .workout-player.is-strength-stage .set-entry.is-current-set {
+  .workout-player.is-strength-stage:not(.is-set-feedback):not(.is-resting):not(.is-pain-stop) .set-stack,
+  .workout-player.is-strength-stage:not(.is-set-feedback):not(.is-resting):not(.is-pain-stop) .set-entry.is-current-set {
     flex: 1 1 auto !important;
     display: flex !important;
     flex-direction: column !important;
   }
 
-  .workout-player.is-strength-stage .complete-set-button {
+  .workout-player.is-strength-stage:not(.is-set-feedback):not(.is-resting):not(.is-pain-stop) .complete-set-button {
     margin-top: auto !important;
   }
 
