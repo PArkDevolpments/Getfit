@@ -997,3 +997,28 @@ body:not([data-active-nav="workout"]) .settings-grid .muted {
     margin-top: 3px !important;
   }
 }
+
+
+/* 0.1.30 capture/device-safe ink selectors.
+   These intentionally do not depend on a body ancestor so the same contrast
+   contract holds in the review-pack foreignObject and the real HA WebView. */
+.library-hero h2,
+.exercise-detail-heading h2,
+.progress-hero h2,
+.progress-chart-card h2,
+.recent-progression-card h2,
+.settings-profile-card h2,
+.settings-grid h2,
+.section-heading h2,
+.native-page-heading h1 {
+  color: var(--pro-ink) !important;
+  text-shadow: none !important;
+}
+
+.library-hero .muted,
+.progress-authority-copy,
+.progress-kpi__label,
+.exercise-card__meta,
+.settings-grid .muted {
+  color: var(--pro-muted) !important;
+}
