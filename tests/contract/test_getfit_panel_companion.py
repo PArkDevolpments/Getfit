@@ -7,7 +7,6 @@ COMPONENT = ROOT / "custom_components" / "getfit_panel"
 def test_full_canvas_panel_companion_is_packaged_without_broad_app_permissions() -> None:
     manifest = (COMPONENT / "manifest.json").read_text(encoding="utf-8")
     init = (COMPONENT / "__init__.py").read_text(encoding="utf-8")
-    panel = (COMPONENT / "frontend" / "getfit_panel.js").read_text(encoding="utf-8")
     app_config = (ROOT / "getfit" / "config.yaml").read_text(encoding="utf-8")
 
     assert '"domain": "getfit_panel"' in manifest
