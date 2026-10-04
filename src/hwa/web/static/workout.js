@@ -519,8 +519,10 @@
     for (const host of document.querySelectorAll('[data-cardio-timer]')) {
       const stage = host.closest('.cardio-item');
       const display = host.querySelector('[data-cardio-display]');
-      const start = host.querySelector('.cardio-timer-start');
-      const reset = host.querySelector('.cardio-timer-reset');
+      const start = stage?.querySelector('.cardio-timer-start')
+        || host.querySelector('.cardio-timer-start');
+      const reset = stage?.querySelector('.cardio-timer-reset')
+        || host.querySelector('.cardio-timer-reset');
       const durationInput = stage?.querySelector('input[name$="-duration"]');
       let remaining = Number(durationInput?.value || stage?.dataset.durationTarget || 0);
       let interval = null;
@@ -569,6 +571,33 @@
     }
   }
 
+  function syncEffortPreset(set) {
+    if (!set) return;
+    const rpe = set.querySelector('input[name$="-rpe"]')?.value || '';
+    for (const button of set.querySelectorAll('[data-effort-preset]')) {
+      const selected = rpe !== '' && Number(button.dataset.rpe) === Number(rpe);
+      button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      button.classList.toggle('is-selected', selected);
+    }
+  }
+
+  function applyEffortPreset(button) {
+    const set = button.closest('.set-entry');
+    if (!set) return;
+    const rpe = set.querySelector('input[name$="-rpe"]');
+    const rir = set.querySelector('input[name$="-rir"]');
+    const manual = set.querySelector('input[name$="-effort-manual"]');
+    if (rpe) rpe.value = button.dataset.rpe || '';
+    if (rir) rir.value = button.dataset.rir || '';
+    if (manual) manual.checked = true;
+    for (const option of set.querySelectorAll('[data-effort-preset]')) {
+      const selected = option === button;
+      option.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      option.classList.toggle('is-selected', selected);
+    }
+    queueAutosave();
+  }
+
   function initialStageIndex() {
     const requestedKind = player.dataset.currentItemKind;
     const requestedSequence = Number(player.dataset.currentSequence || 0);
@@ -613,6 +642,7 @@
   }
 
   restoreStateData();
+  for (const set of document.querySelectorAll('.set-entry')) syncEffortPreset(set);
   initCardioTimers();
   setActiveStage(initialStageIndex());
 
@@ -666,6 +696,10 @@
     button.addEventListener('click', () => stepNumericInput(button));
   }
 
+  for (const button of document.querySelectorAll('[data-effort-preset]')) {
+    button.addEventListener('click', () => applyEffortPreset(button));
+  }
+
   for (const input of document.querySelectorAll('[data-effort-value]')) {
     const markManual = () => {
       const marker = valueOf(input.dataset.effortManualName || '');
@@ -683,7 +717,22 @@
       if (!set || !stage || !completed) return;
       completed.checked = true;
       queueAutosave();
-      showFeedback(stage, set);
+      const preset = set.querySelector('[data-effort-preset][aria-pressed="true"]');
+      if (preset) showRest(stage);
+      else showFeedback(stage, set);
+    });
+  }
+
+  for (const button of document.querySelectorAll('[data-set-pain]')) {
+    button.addEventListener('click', () => {
+      const set = button.closest('.set-entry');
+      const stage = button.closest('.strength-item');
+      const pain = set?.querySelector('input[name$="-pain"]');
+      if (!set || !stage || !pain) return;
+      pain.checked = true;
+      feedbackSet = set;
+      queueAutosave();
+      showPainStop(stage);
     });
   }
 
@@ -693,6 +742,23 @@
   for (const button of document.querySelectorAll('[data-feedback-continue]')) {
     button.addEventListener('click', () => showRest(stages[stageIndex]));
   }
+  for (const input of document.querySelectorAll('.cardio-completion-toggle input[name$="-completed"]')) {
+    input.addEventListener('change', () => {
+      queueAutosave();
+      if (!input.checked || reviewMode) return;
+      const stage = input.closest('.cardio-item');
+      const completedIndex = stages.indexOf(stage);
+      if (completedIndex !== stageIndex) return;
+      window.setTimeout(() => {
+        if (stageIndex < stages.length - 1) setActiveStage(stageIndex + 1);
+        else document.querySelector('.workout-summary-controls')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 120);
+    });
+  }
+
   for (const button of document.querySelectorAll('[data-pain-skip]')) {
     button.addEventListener('click', () => {
       const stage = stages[stageIndex];
