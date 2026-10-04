@@ -1022,3 +1022,18 @@ body:not([data-active-nav="workout"]) .settings-grid .muted {
 .settings-grid .muted {
   color: var(--pro-muted) !important;
 }
+
+
+/* 0.1.31 real-device contrast correction. */
+@media (prefers-color-scheme: light) {
+  .progress-ring {
+    color: #172019 !important;
+    background:
+      radial-gradient(circle, #fffdf8 58%, transparent 59%),
+      conic-gradient(#2fbf71 var(--ring-progress, 0%), rgba(66,82,69,.12) 0) !important;
+  }
+
+  .progress-ring strong {
+    color: #172019 !important;
+  }
+}
