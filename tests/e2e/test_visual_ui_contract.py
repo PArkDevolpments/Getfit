@@ -280,3 +280,19 @@ def test_0127_plan_and_more_surfaces_exist_without_inventing_rest_days() -> None
     assert "Recovery / rest day" not in plan
     assert "Exercise Library" in more
     assert "Auto-review this device" in more
+
+
+def test_0128_phone_cardio_and_plan_close_the_measured_viewport_blockers() -> None:
+    pro = _text(STATIC / "pro-ui.css")
+    workout_pro = _text(STATIC / "workout-pro.css")
+    workout_js = _text(STATIC / "workout.js")
+
+    assert "0.1.28 phone cardio blocker closure" in workout_pro
+    assert "min-height: 104px" in workout_pro
+    assert "grid-template-columns: minmax(0, 1fr) 142px" in workout_pro
+    assert ".workout-player.is-last-stage .workout-summary-controls" in workout_pro
+    assert "player.classList.toggle('is-last-stage'" in workout_js
+
+    assert "the phone Plan is a weekly overview" in pro
+    assert 'body[data-active-nav="plan"] .plan-note' in pro
+    assert "display: none !important;" in pro
