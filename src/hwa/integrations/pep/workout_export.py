@@ -1,6 +1,6 @@
 """Deterministic read-only export for Pep WORKOUT_EVENT_SOURCE."""
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from hwa.db.models.workout import WorkoutEvent, WorkoutRevision
@@ -112,3 +112,25 @@ def export_workouts_for_pep(
 
     rows.sort(key=lambda item: (item.start_at, item.event_id))
     return tuple(rows)
+
+
+def workout_snapshot_generation_for_pep(
+    session: Session,
+    pep_person_id: str,
+) -> int | None:
+    """Return the monotonic append-only revision generation for one mapped Pep person."""
+
+    pep_person_id = pep_person_id.strip()
+    if not pep_person_id:
+        return None
+    person = IdentityRepository(session).person_for_external_subject(
+        "PEP_SITE", pep_person_id
+    )
+    if person is None or not person.active:
+        return None
+    count = session.scalar(
+        select(func.count(WorkoutRevision.id))
+        .join(WorkoutEvent, WorkoutRevision.event_id == WorkoutEvent.event_id)
+        .where(WorkoutEvent.person_id == person.id)
+    )
+    return int(count or 0)
