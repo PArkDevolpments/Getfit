@@ -3,6 +3,7 @@
   const frame = document.getElementById('review-frame');
   const frameShell = document.getElementById('frame-shell');
   const stageLabel = document.getElementById('stage-label');
+  const deviceAuditButton = document.getElementById('run-device-audit');
   const automatedAuditButton = document.getElementById('run-automated-audit');
   const responsiveButton = document.getElementById('capture-responsive');
   const cancelButton = document.getElementById('cancel-capture');
@@ -72,11 +73,15 @@
   }
 
   function currentViewportProfile() {
+    const visualWidth = Math.round(window.visualViewport?.width || window.innerWidth);
+    const visualHeight = Math.round(window.visualViewport?.height || window.innerHeight);
+    const width = Math.max(320, visualWidth);
+    const height = Math.max(568, visualHeight);
     return {
-      key: `current-${window.innerWidth}x${window.innerHeight}`,
-      label: `Current ${window.innerWidth}×${window.innerHeight}`,
-      width: Math.max(320, window.innerWidth),
-      height: Math.max(568, window.innerHeight),
+      key: `device-${width}x${height}`,
+      label: `This device · ${width}×${height}`,
+      width,
+      height,
     };
   }
 
@@ -1220,7 +1225,7 @@
       .replace(/^-+|-+$/g, '');
   }
 
-  function downloadZip(blob) {
+  function downloadZip(blob, prefix = 'getfit-ui-review') {
     const now = new Date();
     const stamp = [
       now.getFullYear(),
@@ -1233,7 +1238,7 @@
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `getfit-ui-review-${stamp}.zip`;
+    link.download = `${prefix}-${stamp}.zip`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -1267,9 +1272,10 @@
     ].join('');
   }
 
-  async function runCapture(profiles, {automated = false} = {}) {
+  async function runCapture(profiles, {automated = false, deviceMode = false} = {}) {
     cancelled = false;
     resetTargetStates();
+    if (deviceAuditButton) deviceAuditButton.disabled = true;
     if (automatedAuditButton) automatedAuditButton.disabled = true;
     responsiveButton.disabled = true;
     cancelButton.hidden = false;
@@ -1339,8 +1345,10 @@
       }
 
       const manifest = {
-        format: 'getfit-ui-review-pack-v3',
-        capture_method: 'same-origin-dom-vector',
+        format: deviceMode ? 'getfit-device-review-pack-v1' : 'getfit-ui-review-pack-v3',
+        capture_method: deviceMode
+          ? 'same-origin-home-assistant-device-dom-vector'
+          : 'same-origin-dom-vector',
         app_version: document.body.dataset.appVersion,
         display_name: document.body.dataset.displayName,
         presentation_profile: document.body.dataset.presentationProfile,
@@ -1349,8 +1357,14 @@
         host_viewport: {
           width: window.innerWidth,
           height: window.innerHeight,
+          visual_width: Math.round(window.visualViewport?.width || window.innerWidth),
+          visual_height: Math.round(window.visualViewport?.height || window.innerHeight),
+          screen_width: window.screen?.width || null,
+          screen_height: window.screen?.height || null,
           device_pixel_ratio: window.devicePixelRatio,
+          max_touch_points: navigator.maxTouchPoints || 0,
         },
+        device_mode: deviceMode,
         captures,
         review_warnings: captures.some(
           (capture) => capture.page === 'workout' && capture.page_state === 'empty',
@@ -1408,14 +1422,16 @@
 
       setMessage('Building ZIP…');
       const zip = await createZip(files);
-      downloadZip(zip);
+      downloadZip(zip, deviceMode ? 'getfit-device-review' : 'getfit-ui-review');
       setProgress(1, 1);
       const emptyWorkout = captures.some(
         (capture) => capture.page === 'workout' && capture.page_state === 'empty',
       );
       setMessage(
         automated
-          ? `Done — automated specification audit complete with ${completed} visual snapshots. Upload the ZIP to ChatGPT.`
+          ? deviceMode
+            ? `Done — this device was auto-reviewed across ${completed} Getfit states. Upload the ZIP to ChatGPT.`
+            : `Done — automated specification audit complete with ${completed} visual snapshots. Upload the ZIP to ChatGPT.`
           : emptyWorkout
             ? `Done — ${completed} snapshots downloaded. No active workout was captured; start or resume one before the Gate 2 pack.`
             : `Done — ${completed} visual snapshots downloaded in one ZIP. Upload that ZIP to ChatGPT.`,
@@ -1428,16 +1444,28 @@
         if (row?.classList.contains('is-active')) setTargetState(target.key, 'error', 'Failed');
       }
     } finally {
+      if (deviceAuditButton) deviceAuditButton.disabled = false;
       if (automatedAuditButton) automatedAuditButton.disabled = false;
       responsiveButton.disabled = false;
       cancelButton.hidden = true;
     }
   }
 
+  async function runDeviceAudit() {
+    const profile = currentViewportProfile();
+    document.body.classList.add('is-device-review');
+    setMessage(`Auto-reviewing this Home Assistant viewport at ${profile.width}×${profile.height}…`);
+    await runCapture([profile], {automated: true, deviceMode: true});
+  }
+
   async function runAutomatedAudit() {
-    setMessage('Starting automated specification audit…');
+    setMessage('Starting full responsive specification audit…');
     await runCapture(fullProfiles, {automated: true});
   }
+
+  deviceAuditButton?.addEventListener('click', () => {
+    void runDeviceAudit();
+  });
 
   automatedAuditButton?.addEventListener('click', () => {
     void runAutomatedAudit();
@@ -1452,5 +1480,14 @@
     setMessage('Capture will stop after the current page.');
   });
 
-  applyProfile(currentViewportProfile());
+  const initialProfile = currentViewportProfile();
+  applyProfile(initialProfile);
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('device') === '1') {
+    document.body.classList.add('is-device-review');
+  }
+  if (params.get('device') === '1' && params.get('autorun') === '1') {
+    window.setTimeout(() => void runDeviceAudit(), 350);
+  }
 })();
