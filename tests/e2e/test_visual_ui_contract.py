@@ -296,3 +296,23 @@ def test_0128_phone_cardio_and_plan_close_the_measured_viewport_blockers() -> No
     assert "the phone Plan is a weekly overview" in pro
     assert 'body[data-active-nav="plan"] .plan-note' in pro
     assert "display: none !important;" in pro
+
+
+def test_0129_mockup_polish_restores_light_contrast_and_active_workout_hierarchy() -> None:
+    pro = _text(STATIC / "pro-ui.css")
+    workout_pro = _text(STATIC / "workout-pro.css")
+    workout = _text(TEMPLATES / "workout.html")
+
+    assert "0.1.29 mockup-alignment polish" in pro
+    assert ".progress-hero h2" in pro
+    assert ".library-hero h2" in pro
+    assert ".exercise-detail-heading h2" in pro
+    assert ".settings-grid h2" in pro
+    assert "color: #182019 !important;" in pro
+
+    assert "0.1.29 active-workout finish pass" in workout_pro
+    assert "min-height: clamp(" in workout_pro
+    assert "grid-template-columns: repeat(3,minmax(0,1fr))" in workout_pro
+    assert ".cardio-rpe-control" in workout_pro
+    assert "background: #fbfaf6 !important;" in workout_pro
+    assert "> Technique" in workout
