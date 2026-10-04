@@ -936,3 +936,604 @@
     box-shadow: 0 14px 34px rgba(36,34,27,.12) !important;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* 0.1.30 locked Getfit v2 mobile authority                                  */
+/* Authority: 2026-10-04 440x820 light/dark board, not the historical v1 UI. */
+/* Active training is compact, image-led, serif-headed and emerald-accented.   */
+/* -------------------------------------------------------------------------- */
+
+.strength-prescription-line {
+  margin: 2px 0 7px;
+  color: var(--pro-muted);
+  font-size: .72rem;
+  line-height: 1.35;
+}
+
+.set-effort-presets {
+  margin-top: 7px;
+}
+
+.set-effort-presets__label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--pro-ink);
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+.set-effort-presets__choices {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.set-effort-presets__choices button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 5px 4px;
+  border: 1px solid var(--pro-line);
+  border-radius: 10px;
+  color: var(--pro-ink);
+  background: var(--pro-card-soft);
+  font-size: .66rem;
+  font-weight: 820;
+}
+
+.set-effort-presets__choices button[aria-pressed="true"],
+.set-effort-presets__choices button.is-selected {
+  color: #fff;
+  border-color: var(--pro-green-strong);
+  background: var(--pro-green-strong);
+  box-shadow: 0 5px 14px rgba(31, 143, 79, .16);
+}
+
+.set-pain-action {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 5px;
+  border: 1px solid rgba(190, 65, 80, .22);
+  border-radius: 10px;
+  color: #9b3442;
+  background: rgba(190, 65, 80, .055);
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+.cardio-live-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.cardio-live-actions button {
+  min-height: 48px;
+  border-radius: 11px;
+  font-weight: 850;
+}
+
+.cardio-live-actions .cardio-timer-reset {
+  padding: 0;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 700px) {
+  /* Session chrome follows the v2 board: compact context, then the live task. */
+  body[data-active-nav="workout"] .content {
+    padding: 7px 9px 10px !important;
+  }
+
+  .workout-player {
+    gap: 6px !important;
+  }
+
+  .workout-session-header {
+    min-height: 43px !important;
+    padding: 0 1px !important;
+  }
+
+  .workout-session-header .eyebrow {
+    color: var(--pro-muted) !important;
+    font-size: .52rem !important;
+    letter-spacing: .08em !important;
+  }
+
+  .workout-session-header h2 {
+    max-width: 240px !important;
+    margin-top: 2px !important;
+    color: var(--pro-ink) !important;
+    font-size: 1.08rem !important;
+    line-height: 1 !important;
+  }
+
+  .workout-session-actions .status-pill {
+    min-height: 30px !important;
+    padding: 4px 9px !important;
+    border-radius: 999px !important;
+  }
+
+  .workout-end-action {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 999px !important;
+  }
+
+  .workout-progress {
+    padding: 6px 8px !important;
+    border-radius: 11px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .workout-progress__meta {
+    color: var(--pro-muted) !important;
+    font-size: .61rem !important;
+  }
+
+  .workout-stage {
+    padding: 8px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 9px 24px rgba(36, 34, 27, .065) !important;
+  }
+
+  /* Strength ---------------------------------------------------------------- */
+  .workout-player.is-strength-stage .strength-item {
+    min-height: 0 !important;
+    padding: 8px !important;
+  }
+
+  .strength-coach-grid {
+    gap: 5px !important;
+  }
+
+  .workout-stage__visual--strength {
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  .workout-stage__visual--strength,
+  .workout-stage__visual--strength img {
+    min-height: 158px !important;
+    max-height: 174px !important;
+    border-radius: 13px !important;
+  }
+
+  .workout-stage__visual--strength .technique-action {
+    position: absolute !important;
+    z-index: 3 !important;
+    right: 8px !important;
+    bottom: 8px !important;
+    min-width: 96px !important;
+    min-height: 38px !important;
+    padding: 6px 9px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    border: 1px solid rgba(26, 134, 75, .22) !important;
+    border-radius: 999px !important;
+    color: #12683a !important;
+    background: rgba(255, 253, 248, .95) !important;
+    box-shadow: 0 5px 14px rgba(0,0,0,.10) !important;
+    font-size: .62rem !important;
+    font-weight: 850 !important;
+    text-decoration: none !important;
+  }
+
+  .strength-heading-row {
+    display: block !important;
+    margin-top: 5px !important;
+  }
+
+  .strength-heading-row .eyebrow {
+    display: none !important;
+  }
+
+  .strength-heading-row h2 {
+    margin: 0 !important;
+    color: var(--pro-ink) !important;
+    font-size: 1.34rem !important;
+    line-height: 1.02 !important;
+    letter-spacing: -.035em !important;
+  }
+
+  .strength-prescription-line {
+    margin: 3px 0 7px !important;
+    color: var(--pro-muted) !important;
+    font-size: .64rem !important;
+    line-height: 1.25 !important;
+  }
+
+  /* The v2 phone surface uses one compact prescription line, not metric cards. */
+  .strength-primary-metrics {
+    display: none !important;
+  }
+
+  .strength-secondary-prescription {
+    min-height: 22px !important;
+    margin: 0 0 4px !important;
+    display: block !important;
+    color: var(--pro-ink) !important;
+    font-size: .69rem !important;
+  }
+
+  .strength-secondary-prescription > span:last-child {
+    display: none !important;
+  }
+
+  .set-entry.is-current-set {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .set-entry.is-current-set legend {
+    display: none !important;
+  }
+
+  .set-entry__fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .set-stepper-label > span {
+    margin-bottom: 4px !important;
+    color: var(--pro-muted) !important;
+    font-size: .55rem !important;
+    letter-spacing: .055em !important;
+  }
+
+  .stepper-control {
+    grid-template-columns: 44px minmax(48px, 1fr) 44px !important;
+    gap: 5px !important;
+  }
+
+  .stepper-control button,
+  .stepper-control input {
+    min-height: 44px !important;
+    border-radius: 10px !important;
+  }
+
+  .set-effort-presets {
+    margin-top: 7px !important;
+  }
+
+  .set-effort-presets__label {
+    margin-bottom: 5px !important;
+    font-size: .64rem !important;
+  }
+
+  .set-effort-presets__choices {
+    gap: 5px !important;
+  }
+
+  .set-effort-presets__choices button {
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    font-size: .61rem !important;
+  }
+
+  .set-effort-panel {
+    margin-top: 6px !important;
+    border-radius: 10px !important;
+  }
+
+  .set-effort-panel summary {
+    min-height: 44px !important;
+    padding: 6px 8px !important;
+  }
+
+  .set-effort-panel summary strong {
+    font-size: .62rem !important;
+  }
+
+  .set-effort-panel summary small {
+    display: none !important;
+  }
+
+  .set-effort-scale {
+    margin-bottom: 0 !important;
+    font-size: .56rem !important;
+  }
+
+  .set-pain-action {
+    min-height: 44px !important;
+  }
+
+  /* Keep the primary action inside the exercise card. No detached dead space. */
+  .workout-player.is-strength-stage .complete-set-button {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    min-height: 52px !important;
+    margin: 7px 0 0 !important;
+    border-radius: 11px !important;
+    color: #fff !important;
+    background: linear-gradient(180deg, #31c876, #1fa95f) !important;
+    box-shadow: 0 8px 18px rgba(31, 143, 79, .18) !important;
+    font-size: .92rem !important;
+  }
+
+  /* Cardio ------------------------------------------------------------------ */
+  .cardio-item {
+    padding: 8px 10px 9px !important;
+  }
+
+  .cardio-coach-main > .eyebrow {
+    display: none !important;
+  }
+
+  .cardio-coach-main h2 {
+    margin: 0 0 3px !important;
+    color: var(--pro-ink) !important;
+    font-size: 1.27rem !important;
+    line-height: 1.03 !important;
+  }
+
+  /* Restore the circular live timer from the locked v2 board. */
+  .cardio-timer--hero {
+    position: relative !important;
+    width: 184px !important;
+    min-height: 184px !important;
+    height: 184px !important;
+    margin: 5px auto 7px !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto !important;
+    place-items: center !important;
+    align-content: center !important;
+    gap: 3px !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: conic-gradient(
+      from 8deg,
+      var(--pro-green) 0 62%,
+      rgba(59, 71, 60, .11) 62% 100%
+    ) !important;
+    box-shadow: none !important;
+  }
+
+  .cardio-timer--hero::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 11px !important;
+    width: auto !important;
+    border-radius: 50% !important;
+    background: var(--pro-card) !important;
+  }
+
+  .cardio-timer--hero .metric-caption,
+  .cardio-timer--hero .cardio-timer__display {
+    position: relative !important;
+    z-index: 1 !important;
+    grid-column: 1 !important;
+  }
+
+  .cardio-timer--hero .metric-caption {
+    grid-row: 1 !important;
+    align-self: end !important;
+    color: var(--pro-muted) !important;
+    font-size: .57rem !important;
+    letter-spacing: .07em !important;
+    text-transform: uppercase !important;
+  }
+
+  .cardio-timer--hero .cardio-timer__display {
+    grid-row: 2 !important;
+    align-self: start !important;
+    margin: 0 !important;
+    color: var(--pro-ink) !important;
+    font-size: 2.8rem !important;
+    line-height: .95 !important;
+    letter-spacing: -.055em !important;
+  }
+
+  .cardio-prescription-grid,
+  .workout-player--review .cardio-prescription-grid {
+    margin-top: 0 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .cardio-prescription-card--prescribed-effort,
+  .cardio-prescription-card--rounds {
+    display: none !important;
+  }
+
+  .cardio-prescription-grid > div {
+    min-height: 54px !important;
+    padding: 6px 8px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+  }
+
+  .cardio-prescription-grid span {
+    color: var(--pro-muted) !important;
+    font-size: .53rem !important;
+    letter-spacing: .045em !important;
+    text-transform: uppercase !important;
+  }
+
+  .cardio-prescription-grid strong {
+    margin-top: 3px !important;
+    color: var(--pro-ink) !important;
+    font-size: .83rem !important;
+    line-height: 1.12 !important;
+  }
+
+  .cardio-rpe-control {
+    min-height: 50px !important;
+    margin-top: 3px !important;
+    padding: 3px 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .cardio-rpe-control > span {
+    color: var(--pro-muted) !important;
+    font-size: .58rem !important;
+    letter-spacing: .055em !important;
+  }
+
+  .stepper-control--rpe {
+    width: 176px !important;
+  }
+
+  .cardio-live-actions {
+    grid-template-columns: minmax(0,1fr) 48px !important;
+    gap: 7px !important;
+    margin-top: 5px !important;
+  }
+
+  .cardio-live-actions .cardio-timer-start {
+    color: #fff !important;
+    background: linear-gradient(180deg, #31c876, #1fa95f) !important;
+  }
+
+  .cardio-live-actions .cardio-timer-reset {
+    color: var(--pro-muted) !important;
+    border-color: var(--pro-line) !important;
+    background: var(--pro-card-soft) !important;
+  }
+
+  .actual-entry-panel {
+    margin-top: 5px !important;
+    border-radius: 10px !important;
+  }
+
+  .actual-entry-panel summary {
+    min-height: 44px !important;
+    padding: 6px 9px !important;
+    color: var(--pro-muted) !important;
+    font-size: .64rem !important;
+  }
+
+  .cardio-completion-toggle {
+    min-height: 48px !important;
+    margin-top: 6px !important;
+    border: 1px solid rgba(47, 191, 113, .30) !important;
+    border-radius: 11px !important;
+    color: #176d42 !important;
+    background: var(--pro-green-soft) !important;
+    box-shadow: none !important;
+    font-weight: 850 !important;
+  }
+
+  /* One live cardio action path: timer control + Complete Segment. */
+  .workout-player.is-cardio-stage .workout-command-bar {
+    display: none !important;
+  }
+
+  /* Interval state remains compact above the same circular timer. */
+  .interval-state-banner,
+  .interval-next-card {
+    min-height: 34px !important;
+    margin: 3px 0 !important;
+    padding: 5px 7px !important;
+    border-radius: 9px !important;
+  }
+
+  .set-feedback-panel,
+  .main-rest-panel,
+  .pain-stop-panel {
+    min-height: 0 !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) and (max-width: 700px) {
+  .workout-stage__visual--strength .technique-action {
+    color: #d9f7e5 !important;
+    border-color: rgba(54, 201, 133, .28) !important;
+    background: rgba(7, 17, 15, .90) !important;
+  }
+
+  .set-effort-presets__choices button {
+    color: var(--pro-ink) !important;
+    background: #0d1c18 !important;
+  }
+
+  .set-effort-presets__choices button[aria-pressed="true"],
+  .set-effort-presets__choices button.is-selected {
+    color: #06150d !important;
+    background: #41d890 !important;
+  }
+
+  .cardio-timer--hero {
+    background: conic-gradient(
+      from 8deg,
+      #42d98f 0 62%,
+      rgba(176, 205, 190, .13) 62% 100%
+    ) !important;
+  }
+
+  .cardio-timer--hero::before {
+    background: #081511 !important;
+  }
+
+  .cardio-live-actions .cardio-timer-reset {
+    background: #0d1c18 !important;
+  }
+
+  .cardio-completion-toggle {
+    color: #86e7b4 !important;
+    background: rgba(54,201,133,.10) !important;
+  }
+
+  .set-pain-action {
+    color: #f2a4af !important;
+    background: rgba(190, 65, 80, .08) !important;
+  }
+}
+
+
+/* 0.1.30 real-device density tuning against the locked 440x820 board. */
+@media (max-width: 700px) {
+  .workout-stage__visual--strength,
+  .workout-stage__visual--strength img {
+    min-height: 194px !important;
+    max-height: 208px !important;
+  }
+
+  .strength-heading-row h2 {
+    font-size: 1.42rem !important;
+  }
+
+  .strength-secondary-prescription > span:last-child {
+    display: none !important;
+  }
+
+  .cardio-timer--hero {
+    width: 208px !important;
+    min-height: 208px !important;
+    height: 208px !important;
+  }
+
+  .cardio-timer--hero .cardio-timer__display {
+    font-size: 3.05rem !important;
+  }
+}
+
+
+/* 0.1.30 v2 strength de-duplication. */
+@media (max-width: 700px) {
+  .strength-secondary-prescription span + span {
+    display: none !important;
+  }
+
+  .set-stepper-label > span {
+    color: #667169 !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) and (max-width: 700px) {
+  .set-stepper-label > span {
+    color: var(--pro-muted) !important;
+  }
+}
