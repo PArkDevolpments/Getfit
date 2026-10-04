@@ -67,26 +67,20 @@
       <div class="cardio-timer cardio-timer--hero" data-cardio-timer>
         <span class="metric-caption">Time</span>
         <strong class="cardio-timer__display" data-cardio-display>{{ time_label(item.duration_seconds) }}</strong>
-        {% if not review_mode|default(false) %}
-        <div class="timer-actions">
-          <button class="secondary-action cardio-timer-start" type="button">Start</button>
-          <button class="ghost-action cardio-timer-reset" type="button">Reset</button>
-        </div>
-        {% endif %}
       </div>
 
       <div class="cardio-prescription-grid">
         {% if item.equipment == "TREADMILL" %}
-        <div>
+        <div class="cardio-prescription-card cardio-prescription-card--primary">
           <span>Speed</span>
           <strong>{% if item.speed_kmh is not none %}{{ clean_number(item.speed_kmh) }} km/h{% else %}Calibrate{% endif %}</strong>
         </div>
-        <div>
+        <div class="cardio-prescription-card cardio-prescription-card--primary">
           <span>Incline</span>
           <strong>{% if item.incline_percent is not none %}{{ clean_number(item.incline_percent) }}%{% else %}Calibrate{% endif %}</strong>
         </div>
         {% else %}
-        <div>
+        <div class="cardio-prescription-card cardio-prescription-card--primary">
           <span>Cadence</span>
           <strong>
             {% if item.cadence_rpm_min is not none and item.cadence_rpm_max is not none %}
@@ -94,19 +88,19 @@
             {% else %}Calibrate{% endif %}
           </strong>
         </div>
-        <div>
+        <div class="cardio-prescription-card cardio-prescription-card--primary">
           <span>Resistance</span>
           <strong>{{ item.resistance|title if item.resistance else "Calibrate" }}</strong>
         </div>
         {% endif %}
-        <div>
+        <div class="cardio-prescription-card cardio-prescription-card--prescribed-effort">
           <span>Effort</span>
           <strong>
             {% if item.rpe_min is not none %}RPE {{ clean_number(item.rpe_min) }}{% if item.rpe_max is not none and item.rpe_max != item.rpe_min %}–{{ clean_number(item.rpe_max) }}{% endif %}{% else %}—{% endif %}
           </strong>
         </div>
         {% if item.rounds %}
-        <div>
+        <div class="cardio-prescription-card cardio-prescription-card--rounds">
           <span>Rounds</span>
           <strong>{{ item.rounds }}</strong>
         </div>
@@ -130,6 +124,11 @@
           >
           <button type="button" data-cardio-rpe-step data-delta="1" aria-label="Increase actual RPE"{% if review_mode|default(false) %} disabled{% endif %}>+</button>
         </div>
+      </div>
+
+      <div class="cardio-live-actions" aria-label="Cardio timer controls">
+        <button class="primary-action cardio-timer-start" type="button"{% if review_mode|default(false) %} disabled{% endif %}>{% if review_mode|default(false) %}Pause{% else %}Start{% endif %}</button>
+        <button class="ghost-action cardio-timer-reset" type="button"{% if review_mode|default(false) %} disabled{% endif %} aria-label="Reset cardio timer">↺</button>
       </div>
 
       {% if item.segment_type|upper == "INTERVAL_HARD" %}
@@ -175,7 +174,7 @@
 
   <label class="completion-toggle cardio-completion-toggle">
     <input name="{{ item.item_id }}-completed" type="checkbox" hidden>
-    <span>Complete Segment</span>
+    <span>Complete Segment →</span>
   </label>
 </article>
 {% endmacro %}
@@ -268,6 +267,9 @@
               {% else %}
               <div class="movement-media-missing">Visual guide unavailable</div>
               {% endif %}
+              <a class="technique-action" href="{{ ingress_url(request, '/library/' ~ item.exercise_id) }}" target="{% if review_mode|default(false) %}_self{% else %}_blank{% endif %}">
+                <span aria-hidden="true">▶</span> Technique
+              </a>
             </div>
           </div>
 
@@ -277,10 +279,23 @@
                 <p class="eyebrow">Current exercise</p>
                 <h2>{{ item.display_name }}</h2>
               </div>
-              <a class="technique-action" href="{{ ingress_url(request, '/library/' ~ item.exercise_id) }}" target="{% if review_mode|default(false) %}_self{% else %}_blank{% endif %}">
-                <span aria-hidden="true">▶</span> Technique
-              </a>
             </div>
+            <p class="strength-prescription-line">
+              {{ item.sets_target }} sets ·
+              {% if item.target_type == "REPS" %}
+                {% if item.reps_min is not none and item.reps_max is not none %}{{ item.reps_min }}–{{ item.reps_max }} reps{% else %}{{ item.reps_target }} reps{% endif %}
+              {% else %}
+                {{ item.duration_seconds_target or item.duration_seconds_min or '—' }} sec
+              {% endif %}
+              ·
+              {% if item.load_mode in ["BODYWEIGHT", "NONE"] %}Bodyweight
+              {% elif item.load_value is not none %}{{ clean_number(item.load_value) }} {{ item.load_unit|lower }}{% if item.load_mode == "EACH_HAND" %} each{% endif %}
+              {% else %}Calibrate load{% endif %}
+              · Tempo
+              {% if item.tempo_eccentric_seconds is not none or item.tempo_concentric_seconds is not none %}
+                {{ item.tempo_eccentric_seconds or 0 }}-0-{{ item.tempo_concentric_seconds or 0 }}
+              {% else %}controlled{% endif %}
+            </p>
             <div class="strength-primary-metrics">
               <div>
                 <strong>
@@ -370,11 +385,20 @@
                   </label>
                   {% endif %}
                 </div>
+                <div class="set-effort-presets">
+                  <span class="set-effort-presets__label">How did it feel?</span>
+                  <div class="set-effort-presets__choices" role="group" aria-label="How did this set feel?">
+                    <button type="button" data-effort-preset data-rpe="6" data-rir="4" aria-pressed="false">Easy</button>
+                    <button type="button" data-effort-preset data-rpe="8" data-rir="2" aria-pressed="false">Moderate</button>
+                    <button type="button" data-effort-preset data-rpe="9" data-rir="1" aria-pressed="false">Hard</button>
+                    <button type="button" data-effort-preset data-rpe="10" data-rir="0" aria-pressed="false">Max</button>
+                  </div>
+                </div>
                 <details class="set-effort-panel">
                   <summary>
                     <span>
-                      <strong>How it felt</strong>
-                      <small>Optional · enter exact RPE / reps in reserve</small>
+                      <strong>Exact effort / pain</strong>
+                      <small>Optional · exact RPE, reps in reserve or stop for pain</small>
                     </span>
                     <span aria-hidden="true">⌄</span>
                   </summary>
@@ -408,6 +432,7 @@
                     <input name="{{ item.item_id }}-set-{{ set_number }}-effort-manual" type="checkbox" hidden>
                   </div>
                   <p class="set-effort-scale">Guide: RPE 6 ≈ 4 RIR · 7 ≈ 3 · 8 ≈ 2 · 9 ≈ 1 · 10 ≈ 0</p>
+                  <button class="set-pain-action" type="button" data-set-pain>Report pain / stop exercise</button>
                 </details>
                 <div class="set-entry__actions">
                   <button class="complete-set-button" type="button" data-complete-set>Complete Set</button>
