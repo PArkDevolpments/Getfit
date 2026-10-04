@@ -10,7 +10,7 @@ def test_full_canvas_panel_companion_is_packaged_without_broad_app_permissions()
     app_config = (ROOT / "getfit" / "config.yaml").read_text(encoding="utf-8")
 
     assert '"domain": "getfit_panel"' in manifest
-    assert '"version": "0.1.30"' in manifest
+    assert '"version": "0.1.31"' in manifest
     assert '"config_flow": true' in manifest
     assert '"panel_custom"' in manifest
 
