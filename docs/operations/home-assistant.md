@@ -31,6 +31,12 @@ The app configuration exposes installation-level equipment capability only. Defa
 
 These options describe what equipment exists. They are not a demographic or physiological load calculator. Starting loads and progression still come from approved targets, individual calibration and performed evidence.
 
+## Full-canvas iPhone panel
+
+The Supervisor app remains the runtime and identity boundary, but a matching optional Home Assistant custom integration can replace the narrow built-in app frame with Getfit's full-canvas panel host. This avoids granting the Getfit app write access to `/config` merely to install UI files.
+
+See [Getfit Full-Canvas Home Assistant Panel](getfit-full-canvas-panel.md) for installation, verification and rollback. The app continues to use Supervisor Ingress; do not expose port 8099 directly as a workaround for mobile layout.
+
 ## Persistent data
 
 The app starts in `/data`. The default SQLite URL therefore resolves to:
