@@ -72,6 +72,10 @@ def test_automated_audit_tracks_current_workout_dom_contracts() -> None:
     assert "function liveCardioTargetsFit" in script
     assert "profile.width > 700" in script
     assert ".cardio-item:not([hidden])" in script
+    assert "'bike-finisher': '.cardio-item:not([hidden]) .cardio-prescription-grid'" in script
+    assert "'treadmill': '.cardio-item:not([hidden]) .cardio-prescription-grid'" in script
+    assert "'interval-hard': '.cardio-item:not([hidden]) .cardio-prescription-grid'" in script
+    assert "'interval-recovery': '.cardio-item:not([hidden]) .cardio-prescription-grid'" in script
     assert "clipped below the phone viewport" not in script
     assert "node.dataset.segmentType === 'CONDITIONING'" in script
     assert r"/RPE\s*7(?:\.0+)?–8(?:\.0+)?/" in script
