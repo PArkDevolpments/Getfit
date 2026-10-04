@@ -136,6 +136,10 @@ async def today(
             "primary_day": primary_day,
             "external_context": external_context,
             "home": home,
+            "recent_workouts": build_progress_context(
+                session,
+                person.hwa_person_id,
+            ).history[:2],
         },
     )
 
