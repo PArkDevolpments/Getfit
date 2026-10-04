@@ -1716,3 +1716,55 @@ body[data-active-nav="workout"] .workout-end-action {
     padding-inline: 12px;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* 0.1.25 Home Assistant bottom navigation                                   */
+/* The mobile nav belongs to the screen edge, not inside a floating card.     */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 820px) {
+  :root {
+    --mobile-nav-content-height: 64px;
+    --mobile-nav-total-height: calc(
+      var(--mobile-nav-content-height) + env(safe-area-inset-bottom)
+    );
+  }
+
+  .app-shell {
+    padding-bottom: var(--mobile-nav-total-height);
+  }
+
+  .primary-nav {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    min-height: var(--mobile-nav-total-height);
+    padding:
+      4px
+      8px
+      calc(4px + env(safe-area-inset-bottom));
+    gap: 2px;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-radius: 14px 14px 0 0;
+    background: rgba(4, 15, 19, .985);
+    box-shadow: 0 -12px 30px rgba(0, 0, 0, .34);
+    backdrop-filter: blur(20px);
+  }
+
+  .primary-nav__item {
+    min-height: 56px;
+    border-radius: 11px;
+    padding: 4px 2px;
+    gap: 2px;
+  }
+
+  .primary-nav__icon,
+  .primary-nav__icon svg {
+    width: 19px;
+    height: 19px;
+  }
+}
