@@ -172,3 +172,17 @@ def test_settings_exposes_device_diagnostics_but_not_internal_build_tools() -> N
     assert "Quality & build review tools" not in settings
     assert "Specification & Acceptance" not in settings
     assert "Run review pack" not in settings
+
+
+def test_home_assistant_mobile_shell_uses_full_ingress_viewport() -> None:
+    base = _text(TEMPLATES / "base.html")
+    refresh = _text(STATIC / "visual-refresh.css")
+
+    assert "viewport-fit=cover" in base
+    assert "Home Assistant mobile shell parity" in refresh
+    assert "min-height: 100dvh" in refresh
+    assert "padding: 12px 12px 0" in refresh
+    assert "left: 8px" in refresh
+    assert "right: 8px" in refresh
+    assert "bottom: max(8px, env(safe-area-inset-bottom))" in refresh
+    assert "padding: 0 0 calc(96px + env(safe-area-inset-bottom))" in refresh
