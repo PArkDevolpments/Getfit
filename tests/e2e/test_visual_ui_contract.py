@@ -218,3 +218,65 @@ def test_phone_workout_uses_training_first_mobile_workspace() -> None:
     assert ".cardio-visual-card {" in workout
     assert "display: none;" in workout
     assert "grid-template-columns: repeat(2, minmax(0, 1fr))" in workout
+
+
+def test_0127_locked_design_authority_is_wired_into_the_product_shell() -> None:
+    base = _text(TEMPLATES / "base.html")
+    context = _text(ROOT / "src" / "hwa" / "web" / "context.py")
+    pro = _text(STATIC / "pro-ui.css")
+    workout_pro = _text(STATIC / "workout-pro.css")
+
+    assert "/static/pro-ui.css" in base
+    assert "/static/workout-pro.css" in base
+    assert "/static/ha-shell.js" in base
+    for item in (
+        'NavigationItem("today", "Today", "/")',
+        'NavigationItem("plan", "Plan", "/plan")',
+        'NavigationItem("workout", "Workout", "/workout")',
+        'NavigationItem("progress", "Progress", "/progress")',
+        'NavigationItem("more", "More", "/more")',
+    ):
+        assert item in context
+    assert "--pro-green: #2fbf71;" in pro
+    assert "Georgia" in pro
+    assert "grid-template-columns: repeat(5,minmax(0,1fr))" in pro
+    assert "min-height:132px" in workout_pro
+    assert "bottom:calc(var(--mobile-nav-total-height) + 8px)" in workout_pro
+
+
+def test_0127_home_assistant_mobile_shell_owns_safe_area_and_kiosk_header() -> None:
+    shell = _text(STATIC / "ha-shell.js")
+    pro = _text(STATIC / "pro-ui.css")
+
+    assert "home-assistant/subscribe-properties" in shell
+    assert "handleSafeArea: true" in shell
+    assert "kioskMode: narrow" in shell
+    assert "home-assistant/properties" in shell
+    assert "--ha-safe-bottom" in shell
+    assert "home-assistant/unsubscribe-properties" in shell
+    assert "var(--ha-safe-top)" in pro
+    assert "var(--ha-safe-bottom)" in pro
+
+
+def test_0127_workout_logging_uses_large_touch_steppers_and_visible_cardio_rpe() -> None:
+    workout = _text(TEMPLATES / "workout.html")
+    script = _text(STATIC / "workout.js")
+    css = _text(STATIC / "workout-pro.css")
+
+    assert "data-stepper" in workout
+    assert "data-cardio-rpe-step" in workout
+    assert 'name="{{ item.item_id }}-rpe"' in workout
+    assert "function stepNumericInput" in script
+    assert "min-width:44px" in css
+    assert "min-height:44px" in css
+    assert ".cardio-rpe-control" in css
+
+
+def test_0127_plan_and_more_surfaces_exist_without_inventing_rest_days() -> None:
+    plan = _text(TEMPLATES / "plan.html")
+    more = _text(TEMPLATES / "settings.html")
+
+    assert "Only approved training appears here." in plan
+    assert "Recovery / rest day" not in plan
+    assert "Exercise Library" in more
+    assert "Auto-review this device" in more
