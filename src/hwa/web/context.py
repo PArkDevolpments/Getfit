@@ -17,10 +17,10 @@ class NavigationItem:
 
 NAV_ITEMS = (
     NavigationItem("today", "Today", "/"),
+    NavigationItem("plan", "Plan", "/plan"),
     NavigationItem("workout", "Workout", "/workout"),
     NavigationItem("progress", "Progress", "/progress"),
-    NavigationItem("library", "Library", "/library"),
-    NavigationItem("settings", "Settings", "/settings"),
+    NavigationItem("more", "More", "/more"),
 )
 
 
