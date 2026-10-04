@@ -8,7 +8,7 @@ def test_product_shell_has_mobile_viewport_and_touch_sized_controls() -> None:
     app_css = (ROOT / "src/hwa/web/static/app.css").read_text(encoding="utf-8")
     workout_css = (ROOT / "src/hwa/web/static/workout.css").read_text(encoding="utf-8")
 
-    assert 'name="viewport" content="width=device-width, initial-scale=1"' in base
+    assert 'name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"' in base
     assert "@media (max-width: 700px)" in app_css
     assert "min-height: 44px" in app_css
     assert "min-height: 48px" in workout_css
