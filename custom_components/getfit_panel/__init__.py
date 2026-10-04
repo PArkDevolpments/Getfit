@@ -7,11 +7,13 @@ from pathlib import Path
 from homeassistant.components import frontend, panel_custom
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_PANELS_UPDATED
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.start import async_at_started
 
 DOMAIN = "getfit_panel"
-PANEL_URL_PATH = "getfit"
+PANEL_URL_PATH = "getfit-full"
+BUILTIN_PANEL_URL_PATH = "getfit"
 PANEL_ELEMENT = "getfit-full-canvas-panel"
 WEB_ROOT_URL_PATH = "/getfit-panel-static"
 PANEL_MODULE_URL = f"{WEB_ROOT_URL_PATH}/getfit_panel.js"
@@ -27,7 +29,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def _async_register_panel(hass: HomeAssistant) -> None:
     """Replace any prior companion panel with the full-canvas Getfit host."""
 
-    frontend.async_remove_panel(hass, PANEL_URL_PATH)
+    frontend.async_remove_panel(hass, PANEL_URL_PATH, warn_if_unknown=False)
     await panel_custom.async_register_panel(
         hass=hass,
         frontend_url_path=PANEL_URL_PATH,
@@ -53,10 +55,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         runtime["static_registered"] = True
 
-    async def register(_hass: HomeAssistant) -> None:
-        await _async_register_panel(_hass)
+    entry_runtime: dict[str, object] = {}
+    runtime[entry.entry_id] = entry_runtime
 
-    runtime[entry.entry_id] = async_at_started(hass, register)
+    @callback
+    def suppress_builtin_panel(_event: object | None = None) -> None:
+        if frontend.async_panel_exists(hass, BUILTIN_PANEL_URL_PATH):
+            frontend.async_remove_panel(
+                hass,
+                BUILTIN_PANEL_URL_PATH,
+                warn_if_unknown=False,
+            )
+
+    async def register(_hass: HomeAssistant) -> None:
+        suppress_builtin_panel()
+        await _async_register_panel(_hass)
+        entry_runtime["unsubscribe_panels"] = _hass.bus.async_listen(
+            EVENT_PANELS_UPDATED,
+            suppress_builtin_panel,
+        )
+
+    entry_runtime["cancel_start"] = async_at_started(hass, register)
     return True
 
 
@@ -64,8 +83,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove the companion panel. The built-in app panel returns after HA restart."""
 
     runtime = hass.data.get(DOMAIN, {})
-    cancel = runtime.pop(entry.entry_id, None)
-    if callable(cancel):
-        cancel()
-    frontend.async_remove_panel(hass, PANEL_URL_PATH)
+    entry_runtime = runtime.pop(entry.entry_id, {})
+    if isinstance(entry_runtime, dict):
+        for key in ("cancel_start", "unsubscribe_panels"):
+            cancel = entry_runtime.get(key)
+            if callable(cancel):
+                cancel()
+    frontend.async_remove_panel(hass, PANEL_URL_PATH, warn_if_unknown=False)
     return True
