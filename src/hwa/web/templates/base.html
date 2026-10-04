@@ -4,10 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#061219">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f2e9">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#061219">
   <title>{% block title %}Home Workout Assistant{% endblock %}</title>
   <link rel="stylesheet" href="{{ ingress_url(request, '/static/app.css') }}">
   {% if page.active_nav == "workout" %}<link rel="stylesheet" href="{{ ingress_url(request, '/static/workout.css') }}">{% endif %}
   <link rel="stylesheet" href="{{ ingress_url(request, '/static/visual-refresh.css') }}">
+  <link rel="stylesheet" href="{{ ingress_url(request, '/static/pro-ui.css') }}">
+  {% if page.active_nav == "workout" %}<link rel="stylesheet" href="{{ ingress_url(request, '/static/workout-pro.css') }}">{% endif %}
+  <script src="{{ ingress_url(request, '/static/ha-shell.js') }}" defer></script>
   {% block styles %}{% endblock %}
 </head>
 <body data-active-nav="{{ page.active_nav }}" data-profile="{{ page.presentation_profile }}">
@@ -42,14 +47,14 @@
         <span class="primary-nav__icon" aria-hidden="true">
           {% if item.key == "today" %}
           <svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v9H5v-9Z"/><path d="M9 20v-6h6v6"/></svg>
+          {% elif item.key == "plan" %}
+          <svg viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M9 7h6M9 12h6M9 17h4"/></svg>
           {% elif item.key == "workout" %}
           <svg viewBox="0 0 24 24"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg>
           {% elif item.key == "progress" %}
           <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/></svg>
-          {% elif item.key == "library" %}
-          <svg viewBox="0 0 24 24"><path d="M5 4h5v16H5zM14 4h5v16h-5z"/></svg>
           {% else %}
-          <svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="m4 12 1.6-1 .2-1.9-1.1-1.5 2-2 1.5 1.1 1.9-.2L11 5h2l.9 1.5 1.9.2 1.5-1.1 2 2-1.1 1.5.2 1.9 1.6 1v2l-1.6 1-.2 1.9 1.1 1.5-2 2-1.5-1.1-1.9.2L13 20h-2l-.9-1.5-1.9-.2-1.5 1.1-2-2 1.1-1.5-.2-1.9L4 14Z"/></svg>
+          <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
           {% endif %}
         </span>
         <span>{{ item.label }}</span>
