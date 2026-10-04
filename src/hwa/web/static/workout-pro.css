@@ -1491,3 +1491,31 @@
     background: rgba(190, 65, 80, .08) !important;
   }
 }
+
+
+/* 0.1.30 real-device density tuning against the locked 440x820 board. */
+@media (max-width: 700px) {
+  .workout-stage__visual--strength,
+  .workout-stage__visual--strength img {
+    min-height: 194px !important;
+    max-height: 208px !important;
+  }
+
+  .strength-heading-row h2 {
+    font-size: 1.42rem !important;
+  }
+
+  .strength-secondary-prescription > span:last-child {
+    display: none !important;
+  }
+
+  .cardio-timer--hero {
+    width: 208px !important;
+    min-height: 208px !important;
+    height: 208px !important;
+  }
+
+  .cardio-timer--hero .cardio-timer__display {
+    font-size: 3.05rem !important;
+  }
+}
