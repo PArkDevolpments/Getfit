@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started
 
 DOMAIN = "getfit_panel"
-PANEL_URL_PATH = "getfit-ui"
+PANEL_URL_PATH = "getfit"
 PANEL_ELEMENT = "getfit-full-canvas-panel"
 WEB_ROOT_URL_PATH = "/getfit-panel-static"
 PANEL_MODULE_URL = f"{WEB_ROOT_URL_PATH}/getfit_panel.js"
