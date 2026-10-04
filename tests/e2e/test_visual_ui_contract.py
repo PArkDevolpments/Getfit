@@ -201,3 +201,20 @@ def test_mobile_bottom_navigation_fits_the_home_assistant_screen_edge() -> None:
     assert "border-radius: 14px 14px 0 0" in refresh
     assert "padding-bottom: var(--mobile-nav-total-height)" in refresh
     assert "var(--mobile-nav-content-height, 64px)" in workout
+
+
+def test_phone_workout_uses_training_first_mobile_workspace() -> None:
+    base = _text(TEMPLATES / "base.html")
+    refresh = _text(STATIC / "visual-refresh.css")
+    workout = _text(STATIC / "workout.css")
+
+    assert '<meta name="theme-color" content="#061219">' in base
+    assert "body[data-active-nav=\"workout\"]:has(#workout-player) .app-header" in refresh
+    assert "display: none;" in refresh
+    assert "phone workout workspace" in workout
+    assert "min-height: 118px" in workout
+    assert "position: fixed;" in workout
+    assert "var(--mobile-nav-total-height, 64px)" in workout
+    assert ".cardio-visual-card {" in workout
+    assert "display: none;" in workout
+    assert "grid-template-columns: repeat(2, minmax(0, 1fr))" in workout
