@@ -197,6 +197,7 @@ class GetfitFullCanvasPanel extends HTMLElement {
     if (!this._frame?.contentWindow) return;
     this._frame.contentWindow.postMessage({
       type: 'home-assistant/properties',
+      host: 'getfit-full-canvas-panel',
       narrow: this._narrow,
       route: this._route?.path || '',
       safeAreaInsets: {
