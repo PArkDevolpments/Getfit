@@ -951,6 +951,10 @@
       'strength-feedback': '[data-set-feedback-panel]',
       'strength-pain': '[data-pain-stop-panel]',
       'strength-rest': '[data-main-rest-panel]',
+      'bike-finisher': '.cardio-prescription-grid',
+      'treadmill': '.cardio-prescription-grid',
+      'interval-hard': '.cardio-prescription-grid',
+      'interval-recovery': '.cardio-prescription-grid',
     };
     const selector = mustBeVisible[target.key];
     if (selector) {

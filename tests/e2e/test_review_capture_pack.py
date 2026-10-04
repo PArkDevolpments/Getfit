@@ -144,3 +144,10 @@ def test_device_review_measures_bottom_navigation_against_the_viewport() -> None
     assert "bottom_nav:" in script
     assert "documentRef.querySelector('.primary-nav')" in script
     assert "viewportHeight - navRect.top" in script
+
+
+def test_device_review_requires_live_cardio_targets_in_the_active_viewport() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    for target in ("bike-finisher", "treadmill", "interval-hard", "interval-recovery"):
+        assert f"'{target}': '.cardio-prescription-grid'" in script
