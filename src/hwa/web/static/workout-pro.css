@@ -1519,3 +1519,21 @@
     font-size: 3.05rem !important;
   }
 }
+
+
+/* 0.1.30 v2 strength de-duplication. */
+@media (max-width: 700px) {
+  .strength-secondary-prescription span + span {
+    display: none !important;
+  }
+
+  .set-stepper-label > span {
+    color: #667169 !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) and (max-width: 700px) {
+  .set-stepper-label > span {
+    color: var(--pro-muted) !important;
+  }
+}
