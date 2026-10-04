@@ -155,6 +155,54 @@ def _render_surface(
 
 
 @router.get(
+    "/plan",
+    response_class=HTMLResponse,
+    dependencies=[Depends(reject_identity_selectors)],
+)
+def plan(
+    request: Request,
+    person: Annotated[PersonContext, Depends(resolve_web_person_context)],
+    session: Annotated[Session, Depends(get_session)],
+) -> HTMLResponse:
+    """Render the resolved person's current approved programme week."""
+
+    today_view = get_today_view(session, person.hwa_person_id)
+    days: tuple[ProgrammeDay, ...] = ()
+    home = None
+    if today_view.programme_id and today_view.week_number is not None:
+        days = tuple(
+            session.scalars(
+                select(ProgrammeDay)
+                .where(
+                    ProgrammeDay.programme_id == today_view.programme_id,
+                    ProgrammeDay.week_number == today_view.week_number,
+                )
+                .order_by(ProgrammeDay.day_number)
+            ).all()
+        )
+        home = build_home_dashboard(
+            session,
+            person_id=person.hwa_person_id,
+            programme_id=today_view.programme_id,
+            week_number=today_view.week_number,
+            current_day_number=today_view.day_number,
+            current_programme_day_id=today_view.programme_day_id,
+        )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="plan.html",
+        context={
+            "page": build_page_context(person, "plan"),
+            "person": person,
+            "days": days,
+            "today_view": today_view,
+            "home": home,
+        },
+    )
+
+
+@router.get(
     "/workout",
     response_class=HTMLResponse,
     dependencies=[Depends(reject_identity_selectors)],
@@ -220,7 +268,7 @@ def library(
         request=request,
         name="library.html",
         context={
-            "page": build_page_context(person, "library"),
+            "page": build_page_context(person, "workout"),
             "person": person,
             "exercises": list_exercises(session),
         },
@@ -331,7 +379,7 @@ def review_spec(
         request=request,
         name="acceptance_review.html",
         context={
-            "page": build_page_context(person, "settings"),
+            "page": build_page_context(person, "more"),
             "person": person,
             "acceptance_spec": specification,
             "acceptance_storage_key": storage_key,
@@ -355,6 +403,7 @@ def review_capture(
 
     targets = [
         {"key": "today", "label": "Today", "url": ingress_url(request, "/")},
+        {"key": "plan", "label": "Plan", "url": ingress_url(request, "/plan")},
         {
             "key": "strength-active",
             "label": "Strength — active Floor Press",
@@ -433,7 +482,7 @@ def review_capture(
             "url": ingress_url(request, "/library/dumbbell_lateral_raise"),
             "media_tab": "video",
         },
-        {"key": "settings", "label": "Settings", "url": ingress_url(request, "/settings")},
+        {"key": "more", "label": "More", "url": ingress_url(request, "/more")},
     ]
 
     specification = acceptance_spec_payload()
@@ -454,6 +503,11 @@ def review_capture(
     )
 
 
+@router.get(
+    "/more",
+    response_class=HTMLResponse,
+    dependencies=[Depends(reject_identity_selectors)],
+)
 @router.get(
     "/settings",
     response_class=HTMLResponse,
@@ -477,7 +531,7 @@ def settings(
         request=request,
         name="settings.html",
         context={
-            "page": build_page_context(person, "settings"),
+            "page": build_page_context(person, "more"),
             "person": person,
             "settings": settings_view,
         },
