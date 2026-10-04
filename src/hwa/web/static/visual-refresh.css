@@ -1768,3 +1768,38 @@ body[data-active-nav="workout"] .workout-end-action {
     height: 19px;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* 0.1.26 mobile canvas                                                       */
+/* Background can reach the WebView edges; controls stay in the usable area.  */
+/* Active training drops the redundant product header and uses its own toolbar.*/
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 820px) {
+  html {
+    color-scheme: dark;
+    background: #061219 !important;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 80% -10%, rgba(46,230,138,.09), transparent 30rem),
+      linear-gradient(180deg, #07151d 0%, #061219 58%, #050e13 100%) !important;
+  }
+
+  .primary-nav {
+    background: #040f13;
+  }
+}
+
+@media (max-width: 700px) {
+  body[data-active-nav="workout"]:has(#workout-player) .app-header {
+    display: none;
+  }
+
+  body[data-active-nav="workout"]:has(#workout-player) .content {
+    padding: 6px 8px 0;
+    gap: .4rem;
+  }
+}
