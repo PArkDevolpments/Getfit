@@ -21,7 +21,7 @@ from hwa.web.dependencies import WebIdentitySetupRequired
 from hwa.web.router import router as product_web_router
 from hwa.web.setup import setup_required_exception_handler
 
-APP_VERSION = "0.1.28"
+APP_VERSION = "0.1.29"
 _WEB_DIR = Path(__file__).parent / "web"
 _LOCAL_VIDEO_DIR = Path("/media/getfit/videos")
 
