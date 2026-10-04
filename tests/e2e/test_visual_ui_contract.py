@@ -352,3 +352,23 @@ def test_0130_locked_v2_authority_drives_active_strength_and_cardio() -> None:
     assert "position: static !important;" in css
     assert ".strength-primary-metrics" in css
     assert "display: none !important;" in css
+
+
+def test_0131_real_device_polish_fixes_light_states_and_tall_phone_composition() -> None:
+    pro = _text(STATIC / "pro-ui.css")
+    workout = _text(STATIC / "workout-pro.css")
+
+    assert "0.1.31 real-device contrast correction" in pro
+    assert "radial-gradient(circle, #fffdf8 58%, transparent 59%)" in pro
+    assert ".progress-ring strong" in pro
+
+    assert "0.1.31 real-device polish" in workout
+    assert 'body[data-active-nav="workout"] .set-entry.is-current-set' in workout
+    assert "box-shadow: none !important;" in workout
+    assert ".set-feedback-panel," in workout
+    assert ".main-rest-panel" in workout
+    assert ".pain-stop-panel" in workout
+    assert ".interval-next-card" in workout
+    assert "@media (max-width: 700px) and (min-height: 900px)" in workout
+    assert "calc(100dvh - var(--mobile-nav-total-height) - 118px)" in workout
+    assert ".cardio-item:not([hidden])" in workout
