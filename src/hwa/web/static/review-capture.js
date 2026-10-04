@@ -7,6 +7,7 @@
   const automatedAuditButton = document.getElementById('run-automated-audit');
   const responsiveButton = document.getElementById('capture-responsive');
   const cancelButton = document.getElementById('cancel-capture');
+  const downloadReviewLink = document.getElementById('download-review');
   const progressBar = document.getElementById('progress-bar');
   const progressMessage = document.getElementById('progress-message');
   const acceptanceSpecNode = document.getElementById('acceptance-specification');
@@ -25,6 +26,7 @@
   ];
 
   let cancelled = false;
+  let latestDownloadUrl = null;
 
   const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
   const nextFrame = () => new Promise((resolve) => window.requestAnimationFrame(resolve));
@@ -900,6 +902,54 @@
     ].join('');
   }
 
+  function collectDeviceDiagnostics(target, documentRef, profile) {
+    const root = documentRef.documentElement;
+    const touchAudit = auditTouchTargets(documentRef);
+    const issues = [];
+    const horizontalOverflow = root.scrollWidth > root.clientWidth + 4;
+    if (horizontalOverflow) {
+      issues.push({
+        code: 'HORIZONTAL_OVERFLOW',
+        detail: `scrollWidth ${root.scrollWidth}px exceeds clientWidth ${root.clientWidth}px`,
+      });
+    }
+    if (touchAudit.failures.length) {
+      issues.push({
+        code: 'TOUCH_TARGETS',
+        detail: touchAudit.failures,
+      });
+    }
+
+    const mustBeVisible = {
+      'strength-active': '.complete-set-button',
+      'strength-feedback': '[data-set-feedback-panel]',
+      'strength-pain': '[data-pain-stop-panel]',
+      'strength-rest': '[data-main-rest-panel]',
+    };
+    const selector = mustBeVisible[target.key];
+    if (selector) {
+      const node = documentRef.querySelector(selector);
+      if (!fullyVisible(node, documentRef, profile)) {
+        issues.push({
+          code: 'PRIMARY_STATE_BELOW_VIEWPORT',
+          detail: `${selector} is not fully visible in the active device viewport`,
+        });
+      }
+    }
+
+    return {
+      page: target.key,
+      page_label: target.label,
+      viewport: {width: profile.width, height: profile.height},
+      scroll_width: root.scrollWidth,
+      scroll_height: root.scrollHeight,
+      client_width: root.clientWidth,
+      client_height: root.clientHeight,
+      touch_targets_checked: touchAudit.checked,
+      issues,
+    };
+  }
+
   function collectCss(documentRef) {
     const chunks = [];
     for (const sheet of Array.from(documentRef.styleSheets)) {
@@ -1028,7 +1078,7 @@
     }
   }
 
-  async function renderDocumentToSvg(profile) {
+  async function renderDocumentToSvg(profile, {viewportOnly = false} = {}) {
     const documentRef = frame.contentDocument;
     if (!documentRef?.documentElement || !documentRef.body) {
       throw new Error('The Getfit page could not be read for capture.');
@@ -1047,11 +1097,13 @@
     await inlineImages(documentRef.body, clonedBody);
 
     const css = collectCss(documentRef);
-    const fullHeight = Math.max(
-      profile.height,
-      documentRef.documentElement.scrollHeight,
-      documentRef.body.scrollHeight,
-    );
+    const fullHeight = viewportOnly
+      ? profile.height
+      : Math.max(
+        profile.height,
+        documentRef.documentElement.scrollHeight,
+        documentRef.body.scrollHeight,
+      );
     const fullWidth = profile.width;
 
     const xhtmlDocument = document.implementation.createHTMLDocument('Getfit capture');
@@ -1225,7 +1277,7 @@
       .replace(/^-+|-+$/g, '');
   }
 
-  function downloadZip(blob, prefix = 'getfit-ui-review') {
+  function prepareZipDownload(blob, prefix = 'getfit-ui-review', {autoDownload = true} = {}) {
     const now = new Date();
     const stamp = [
       now.getFullYear(),
@@ -1235,14 +1287,26 @@
       String(now.getHours()).padStart(2, '0'),
       String(now.getMinutes()).padStart(2, '0'),
     ].join('');
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${prefix}-${stamp}.zip`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    const fileName = `${prefix}-${stamp}.zip`;
+
+    if (latestDownloadUrl) URL.revokeObjectURL(latestDownloadUrl);
+    latestDownloadUrl = URL.createObjectURL(blob);
+
+    if (downloadReviewLink) {
+      downloadReviewLink.href = latestDownloadUrl;
+      downloadReviewLink.download = fileName;
+      downloadReviewLink.textContent = `Download ${fileName}`;
+      downloadReviewLink.hidden = false;
+    }
+
+    if (autoDownload) {
+      const link = document.createElement('a');
+      link.href = latestDownloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
   }
 
 
@@ -1283,6 +1347,7 @@
     const files = [];
     const captures = [];
     const auditSamples = [];
+    const deviceDiagnostics = [];
     let completed = 0;
 
     try {
@@ -1296,6 +1361,11 @@
           await loadTarget(target, profile);
 
           const pageState = detectPageState(target);
+          if (deviceMode) {
+            deviceDiagnostics.push(
+              collectDeviceDiagnostics(target, frame.contentDocument, profile),
+            );
+          }
           if (automated) {
             const documentRef = frame.contentDocument;
             for (const gate of acceptanceSpecification.gates || []) {
@@ -1317,19 +1387,54 @@
             }
           }
           setMessage(`Capturing ${target.label} · ${profile.label}…`);
-          const shot = await renderDocumentToSvg(profile);
-          const fileName = `screenshots/${String(completed + 1).padStart(2, '0')}-${slug(target.key)}-${slug(profile.key)}.svg`;
-          files.push({name: fileName, data: shot.blob});
-          captures.push({
-            page: target.key,
-            page_label: target.label,
-            profile: profile.key,
-            profile_label: profile.label,
-            width: shot.width,
-            height: shot.height,
-            page_state: pageState,
-            file: fileName,
-          });
+          const index = String(completed + 1).padStart(2, '0');
+
+          if (deviceMode) {
+            const viewportShot = await renderDocumentToSvg(profile, {viewportOnly: true});
+            const viewportFile = `screenshots/${index}-${slug(target.key)}-viewport.svg`;
+            files.push({name: viewportFile, data: viewportShot.blob});
+            captures.push({
+              page: target.key,
+              page_label: target.label,
+              profile: profile.key,
+              profile_label: profile.label,
+              capture_kind: 'viewport',
+              width: viewportShot.width,
+              height: viewportShot.height,
+              page_state: pageState,
+              file: viewportFile,
+            });
+
+            const fullShot = await renderDocumentToSvg(profile);
+            const fullFile = `full-pages/${index}-${slug(target.key)}-full.svg`;
+            files.push({name: fullFile, data: fullShot.blob});
+            captures.push({
+              page: target.key,
+              page_label: target.label,
+              profile: profile.key,
+              profile_label: profile.label,
+              capture_kind: 'full-page',
+              width: fullShot.width,
+              height: fullShot.height,
+              page_state: pageState,
+              file: fullFile,
+            });
+          } else {
+            const shot = await renderDocumentToSvg(profile);
+            const fileName = `screenshots/${index}-${slug(target.key)}-${slug(profile.key)}.svg`;
+            files.push({name: fileName, data: shot.blob});
+            captures.push({
+              page: target.key,
+              page_label: target.label,
+              profile: profile.key,
+              profile_label: profile.label,
+              capture_kind: 'full-page',
+              width: shot.width,
+              height: shot.height,
+              page_state: pageState,
+              file: fileName,
+            });
+          }
           completed += 1;
           setProgress(completed, targets.length * profiles.length);
         }
@@ -1407,6 +1512,12 @@
         name: 'review-manifest.json',
         data: encoder.encode(JSON.stringify(manifest, null, 2)),
       });
+      if (deviceMode) {
+        files.push({
+          name: 'device-layout-diagnostics.json',
+          data: encoder.encode(JSON.stringify(deviceDiagnostics, null, 2)),
+        });
+      }
       files.push({
         name: 'review-gallery.html',
         data: encoder.encode(buildReviewGallery(captures)),
@@ -1422,7 +1533,11 @@
 
       setMessage('Building ZIP…');
       const zip = await createZip(files);
-      downloadZip(zip, deviceMode ? 'getfit-device-review' : 'getfit-ui-review');
+      prepareZipDownload(
+        zip,
+        deviceMode ? 'getfit-device-review' : 'getfit-ui-review',
+        {autoDownload: !deviceMode},
+      );
       setProgress(1, 1);
       const emptyWorkout = captures.some(
         (capture) => capture.page === 'workout' && capture.page_state === 'empty',
@@ -1482,6 +1597,10 @@
 
   const initialProfile = currentViewportProfile();
   applyProfile(initialProfile);
+
+  window.addEventListener('beforeunload', () => {
+    if (latestDownloadUrl) URL.revokeObjectURL(latestDownloadUrl);
+  });
 
   const params = new URLSearchParams(window.location.search);
   if (params.get('device') === '1') {
