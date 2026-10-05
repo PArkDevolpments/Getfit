@@ -20,7 +20,7 @@ GitHub issue numbers below are the governed backlog created for this programme.
 
 | Workstream | Status | GitHub issue | Dependencies | Primary owner lane | Release gate |
 |---|---|---:|---|---|---|
-| GF-0140-01 Review-pack visibility correctness | ACTIVE | #74 | none | Visual QA + Frontend | pending |
+| GF-0140-01 Review-pack visibility correctness | REVIEW | #74 | none | Visual QA + Frontend | pending |
 | GF-0140-02 Review-pack privacy sanitisation | PLANNED | #75 | none | Security/Privacy + Frontend | pending |
 | GF-0140-03 Mobile workout secondary controls | PLANNED | #76 | none | Frontend + Product/UX | pending |
 | GF-0140-04 Today responsive contract alignment | PLANNED | #77 | none | Product/UX + Frontend | pending |
@@ -64,6 +64,13 @@ GitHub issue numbers below are the governed backlog created for this programme.
 ## Future 0.3.x
 
 Governed coaching/progression/adaptation remains future scope and has no implementation authority from this ledger yet.
+
+
+## Active / review evidence
+
+| Workstream | PR | Current evidence |
+|---|---:|---|
+| GF-0140-01 Review-pack visibility correctness | #100 | TDD RED captured in CI run 37357826234; final-head CI and deterministic UI review-pack generation required before merge. |
 
 ## Ledger update rule
 
