@@ -615,6 +615,7 @@
   async function completeWorkout() {
     if (!completeButton || reviewMode) return;
     completeButton.disabled = true;
+    completeButton.setAttribute('aria-busy', 'true');
     if (completionStatus) completionStatus.textContent = 'Saving final workout…';
     await autosave();
     try {
@@ -638,6 +639,7 @@
         completionStatus.textContent = `Workout not completed: ${error.message}. Your draft remains saved.`;
       }
       completeButton.disabled = false;
+      completeButton.removeAttribute('aria-busy');
     }
   }
 
