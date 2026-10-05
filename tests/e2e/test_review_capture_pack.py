@@ -176,9 +176,13 @@ def test_0127_device_review_covers_plan_and_more_surfaces() -> None:
     assert "if (criterionId === 'REGRESSION-06') return ['more'];" in script
 
 
-def test_0128_real_device_review_requires_full_canvas_panel_host() -> None:
+def test_0133_real_device_review_verifies_native_home_assistant_full_canvas_handshake() -> None:
     script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
 
-    assert "HOME_ASSISTANT_FULL_CANVAS_HOST_REQUIRED" in script
-    assert "haPanelHost !== 'getfit-full-canvas-panel'" in script
-    assert "&& haShellReady" in script
+    assert "waitForHostShellReady" in script
+    assert "hostShellSnapshot" in script
+    assert "HOME_ASSISTANT_FULL_CANVAS_HANDSHAKE_MISSING" in script
+    assert "'home-assistant-app-panel'" in script
+    assert "'getfit-full-canvas-panel'" in script
+    assert "home_assistant_shell: deviceMode ? hostShell : null" in script
+    assert "collectDeviceDiagnostics(target, frame.contentDocument, profile, hostShell)" in script
