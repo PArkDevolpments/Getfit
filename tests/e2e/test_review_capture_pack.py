@@ -94,7 +94,8 @@ def test_automated_audit_measures_core_touch_targets_across_product_states() -> 
     assert "'.exercise-media-tab'" in script
     assert "'.exercise-card__open'" in script
     assert "'.coach-dashboard-card__settings'" in script
-    assert "touchAudit.failures.length ? 'FAIL' : 'PASS'" in script
+    assert "touchAudit.failures.length" in script
+    assert "fitCriticalVerticalOverflow" in script
 
 
 def test_strength_feedback_and_rest_audit_require_active_viewport_visibility() -> None:

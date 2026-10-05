@@ -986,18 +986,25 @@
     }
     if (criterionId === 'REGRESSION-05') {
       const root = documentRef.documentElement;
-      const overflow = root.scrollWidth > root.clientWidth + 4;
+      const horizontalOverflow = root.scrollWidth > root.clientWidth + 4;
+      const fitCriticalVerticalOverflow = sandboxStateTargets.has(target.key)
+        && profile.width <= 700
+        && root.scrollHeight > root.clientHeight + 4;
       const touchAudit = auditTouchTargets(documentRef);
       const failures = touchAudit.failures
         .map((item) => `${item.label || 'control'} ${item.width}×${item.height}px`)
         .join(', ');
       return automatedResult(
-        overflow || touchAudit.failures.length ? 'FAIL' : 'PASS',
-        overflow
+        horizontalOverflow || fitCriticalVerticalOverflow || touchAudit.failures.length
+          ? 'FAIL'
+          : 'PASS',
+        horizontalOverflow
           ? `Horizontal overflow detected: ${root.scrollWidth}px > ${root.clientWidth}px.`
-          : touchAudit.failures.length
-            ? `Touch targets below 44px detected: ${failures}.`
-            : `No horizontal overflow and ${touchAudit.checked} visible core controls meet the 44px touch-target floor.`,
+          : fitCriticalVerticalOverflow
+            ? `Fit-critical workout state needs vertical scrolling: ${root.scrollHeight}px > ${root.clientHeight}px (+4px tolerance).`
+            : touchAudit.failures.length
+              ? `Touch targets below 44px detected: ${failures}.`
+              : `No unintended overflow and ${touchAudit.checked} visible core controls meet the 44px touch-target floor.`,
         profile,
       );
     }
@@ -1199,6 +1206,18 @@
       scroll_height: root.scrollHeight,
       client_width: root.clientWidth,
       client_height: root.clientHeight,
+      viewport_band: root.dataset.viewportBand || null,
+      viewport_engine: {
+        ready: root.dataset.viewportReady === 'true',
+        measured_width: Number(root.dataset.viewportWidth || 0),
+        measured_height: Number(root.dataset.viewportHeight || 0),
+        usable_height: Number.parseFloat(
+          documentRef.defaultView?.getComputedStyle(root).getPropertyValue('--getfit-usable-h') || '0',
+        ) || 0,
+        nav_height: Number.parseFloat(
+          documentRef.defaultView?.getComputedStyle(root).getPropertyValue('--getfit-nav-h') || '0',
+        ) || 0,
+      },
       touch_targets_checked: touchAudit.checked,
       ha_shell_ready: haShellReady,
       ha_panel_host: haPanelHost,
