@@ -432,7 +432,7 @@
 
     return {
       visible,
-      reachable,
+      reachable: reachable,
       rendered,
       disabled,
       inert,
