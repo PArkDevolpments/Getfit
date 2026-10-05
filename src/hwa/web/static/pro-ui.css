@@ -1078,3 +1078,29 @@ body:not([data-active-nav="workout"]) .settings-grid .muted {
     min-height: 88px !important;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* 0.1.36 adaptive visual viewport                                             */
+/* -------------------------------------------------------------------------- */
+@media (max-width: 820px) {
+  html,
+  body,
+  .app-shell {
+    min-height: var(--getfit-viewport-h, 100dvh) !important;
+  }
+
+  html[data-viewport-band="compact"] .content {
+    padding-top: 8px !important;
+    gap: 7px !important;
+  }
+
+  html[data-viewport-band="standard"] .content {
+    padding-top: 10px !important;
+  }
+
+  html[data-viewport-band="tall"] .content {
+    padding-top: 14px !important;
+    gap: 12px !important;
+  }
+}
