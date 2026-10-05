@@ -1682,3 +1682,84 @@
     font-size: 3.2rem !important;
   }
 }
+
+
+/* 0.1.32 rest-state composition: keep recovery imagery, but do not wash the
+   timer and copy through a full-card darkened photograph. */
+@media (max-width: 700px) {
+  .workout-player.is-resting .main-rest-panel {
+    min-height: 0 !important;
+    padding: 9px !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "photo"
+      "eyebrow"
+      "ring"
+      "next"
+      "actions" !important;
+    gap: 3px !important;
+    align-content: start !important;
+    color: var(--pro-ink) !important;
+    border-color: var(--pro-line) !important;
+    background: var(--pro-card) !important;
+  }
+
+  .workout-player.is-resting .rest-state-photo {
+    position: relative !important;
+    inset: auto !important;
+    grid-area: photo !important;
+    width: 100% !important;
+    height: 92px !important;
+    min-height: 92px !important;
+    max-height: 92px !important;
+    margin: 0 0 4px !important;
+    overflow: hidden !important;
+    opacity: 1 !important;
+    border-radius: 12px !important;
+  }
+
+  .workout-player.is-resting .rest-state-photo img {
+    width: 100% !important;
+    height: 92px !important;
+    min-height: 92px !important;
+    max-height: 92px !important;
+    object-fit: cover !important;
+    object-position: center 38% !important;
+    filter: none !important;
+  }
+
+  .workout-player.is-resting .main-rest-panel .eyebrow {
+    grid-area: eyebrow !important;
+    margin: 2px 0 0 !important;
+    text-align: center !important;
+    color: var(--pro-green-strong) !important;
+  }
+
+  .workout-player.is-resting .main-rest-ring {
+    grid-area: ring !important;
+    width: 140px !important;
+    height: 140px !important;
+    margin: 1px auto 4px !important;
+    color: var(--pro-ink) !important;
+    border-color: var(--pro-green-soft) !important;
+    border-top-color: var(--pro-green) !important;
+    border-right-color: var(--pro-green) !important;
+    background: var(--pro-card-soft) !important;
+  }
+
+  .workout-player.is-resting .main-rest-next {
+    grid-area: next !important;
+    margin: 0 0 3px !important;
+    color: var(--pro-muted) !important;
+  }
+
+  .workout-player.is-resting .main-rest-next strong {
+    color: var(--pro-ink) !important;
+  }
+
+  .workout-player.is-resting .main-rest-actions {
+    grid-area: actions !important;
+    margin: 4px 0 0 !important;
+  }
+}
