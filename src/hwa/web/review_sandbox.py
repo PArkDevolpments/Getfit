@@ -17,6 +17,7 @@ from hwa.db.models.programme import ProgrammeDay
 from hwa.domain.draft import DraftPhase, WorkoutDraftSnapshot
 from hwa.read_models.history import WorkoutHistoryRow
 from hwa.read_models.progress import ExerciseProgressSummary, ProgressSummary
+from hwa.read_models.training_analytics import TrainingAnalytics
 from hwa.web.progress import (
     ProgressChartPoint,
     ProgressChartSeries,
@@ -209,4 +210,10 @@ def build_review_progress() -> ProgressPageContext:
             (1, "upper_body_bike"),
         )
     )
-    return ProgressPageContext(summary=summary, history=history, chart=chart)
+    analytics = TrainingAnalytics(personal_bests=(), muscle_coverage=(), activity_days=())
+    return ProgressPageContext(
+        summary=summary,
+        history=history,
+        chart=chart,
+        analytics=analytics,
+    )
