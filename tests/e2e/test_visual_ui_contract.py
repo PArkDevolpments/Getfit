@@ -383,6 +383,7 @@ def test_0139_visual_evidence_and_accessibility_polish_is_locked() -> None:
     assert router.count('"page": build_page_context(person, "more")') >= 3
     assert "0.1.39 visual evidence and accessibility polish" in pro
     assert 'body[data-active-nav="more"] .exercise-coaching-card h3' in pro
+    assert 'body[data-active-nav="more"] .cue-list--checks li' in pro
     assert 'body[data-active-nav="progress"] .history-row__metrics span' in pro
     assert 'body[data-active-nav="progress"] .progress-chart text' in pro
     assert "flex-wrap: wrap;" in pro
