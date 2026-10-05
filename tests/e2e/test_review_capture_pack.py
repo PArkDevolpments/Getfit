@@ -141,7 +141,8 @@ def test_device_review_uses_actual_home_assistant_viewport_and_can_autorun() -> 
     assert "getfit-device-review" in script
     assert "params.get('device') === '1'" in script
     assert "params.get('autorun') === '1'" in script
-    assert "runCapture([profile], {automated: true, deviceMode: true})" in script
+    assert "waitForHostShellReady" in script
+    assert "runCapture([profile], {automated: true, deviceMode: true, hostShell})" in script
     assert "device-layout-diagnostics.json" in script
     assert "capture_kind: 'viewport'" in script
     assert "capture_kind: 'full-page'" in script
