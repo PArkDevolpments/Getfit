@@ -28,6 +28,19 @@
 
   let cancelled = false;
   let latestDownloadUrl = null;
+  let captureRunning = false;
+  let navigationSequence = 0;
+
+  const sandboxStateTargets = new Set([
+    'strength-active',
+    'strength-feedback',
+    'strength-pain',
+    'strength-rest',
+    'bike-finisher',
+    'treadmill',
+    'interval-hard',
+    'interval-recovery',
+  ]);
 
   const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
   const nextFrame = () => new Promise((resolve) => window.requestAnimationFrame(resolve));
@@ -137,33 +150,110 @@
     if (stageLabel) stageLabel.textContent = profile.label;
   }
 
+  function captureIdentity(target) {
+    const documentRef = frame.contentDocument;
+    const player = documentRef?.getElementById('workout-player');
+    const activeMedia = documentRef?.querySelector('.exercise-media-tab.is-active');
+    let path = '';
+    try {
+      path = frame.contentWindow?.location.pathname || '';
+    } catch (_) {
+      path = '';
+    }
+    return {
+      expected_path: new URL(target.url, window.location.href).pathname,
+      path,
+      review_state: player?.dataset.reviewState || null,
+      media_tab: activeMedia?.dataset.mediaTab || null,
+      ready_state: documentRef?.readyState || 'unknown',
+    };
+  }
+
+  function captureIdentityMatches(target, identity, {requireMedia = true} = {}) {
+    if (!identity || identity.path !== identity.expected_path) return false;
+    if (
+      sandboxStateTargets.has(target.key)
+      && identity.review_state !== target.key
+    ) {
+      return false;
+    }
+    if (requireMedia && target.media_tab && identity.media_tab !== target.media_tab) {
+      return false;
+    }
+    return true;
+  }
+
+  async function waitForTargetIdentity(target, {requireMedia = true, timeoutMs = 6500} = {}) {
+    const started = Date.now();
+    let identity = captureIdentity(target);
+    while (Date.now() - started < timeoutMs) {
+      identity = captureIdentity(target);
+      if (
+        identity.ready_state === 'complete'
+        && captureIdentityMatches(target, identity, {requireMedia})
+      ) {
+        return identity;
+      }
+      await sleep(75);
+    }
+    throw new Error(
+      `Capture identity mismatch for ${target.label}: expected ${identity.expected_path}`
+      + ` / ${target.key}, received ${identity.path} / ${identity.review_state || 'none'}.`,
+    );
+  }
+
+  async function settleLoadedTarget(target) {
+    await nextFrame();
+    await nextFrame();
+    const fonts = frame.contentDocument?.fonts;
+    if (fonts?.ready) {
+      try {
+        await fonts.ready;
+      } catch (_) {
+        // A font readiness failure must not bypass the identity gate below.
+      }
+    }
+    await sleep(150);
+    return await waitForTargetIdentity(target);
+  }
+
   async function loadTarget(target, profile) {
     applyProfile(profile);
-    const wanted = new URL(target.url, window.location.href).href;
+    const wanted = new URL(target.url, window.location.href);
+    wanted.searchParams.set(
+      '__getfit_review_capture',
+      `${Date.now()}-${++navigationSequence}-${target.key}-${profile.key}`,
+    );
+    const expectedPath = wanted.pathname;
 
     await new Promise((resolve, reject) => {
-      const timeout = window.setTimeout(
-        () => reject(new Error(`Timed out loading ${target.label}`)),
-        15000,
-      );
-      frame.onload = () => {
+      const cleanup = () => {
         window.clearTimeout(timeout);
+        frame.removeEventListener('load', onLoad);
+      };
+      const timeout = window.setTimeout(() => {
+        cleanup();
+        reject(new Error(`Timed out loading ${target.label}`));
+      }, 15000);
+      const onLoad = () => {
+        let activePath = '';
+        try {
+          activePath = frame.contentWindow?.location.pathname || '';
+        } catch (_) {
+          activePath = '';
+        }
+        if (activePath !== expectedPath) return;
+        cleanup();
         resolve();
       };
 
-      if (frame.src === wanted) {
-        try {
-          frame.contentWindow?.location.reload();
-        } catch (_) {
-          frame.src = target.url;
-        }
-      } else {
-        frame.src = target.url;
-      }
+      frame.addEventListener('load', onLoad);
+      frame.src = wanted.href;
     });
 
+    await waitForTargetIdentity(target, {requireMedia: false});
     await nextFrame();
-    await sleep(500);
+    await sleep(180);
 
     if (target.media_tab) {
       const documentRef = frame.contentDocument;
@@ -177,24 +267,16 @@
       }
       tab.click();
       await nextFrame();
-      await sleep(350);
+      await sleep(180);
     }
+
+    return await settleLoadedTarget(target);
   }
 
   function detectPageState(target) {
     const documentRef = frame.contentDocument;
     if (!documentRef?.body) return 'unknown';
-    const workoutTargets = new Set([
-      'strength-active',
-      'strength-feedback',
-      'strength-pain',
-      'strength-rest',
-      'bike-finisher',
-      'treadmill',
-      'interval-hard',
-      'interval-recovery',
-    ]);
-    if (!workoutTargets.has(target.key)) return 'ready';
+    if (!sandboxStateTargets.has(target.key)) return 'ready';
     const text = documentRef.body.textContent || '';
     return text.includes('No workout is currently in progress') ? 'empty' : 'active';
   }
@@ -1525,6 +1607,11 @@
   }
 
   async function runCapture(profiles, {automated = false, deviceMode = false, hostShell = null} = {}) {
+    if (captureRunning) {
+      setMessage('A review capture is already running. Wait for it to finish before starting another.');
+      return;
+    }
+    captureRunning = true;
     cancelled = false;
     resetTargetStates();
     if (deviceAuditButton) deviceAuditButton.disabled = true;
@@ -1546,16 +1633,19 @@
           if (cancelled) throw new Error('Capture cancelled.');
           setTargetState(target.key, 'active', profile.label);
           setMessage(`Loading ${target.label} · ${profile.label}…`);
-          await loadTarget(target, profile);
+          const identity = await loadTarget(target, profile);
+          const documentRef = frame.contentDocument;
+          if (!documentRef?.body || !captureIdentityMatches(target, identity)) {
+            throw new Error(`Capture integrity check failed for ${target.label} · ${profile.label}.`);
+          }
 
           const pageState = detectPageState(target);
           if (deviceMode) {
             deviceDiagnostics.push(
-              collectDeviceDiagnostics(target, frame.contentDocument, profile, hostShell),
+              collectDeviceDiagnostics(target, documentRef, profile, hostShell),
             );
           }
           if (automated) {
-            const documentRef = frame.contentDocument;
             for (const gate of acceptanceSpecification.gates || []) {
               for (const criterion of gate.criteria || []) {
                 if (!criterionTargetKeys(criterion.criterion_id).includes(target.key)) continue;
@@ -1590,6 +1680,9 @@
               width: viewportShot.width,
               height: viewportShot.height,
               page_state: pageState,
+              source_path: identity.path,
+              source_review_state: identity.review_state,
+              source_media_tab: identity.media_tab,
               file: viewportFile,
             });
 
@@ -1605,6 +1698,9 @@
               width: fullShot.width,
               height: fullShot.height,
               page_state: pageState,
+              source_path: identity.path,
+              source_review_state: identity.review_state,
+              source_media_tab: identity.media_tab,
               file: fullFile,
             });
           } else {
@@ -1620,6 +1716,9 @@
               width: shot.width,
               height: shot.height,
               page_state: pageState,
+              source_path: identity.path,
+              source_review_state: identity.review_state,
+              source_media_tab: identity.media_tab,
               file: fileName,
             });
           }
@@ -1748,6 +1847,7 @@
         if (row?.classList.contains('is-active')) setTargetState(target.key, 'error', 'Failed');
       }
     } finally {
+      captureRunning = false;
       if (deviceAuditButton) deviceAuditButton.disabled = false;
       if (automatedAuditButton) automatedAuditButton.disabled = false;
       responsiveButton.disabled = false;
