@@ -372,3 +372,24 @@ def test_0131_real_device_polish_fixes_light_states_and_tall_phone_composition()
     assert "@media (max-width: 700px) and (min-height: 900px)" in workout
     assert "calc(100dvh - var(--mobile-nav-total-height) - 118px)" in workout
     assert ".cardio-item:not([hidden])" in workout
+
+
+
+def test_0139_visual_evidence_and_accessibility_polish_is_locked() -> None:
+    router = _text(ROOT / "src" / "hwa" / "web" / "router.py")
+    pro = _text(STATIC / "pro-ui.css")
+    sandbox = _text(ROOT / "src" / "hwa" / "web" / "review_sandbox.py")
+
+    assert router.count('"page": build_page_context(person, "more")') >= 3
+    assert "0.1.39 visual evidence and accessibility polish" in pro
+    assert 'body[data-active-nav="more"] .exercise-coaching-card h3' in pro
+    assert 'body[data-active-nav="progress"] .history-row__metrics span' in pro
+    assert 'body[data-active-nav="progress"] .progress-chart text' in pro
+    assert "flex-wrap: wrap;" in pro
+    assert "overflow-x: visible;" in pro
+
+    assert "ExercisePersonalBest(" in sandbox
+    assert "MuscleCoverageRow(" in sandbox
+    assert "ActivityDay(" in sandbox
+    assert "estimated_1rm_kg=Decimal(\"10.7\")" in sandbox
+    assert "for offset in range(84)" in sandbox
