@@ -218,13 +218,13 @@ def _enrich_pack_for_ai(pack_path: Path, context: BrowserContext) -> None:
     ).encode("utf-8")
     entries["ai-review-gallery.html"] = _ai_gallery(captures).encode("utf-8")
     entries["AI-REVIEW-GUIDE.txt"] = (
-        "Getfit AI Review Guide\n\n"
-        "Read review-content.json first for rendered text, headings and controls. "
-        "Inspect ai-screenshots/*.png for actual browser-rendered visual evidence at the "
-        "Home Assistant phone and desktop extremes. The SVG files are complete lossless "
-        "backing evidence; some text-only extractors truncate large SVG source inside the "
-        "embedded CSS, so that truncation must not be treated as a broken Getfit export.\n"
-    ).encode("utf-8")
+        b"Getfit AI Review Guide\n\n"
+        b"Read review-content.json first for rendered text, headings and controls. "
+        b"Inspect ai-screenshots/*.png for actual browser-rendered visual evidence at the "
+        b"Home Assistant phone and desktop extremes. The SVG files are complete lossless "
+        b"backing evidence; some text-only extractors truncate large SVG source inside the "
+        b"embedded CSS, so that truncation must not be treated as a broken Getfit export.\n"
+    )
 
     replacement = pack_path.with_suffix(".repacked.zip")
     with zipfile.ZipFile(
