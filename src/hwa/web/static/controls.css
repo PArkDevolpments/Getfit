@@ -9,9 +9,9 @@
   --btn-radius-primary: 16px;
   --btn-gap: 8px;
   --btn-pad-x: 17px;
-  --btn-green-hi: #36ca7a;
-  --btn-green: #25ad65;
-  --btn-green-lo: #1d9654;
+  --btn-green-hi: #1f844b;
+  --btn-green: #1b7b45;
+  --btn-green-lo: #146c3b;
   --btn-danger: #9b3442;
   --btn-danger-soft: rgba(190,65,80,.075);
   --btn-focus: rgba(47,191,113,.36);
@@ -314,7 +314,7 @@ button[aria-disabled="true"] {
   border-color: #229956 !important;
   color: #fff !important;
   background:
-    linear-gradient(180deg, #32c676, #219b58) !important;
+    linear-gradient(180deg, #1f844b, #176d42) !important;
   box-shadow:
     0 6px 15px rgba(31,143,79,.17),
     inset 0 1px rgba(255,255,255,.2) !important;
@@ -445,6 +445,19 @@ button[aria-disabled="true"] {
     --btn-danger: #f0a1ad;
     --btn-danger-soft: rgba(210,74,91,.09);
     --btn-focus: rgba(65,216,144,.42);
+  }
+
+  .btn--primary,
+  .primary-action,
+  .complete-set-button,
+  .cardio-timer-start {
+    color: #06150d !important;
+    background: linear-gradient(180deg, #4ade93, #31c876) !important;
+    border-color: rgba(81,229,156,.18) !important;
+    text-shadow: none;
+    box-shadow:
+      0 9px 22px rgba(22,129,72,.20),
+      inset 0 1px rgba(255,255,255,.18) !important;
   }
 
   .btn--secondary,
