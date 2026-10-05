@@ -35,6 +35,9 @@
 .library-filter-pills button,
 .exercise-media-tab {
   -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
   box-sizing: border-box;
   min-height: var(--btn-h);
   border-radius: var(--btn-radius);
@@ -160,6 +163,21 @@
 .workout-end-action:hover {
   border-color: rgba(39,51,41,.20) !important;
   background: var(--pro-card-soft) !important;
+}
+
+.btn--secondary:active,
+.secondary-action:active,
+.btn--ghost:active,
+.ghost-action:active,
+.workout-end-action:active,
+.btn--danger:active,
+.danger-action:active,
+.set-pain-action:active,
+.plan-segmented button:active,
+.library-filter-pills button:active,
+.exercise-media-tab:active {
+  transform: translateY(1px);
+  box-shadow: none !important;
 }
 
 /* Danger ---------------------------------------------------------------- */
