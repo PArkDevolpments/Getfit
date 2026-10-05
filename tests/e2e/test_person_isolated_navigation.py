@@ -76,7 +76,7 @@ def test_all_product_surfaces_are_person_scoped(tmp_path) -> None:
         ("/workout", "workout"),
         ("/progress", "progress"),
         ("/more", "more"),
-        ("/library", "workout"),
+        ("/library", "more"),
         ("/settings", "more"),
     )
     try:
