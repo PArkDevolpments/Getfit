@@ -370,16 +370,16 @@
   function isScreenReaderOnly(node, style) {
     if (!node || !style) return false;
     if (
-      node.classList?.contains('sr-only')
-      || node.classList?.contains('visually-hidden')
-      || node.classList?.contains('screen-reader-only')
+      node.closest?.('.sr-only, .visually-hidden, .screen-reader-only')
     ) {
       return true;
     }
 
     const width = Number.parseFloat(style.width || '0');
     const height = Number.parseFloat(style.height || '0');
-    const clipped = style.clip && style.clip !== 'auto' && style.clip !== 'rect(auto, auto, auto, auto)';
+    const clipped = style.clip
+      && style.clip !== 'auto'
+      && style.clip !== 'rect(auto, auto, auto, auto)';
     const clipPathed = style.clipPath && style.clipPath !== 'none';
     return style.position === 'absolute'
       && width <= 1
@@ -495,7 +495,7 @@
       || node.textContent
       || node.getAttribute('placeholder')
       || node.tagName
-    ).replace(/\\s+/g, ' ').trim();
+    ).replace(/\s+/g, ' ').trim();
     const value = 'value' in node && state.visible
       ? String(node.value || '').trim()
       : '';
@@ -509,14 +509,12 @@
   }
 
   function collectReviewContent(target, documentRef, profile, identity, pageState) {
-    const visibleText = (documentRef?.body?.innerText || '')
-      .replace(/\\n{3,}/g, '\\n\\n')
-      .trim();
+    const visibleText = pageText(documentRef, profile);
 
     const visualHeadingRecords = [];
     const nonVisualHeadingRecords = [];
     for (const node of documentRef?.querySelectorAll('h1, h2, h3') || []) {
-      const label = (node.textContent || '').replace(/\\s+/g, ' ').trim();
+      const label = (node.textContent || '').replace(/\s+/g, ' ').trim();
       if (!label) continue;
       const visibility = elementReviewState(node, documentRef, profile);
       const record = {label, visibility};
@@ -533,7 +531,7 @@
     ) {
       const record = controlReviewRecord(node, documentRef, profile);
       if (!record.label) continue;
-      if (record.visibility.visible && record.visibility.reachable) {
+      if (record.visibility.visible) {
         visualControls.push(record);
       } else {
         nonVisualControls.push({
