@@ -61,7 +61,11 @@ _PROFILES: dict[str, ExerciseProfile] = {
     "overhead_triceps_extension": ExerciseProfile(
         body_area="Triceps",
         movement_family="Arm extension",
-        technique_cues=(\n            "Keep ribs stacked",\n            "Keep upper arms steady",\n            "Move smoothly through the elbows",\n        ),
+        technique_cues=(
+            "Keep ribs stacked",
+            "Keep upper arms steady",
+            "Move smoothly through the elbows",
+        ),
         equipment=("Dumbbells",),
         primary_muscles=("triceps",),
     ),
@@ -80,7 +84,11 @@ _PROFILES: dict[str, ExerciseProfile] = {
     "dumbbell_romanian_deadlift": ExerciseProfile(
         body_area="Posterior chain",
         movement_family="Hip hinge",
-        technique_cues=(\n            "Push the hips backward",\n            "Keep knees softly bent",\n            "Stand by driving the hips forward",\n        ),
+        technique_cues=(
+            "Push the hips backward",
+            "Keep knees softly bent",
+            "Stand by driving the hips forward",
+        ),
         equipment=("Dumbbells",),
         primary_muscles=("hamstrings", "glutes"),
         secondary_muscles=("back",),
@@ -88,7 +96,11 @@ _PROFILES: dict[str, ExerciseProfile] = {
     "supported_reverse_lunge": ExerciseProfile(
         body_area="Quads · glutes",
         movement_family="Single-leg squat",
-        technique_cues=(\n            "Use the support for balance",\n            "Step back under control",\n            "Drive through the front foot",\n        ),
+        technique_cues=(
+            "Use the support for balance",
+            "Step back under control",
+            "Drive through the front foot",
+        ),
         equipment=("Bodyweight",),
         primary_muscles=("quads", "glutes"),
         secondary_muscles=("hamstrings",),
@@ -110,14 +122,22 @@ _PROFILES: dict[str, ExerciseProfile] = {
     "forearm_plank": ExerciseProfile(
         body_area="Core · trunk",
         movement_family="Isometric hold",
-        technique_cues=(\n            "Make a long line head to heel",\n            "Brace the trunk",\n            "Stop before position breaks down",\n        ),
+        technique_cues=(
+            "Make a long line head to heel",
+            "Brace the trunk",
+            "Stop before position breaks down",
+        ),
         equipment=("Bodyweight",),
         primary_muscles=("core",),
     ),
     "dumbbell_lateral_raise": ExerciseProfile(
         body_area="Shoulders",
         movement_family="Shoulder raise",
-        technique_cues=(\n            "Use a light controlled load",\n            "Keep a soft elbow",\n            "Avoid shrugging the shoulders",\n        ),
+        technique_cues=(
+            "Use a light controlled load",
+            "Keep a soft elbow",
+            "Avoid shrugging the shoulders",
+        ),
         equipment=("Dumbbells",),
         primary_muscles=("shoulders",),
     ),
