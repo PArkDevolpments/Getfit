@@ -88,6 +88,38 @@
     };
   }
 
+  function hostShellSnapshot() {
+    const root = document.documentElement;
+    const styles = getComputedStyle(root);
+    return {
+      ready: root.dataset.haShellReady === 'true',
+      host: root.dataset.haPanelHost || null,
+      requested: root.dataset.haShellRequested === 'true',
+      attempts: Number(root.dataset.haShellAttempts || 0),
+      timed_out: root.dataset.haShellTimedOut === 'true',
+      safe_area: {
+        top: styles.getPropertyValue('--ha-safe-top').trim() || '0px',
+        right: styles.getPropertyValue('--ha-safe-right').trim() || '0px',
+        bottom: styles.getPropertyValue('--ha-safe-bottom').trim() || '0px',
+        left: styles.getPropertyValue('--ha-safe-left').trim() || '0px',
+      },
+    };
+  }
+
+  async function waitForHostShellReady(timeoutMs = 6500) {
+    const started = Date.now();
+    while (Date.now() - started < timeoutMs) {
+      const snapshot = hostShellSnapshot();
+      if (snapshot.ready) {
+        await nextFrame();
+        await sleep(350);
+        return hostShellSnapshot();
+      }
+      await sleep(100);
+    }
+    return hostShellSnapshot();
+  }
+
   function applyProfile(profile) {
     frameShell.style.width = `${profile.width}px`;
     frameShell.style.height = `${profile.height}px`;
@@ -965,7 +997,7 @@
     ].join('');
   }
 
-  function collectDeviceDiagnostics(target, documentRef, profile) {
+  function collectDeviceDiagnostics(target, documentRef, profile, hostShell) {
     const root = documentRef.documentElement;
     const touchAudit = auditTouchTargets(documentRef);
     const issues = [];
@@ -983,18 +1015,31 @@
       });
     }
 
-    const haShellReady = root.dataset.haShellReady === 'true';
-    const haPanelHost = root.dataset.haPanelHost || null;
-    if (
+    const haShellReady = Boolean(hostShell?.ready);
+    const haPanelHost = hostShell?.host || null;
+    const acceptedHosts = new Set([
+      'home-assistant-app-panel',
+      'getfit-full-canvas-panel',
+    ]);
+    if (profile.width <= 820 && !haShellReady) {
+      issues.push({
+        code: 'HOME_ASSISTANT_FULL_CANVAS_HANDSHAKE_MISSING',
+        detail: {
+          requested: Boolean(hostShell?.requested),
+          attempts: Number(hostShell?.attempts || 0),
+          timed_out: Boolean(hostShell?.timed_out),
+        },
+      });
+    } else if (
       profile.width <= 820
-      && haShellReady
-      && haPanelHost !== 'getfit-full-canvas-panel'
+      && haPanelHost
+      && !acceptedHosts.has(haPanelHost)
     ) {
       issues.push({
-        code: 'HOME_ASSISTANT_FULL_CANVAS_HOST_REQUIRED',
+        code: 'HOME_ASSISTANT_FULL_CANVAS_HOST_UNSUPPORTED',
         detail: {
           active_host: haPanelHost,
-          required_host: 'getfit-full-canvas-panel',
+          accepted_hosts: Array.from(acceptedHosts),
         },
       });
     }
@@ -1051,6 +1096,10 @@
       touch_targets_checked: touchAudit.checked,
       ha_shell_ready: haShellReady,
       ha_panel_host: haPanelHost,
+      ha_shell_requested: Boolean(hostShell?.requested),
+      ha_shell_attempts: Number(hostShell?.attempts || 0),
+      ha_shell_timed_out: Boolean(hostShell?.timed_out),
+      ha_safe_area: hostShell?.safe_area || null,
       bottom_nav: bottomNavRect
         ? {
           left: Math.round(bottomNavRect.left),
@@ -1451,7 +1500,7 @@
     ].join('');
   }
 
-  async function runCapture(profiles, {automated = false, deviceMode = false} = {}) {
+  async function runCapture(profiles, {automated = false, deviceMode = false, hostShell = null} = {}) {
     cancelled = false;
     resetTargetStates();
     if (deviceAuditButton) deviceAuditButton.disabled = true;
@@ -1478,7 +1527,7 @@
           const pageState = detectPageState(target);
           if (deviceMode) {
             deviceDiagnostics.push(
-              collectDeviceDiagnostics(target, frame.contentDocument, profile),
+              collectDeviceDiagnostics(target, frame.contentDocument, profile, hostShell),
             );
           }
           if (automated) {
@@ -1585,6 +1634,7 @@
           max_touch_points: navigator.maxTouchPoints || 0,
         },
         device_mode: deviceMode,
+        home_assistant_shell: deviceMode ? hostShell : null,
         captures,
         review_warnings: captures.some(
           (capture) => capture.page === 'workout' && capture.page_state === 'empty',
@@ -1682,10 +1732,12 @@
   }
 
   async function runDeviceAudit() {
-    const profile = currentViewportProfile();
     document.body.classList.add('is-device-review');
+    setMessage('Negotiating the Home Assistant full-canvas viewport…');
+    const hostShell = await waitForHostShellReady();
+    const profile = currentViewportProfile();
     setMessage(`Auto-reviewing this Home Assistant viewport at ${profile.width}×${profile.height}…`);
-    await runCapture([profile], {automated: true, deviceMode: true});
+    await runCapture([profile], {automated: true, deviceMode: true, hostShell});
   }
 
   async function runAutomatedAudit() {

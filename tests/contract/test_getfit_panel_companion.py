@@ -10,7 +10,7 @@ def test_full_canvas_panel_companion_is_packaged_without_broad_app_permissions()
     app_config = (ROOT / "getfit" / "config.yaml").read_text(encoding="utf-8")
 
     assert '"domain": "getfit_panel"' in manifest
-    assert '"version": "0.1.32"' in manifest
+    assert '"version": "0.1.33"' in manifest
     assert '"config_flow": true' in manifest
     assert '"panel_custom"' in manifest
 
@@ -56,3 +56,20 @@ def test_device_review_records_which_home_assistant_panel_host_is_active() -> No
     assert "data.host || 'home-assistant-app-panel'" in shell
     assert "ha_panel_host:" in review
     assert "ha_shell_ready:" in review
+
+
+def test_native_home_assistant_app_panel_is_the_preferred_full_canvas_host() -> None:
+    shell = (ROOT / "src" / "hwa" / "web" / "static" / "ha-shell.js").read_text(
+        encoding="utf-8"
+    )
+    docs = (ROOT / "docs" / "operations" / "getfit-full-canvas-panel.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "home-assistant/subscribe-properties" in shell
+    assert "handleSafeArea: true" in shell
+    assert "kioskMode: narrow" in shell
+    assert "MAX_ATTEMPTS = 24" in shell
+    assert "home-assistant-app-panel" in shell
+    assert "native app panel" in docs
+    assert "no separate Getfit panel integration is required" in docs
