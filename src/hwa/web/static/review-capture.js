@@ -1008,6 +1008,30 @@
         detail: `scrollWidth ${root.scrollWidth}px exceeds clientWidth ${root.clientWidth}px`,
       });
     }
+
+    const fitCriticalWorkoutStates = new Set([
+      'strength-active',
+      'strength-feedback',
+      'strength-pain',
+      'strength-rest',
+      'bike-finisher',
+      'treadmill',
+      'interval-hard',
+      'interval-recovery',
+    ]);
+    const verticalOverflow = fitCriticalWorkoutStates.has(target.key)
+      && root.scrollHeight > root.clientHeight + 4;
+    if (verticalOverflow) {
+      issues.push({
+        code: 'FIT_CRITICAL_VERTICAL_OVERFLOW',
+        detail: {
+          scroll_height: root.scrollHeight,
+          client_height: root.clientHeight,
+          overflow_px: root.scrollHeight - root.clientHeight,
+          tolerance_px: 4,
+        },
+      });
+    }
     if (touchAudit.failures.length) {
       issues.push({
         code: 'TOUCH_TARGETS',
