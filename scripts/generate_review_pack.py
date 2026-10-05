@@ -137,7 +137,7 @@ def _ai_gallery(captures: list[dict[str, Any]]) -> str:
 
     return "".join(
         [
-            "<!doctype html><html lang="en-GB"><head><meta charset="utf-8">",
+            '<!doctype html><html lang="en-GB"><head><meta charset="utf-8">',
             '<meta name="viewport" content="width=device-width,initial-scale=1">',
             "<title>Getfit AI Review Gallery</title><style>",
             "body{margin:0;padding:24px;background:#061321;color:#eaf6ff;"
