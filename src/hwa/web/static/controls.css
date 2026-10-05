@@ -1,0 +1,571 @@
+/* Getfit 0.1.34 professional interaction system.
+   Controls are vector/CSS-based deliberately: no raster button artwork, so
+   every state remains crisp, accessible and responsive at any device scale. */
+
+:root {
+  --btn-h: 48px;
+  --btn-h-primary: 54px;
+  --btn-radius: 14px;
+  --btn-radius-primary: 16px;
+  --btn-gap: 8px;
+  --btn-pad-x: 17px;
+  --btn-green-hi: #1f844b;
+  --btn-green: #1b7b45;
+  --btn-green-lo: #146c3b;
+  --btn-danger: #9b3442;
+  --btn-danger-soft: rgba(190,65,80,.075);
+  --btn-focus: rgba(47,191,113,.36);
+  --btn-shadow: 0 9px 22px rgba(31,143,79,.19);
+  --btn-shadow-pressed: 0 4px 10px rgba(31,143,79,.13);
+}
+
+/* Shared primitive ------------------------------------------------------- */
+.btn,
+.primary-action,
+.secondary-action,
+.ghost-action,
+.danger-action,
+.complete-set-button,
+.workout-end-action,
+.set-pain-action,
+.technique-action,
+.cardio-timer-start,
+.cardio-timer-reset,
+.plan-segmented button,
+.library-filter-pills button,
+.exercise-media-tab {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  box-sizing: border-box;
+  min-height: var(--btn-h);
+  border-radius: var(--btn-radius);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: .9rem;
+  font-weight: 780;
+  line-height: 1;
+  letter-spacing: -.012em;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    opacity 140ms ease;
+}
+
+.btn,
+.primary-action,
+.secondary-action,
+.ghost-action,
+.danger-action {
+  padding: 0 var(--btn-pad-x);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--btn-gap);
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn__icon,
+.button-icon {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.btn__icon--solid {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* Primary --------------------------------------------------------------- */
+.btn--primary,
+.primary-action,
+.complete-set-button,
+.cardio-timer-start {
+  min-height: var(--btn-h-primary);
+  border: 1px solid rgba(20,111,61,.08) !important;
+  border-radius: var(--btn-radius-primary);
+  color: #fff !important;
+  background:
+    linear-gradient(180deg, var(--btn-green-hi) 0%, var(--btn-green) 52%, var(--btn-green-lo) 100%) !important;
+  box-shadow:
+    var(--btn-shadow),
+    inset 0 1px rgba(255,255,255,.24),
+    inset 0 -1px rgba(5,68,34,.12) !important;
+  text-shadow: 0 1px rgba(0,0,0,.08);
+}
+
+.btn--primary:hover,
+.primary-action:hover,
+.complete-set-button:hover,
+.cardio-timer-start:hover {
+  filter: saturate(1.03) brightness(1.015);
+  box-shadow:
+    0 11px 25px rgba(31,143,79,.23),
+    inset 0 1px rgba(255,255,255,.28) !important;
+}
+
+.btn--primary:active,
+.primary-action:active,
+.complete-set-button:active,
+.cardio-timer-start:active {
+  transform: translateY(1px);
+  filter: brightness(.97);
+  box-shadow:
+    var(--btn-shadow-pressed),
+    inset 0 1px rgba(255,255,255,.15) !important;
+}
+
+/* Secondary ------------------------------------------------------------- */
+.btn--secondary,
+.secondary-action {
+  border: 1px solid rgba(47,191,113,.26) !important;
+  color: #185f3b !important;
+  background:
+    linear-gradient(180deg, rgba(247,252,248,.96), rgba(232,246,237,.96)) !important;
+  box-shadow:
+    0 3px 10px rgba(35,55,39,.055),
+    inset 0 1px rgba(255,255,255,.8) !important;
+}
+
+.btn--secondary:hover,
+.secondary-action:hover {
+  border-color: rgba(47,191,113,.40) !important;
+  background: #e8f6ed !important;
+}
+
+/* Ghost ----------------------------------------------------------------- */
+.btn--ghost,
+.ghost-action,
+.workout-end-action {
+  border: 1px solid rgba(39,51,41,.12) !important;
+  color: var(--pro-ink) !important;
+  background: rgba(255,253,248,.72) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.70) !important;
+}
+
+.btn--ghost:hover,
+.ghost-action:hover,
+.workout-end-action:hover {
+  border-color: rgba(39,51,41,.20) !important;
+  background: var(--pro-card-soft) !important;
+}
+
+.btn--secondary:active,
+.secondary-action:active,
+.btn--ghost:active,
+.ghost-action:active,
+.workout-end-action:active,
+.btn--danger:active,
+.danger-action:active,
+.set-pain-action:active,
+.plan-segmented button:active,
+.library-filter-pills button:active,
+.exercise-media-tab:active {
+  transform: translateY(1px);
+  box-shadow: none !important;
+}
+
+/* Danger ---------------------------------------------------------------- */
+.btn--danger,
+.danger-action,
+.set-pain-action {
+  border: 1px solid rgba(155,52,66,.20) !important;
+  color: var(--btn-danger) !important;
+  background: var(--btn-danger-soft) !important;
+  box-shadow: none !important;
+}
+
+.btn--danger:hover,
+.danger-action:hover,
+.set-pain-action:hover {
+  border-color: rgba(155,52,66,.34) !important;
+  background: rgba(190,65,80,.11) !important;
+}
+
+/* Focus / disabled / loading ------------------------------------------- */
+.btn:focus-visible,
+.primary-action:focus-visible,
+.secondary-action:focus-visible,
+.ghost-action:focus-visible,
+.danger-action:focus-visible,
+.complete-set-button:focus-visible,
+.workout-end-action:focus-visible,
+.set-pain-action:focus-visible,
+.technique-action:focus-visible,
+.cardio-timer-start:focus-visible,
+.cardio-timer-reset:focus-visible,
+.plan-segmented button:focus-visible,
+.library-filter-pills button:focus-visible,
+.exercise-media-tab:focus-visible,
+.stepper-control button:focus-visible,
+.set-effort-presets__choices button:focus-visible,
+.set-feedback-options button:focus-visible {
+  outline: 3px solid var(--btn-focus) !important;
+  outline-offset: 2px;
+}
+
+.btn:disabled,
+.primary-action:disabled,
+.secondary-action:disabled,
+.ghost-action:disabled,
+.danger-action:disabled,
+.complete-set-button:disabled,
+button[aria-disabled="true"] {
+  opacity: .50 !important;
+  cursor: not-allowed !important;
+  filter: saturate(.55) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+[aria-busy="true"].btn,
+[aria-busy="true"].primary-action {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+[aria-busy="true"].btn::after,
+[aria-busy="true"].primary-action::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,.42);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: getfit-control-spin .72s linear infinite;
+}
+
+@keyframes getfit-control-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Compact and icon controls -------------------------------------------- */
+.btn--compact {
+  min-height: 44px;
+  padding-inline: 13px;
+  border-radius: 12px;
+  font-size: .82rem;
+}
+
+.btn--icon,
+.cardio-timer-reset {
+  width: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 !important;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 14px !important;
+  font-size: 1.08rem;
+}
+
+/* Steppers -------------------------------------------------------------- */
+.stepper-control button {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border: 1px solid rgba(39,51,41,.12) !important;
+  border-radius: 12px !important;
+  color: var(--pro-ink) !important;
+  background:
+    linear-gradient(180deg, #fffdf8, #f1eee6) !important;
+  box-shadow:
+    0 2px 6px rgba(35,55,39,.05),
+    inset 0 1px rgba(255,255,255,.8) !important;
+  font-size: 1.16rem !important;
+  font-weight: 720 !important;
+}
+
+.stepper-control button:active {
+  transform: translateY(1px);
+  background: #eae7de !important;
+}
+
+/* Effort choice --------------------------------------------------------- */
+.set-effort-presets__choices button {
+  min-height: 46px !important;
+  border: 1px solid rgba(39,51,41,.12) !important;
+  border-radius: 12px !important;
+  color: var(--pro-ink) !important;
+  background:
+    linear-gradient(180deg, #fffdf9, #f3f0e8) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.8) !important;
+  font-weight: 760 !important;
+}
+
+.set-effort-presets__choices button[aria-pressed="true"],
+.set-effort-presets__choices button.is-selected {
+  border-color: #229956 !important;
+  color: #fff !important;
+  background:
+    linear-gradient(180deg, #1f844b, #176d42) !important;
+  box-shadow:
+    0 6px 15px rgba(31,143,79,.17),
+    inset 0 1px rgba(255,255,255,.2) !important;
+}
+
+/* Post-set choices ------------------------------------------------------ */
+.set-feedback-options button {
+  min-height: 64px !important;
+  border: 1px solid rgba(39,51,41,.12) !important;
+  border-radius: 14px !important;
+  color: var(--pro-ink) !important;
+  background:
+    linear-gradient(180deg, #fffdf9, #f4f1e9) !important;
+  box-shadow: 0 3px 10px rgba(35,55,39,.045) !important;
+}
+
+.set-feedback-options button:hover {
+  border-color: rgba(47,191,113,.28) !important;
+  transform: translateY(-1px);
+}
+
+.set-feedback-options button[aria-pressed="true"],
+.set-feedback-options button.is-selected {
+  border-color: #239d59 !important;
+  background: rgba(47,191,113,.10) !important;
+  box-shadow: inset 3px 0 #2fbf71 !important;
+}
+
+.set-feedback-options button[data-set-feedback="pain"] {
+  border-color: rgba(155,52,66,.14) !important;
+}
+
+.set-feedback-options button[data-set-feedback="pain"][aria-pressed="true"] {
+  border-color: rgba(155,52,66,.32) !important;
+  background: rgba(190,65,80,.08) !important;
+  box-shadow: inset 3px 0 #a43d4c !important;
+}
+
+/* Tabs / segmented controls -------------------------------------------- */
+.plan-segmented,
+.exercise-media-tabs {
+  padding: 4px !important;
+  gap: 4px !important;
+  border: 1px solid rgba(39,51,41,.10) !important;
+  border-radius: 14px !important;
+  background: rgba(237,234,225,.72) !important;
+}
+
+.plan-segmented button,
+.exercise-media-tab {
+  min-height: 44px !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  color: var(--pro-muted) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.plan-segmented button.is-active,
+.exercise-media-tab.is-active {
+  color: #176d42 !important;
+  background: var(--pro-paper) !important;
+  box-shadow:
+    0 3px 10px rgba(35,55,39,.08),
+    inset 0 -2px #2fbf71 !important;
+}
+
+.library-filter-pills button {
+  min-height: 44px !important;
+  padding: 0 15px !important;
+  border: 1px solid rgba(39,51,41,.10) !important;
+  border-radius: 999px !important;
+  color: var(--pro-muted) !important;
+  background: rgba(255,253,248,.74) !important;
+}
+
+.library-filter-pills button.is-active {
+  border-color: rgba(47,191,113,.30) !important;
+  color: #176d42 !important;
+  background: rgba(47,191,113,.12) !important;
+  box-shadow: inset 0 0 0 1px rgba(47,191,113,.04) !important;
+}
+
+/* Workout-specific hierarchy ------------------------------------------- */
+.complete-set-button {
+  width: 100%;
+  font-size: .96rem !important;
+  font-weight: 840 !important;
+}
+
+.technique-action {
+  min-height: 44px !important;
+  padding: 0 13px !important;
+  border-radius: 999px !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.main-rest-actions,
+.pain-stop-actions,
+.cardio-live-actions {
+  gap: 8px !important;
+}
+
+.main-rest-actions .primary-action,
+.pain-stop-actions .primary-action,
+.feedback-continue {
+  flex: 1 1 auto;
+}
+
+.workout-command-bar button {
+  min-height: 48px !important;
+  border-radius: 14px !important;
+}
+
+/* Button icon-label alignment ------------------------------------------ */
+.button-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Dark ------------------------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --btn-danger: #f0a1ad;
+    --btn-danger-soft: rgba(210,74,91,.09);
+    --btn-focus: rgba(65,216,144,.42);
+  }
+
+  .btn--primary,
+  .primary-action,
+  .complete-set-button,
+  .cardio-timer-start {
+    color: #06150d !important;
+    background: linear-gradient(180deg, #4ade93, #31c876) !important;
+    border-color: rgba(81,229,156,.18) !important;
+    text-shadow: none;
+    box-shadow:
+      0 9px 22px rgba(22,129,72,.20),
+      inset 0 1px rgba(255,255,255,.18) !important;
+  }
+
+  .btn--secondary,
+  .secondary-action {
+    color: #dff6e8 !important;
+    border-color: rgba(65,216,144,.20) !important;
+    background: linear-gradient(180deg, #10231d, #0b1b17) !important;
+    box-shadow: inset 0 1px rgba(255,255,255,.025) !important;
+  }
+
+  .btn--ghost,
+  .ghost-action,
+  .workout-end-action,
+  .cardio-timer-reset {
+    color: #d9e8df !important;
+    border-color: rgba(188,211,198,.13) !important;
+    background: rgba(13,28,24,.78) !important;
+  }
+
+  .stepper-control button,
+  .set-effort-presets__choices button,
+  .set-feedback-options button {
+    color: var(--pro-ink) !important;
+    border-color: rgba(188,211,198,.12) !important;
+    background: linear-gradient(180deg, #10231d, #0b1916) !important;
+    box-shadow: inset 0 1px rgba(255,255,255,.025) !important;
+  }
+
+  .plan-segmented,
+  .exercise-media-tabs {
+    border-color: rgba(188,211,198,.10) !important;
+    background: #0b1916 !important;
+  }
+
+  .plan-segmented button.is-active,
+  .exercise-media-tab.is-active {
+    color: #8de7b8 !important;
+    background: #10231d !important;
+    box-shadow:
+      0 3px 10px rgba(0,0,0,.16),
+      inset 0 -2px #41d890 !important;
+  }
+
+  .library-filter-pills button {
+    border-color: rgba(188,211,198,.10) !important;
+    color: var(--pro-muted) !important;
+    background: #0b1916 !important;
+  }
+
+  .library-filter-pills button.is-active {
+    color: #8de7b8 !important;
+    border-color: rgba(65,216,144,.25) !important;
+    background: rgba(65,216,144,.09) !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .primary-action,
+  .complete-set-button,
+  .cardio-timer-start {
+    min-height: 54px !important;
+  }
+
+  .home-primary-action .primary-action,
+  .progress-empty-actions .primary-action,
+  .progress-empty-actions .secondary-action,
+  .settings-device-review .primary-action {
+    width: 100%;
+  }
+
+  .workout-end-action {
+    width: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+  }
+
+  .workout-end-action::before {
+    content: "×";
+    font-size: 1.18rem;
+    line-height: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .primary-action,
+  .secondary-action,
+  .ghost-action,
+  .danger-action,
+  .complete-set-button,
+  .workout-end-action,
+  .set-pain-action,
+  .technique-action,
+  .cardio-timer-start,
+  .cardio-timer-reset,
+  .plan-segmented button,
+  .library-filter-pills button,
+  .exercise-media-tab,
+  .stepper-control button,
+  .set-effort-presets__choices button,
+  .set-feedback-options button {
+    transition: none !important;
+  }
+
+  [aria-busy="true"].btn::after,
+  [aria-busy="true"].primary-action::after {
+    animation: none;
+  }
+}

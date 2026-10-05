@@ -127,8 +127,8 @@
       </div>
 
       <div class="cardio-live-actions" aria-label="Cardio timer controls">
-        <button class="primary-action cardio-timer-start" type="button"{% if review_mode|default(false) %} disabled{% endif %}>{% if review_mode|default(false) %}Pause{% else %}Start{% endif %}</button>
-        <button class="ghost-action cardio-timer-reset" type="button"{% if review_mode|default(false) %} disabled{% endif %} aria-label="Reset cardio timer">↺</button>
+        <button class="btn btn--primary btn--block primary-action cardio-timer-start" type="button"{% if review_mode|default(false) %} disabled{% endif %}>{% if review_mode|default(false) %}Pause{% else %}Start{% endif %}</button>
+        <button class="btn btn--ghost btn--icon ghost-action cardio-timer-reset" type="button"{% if review_mode|default(false) %} disabled{% endif %} aria-label="Reset cardio timer">↺</button>
       </div>
 
       {% if item.segment_type|upper == "INTERVAL_HARD" %}
@@ -432,10 +432,10 @@
                     <input name="{{ item.item_id }}-set-{{ set_number }}-effort-manual" type="checkbox" hidden>
                   </div>
                   <p class="set-effort-scale">Guide: RPE 6 ≈ 4 RIR · 7 ≈ 3 · 8 ≈ 2 · 9 ≈ 1 · 10 ≈ 0</p>
-                  <button class="set-pain-action" type="button" data-set-pain>Report pain / stop exercise</button>
+                  <button class="btn btn--danger btn--block set-pain-action" type="button" data-set-pain>Report pain / stop exercise</button>
                 </details>
                 <div class="set-entry__actions">
-                  <button class="complete-set-button" type="button" data-complete-set>Complete Set</button>
+                  <button class="btn btn--primary btn--block complete-set-button" type="button" data-complete-set><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg><span>Complete Set</span></button>
                   <input name="{{ item.item_id }}-set-{{ set_number }}-pain" type="checkbox" hidden>
                   <input name="{{ item.item_id }}-set-{{ set_number }}-completed" type="checkbox" hidden>
                 </div>
@@ -464,7 +464,7 @@
               <span aria-hidden="true">!</span><strong>Pain / Stop</strong><small>Stop this exercise and choose what to do next</small>
             </button>
           </div>
-          <button class="primary-action feedback-continue" type="button" data-feedback-continue disabled>Continue</button>
+          <button class="btn btn--primary btn--block primary-action feedback-continue" type="button" data-feedback-continue disabled><span>Continue</span><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M14 7l5 5-5 5"/></svg></button>
         </section>
 
         <section class="pain-stop-panel" data-pain-stop-panel hidden>
@@ -473,8 +473,8 @@
           <h3>Stop this exercise.</h3>
           <p>We’ve saved the set with the pain flag. Getfit will not start another set of this exercise automatically. If you stop for now, the workout remains saved and resumable.</p>
           <div class="pain-stop-actions">
-            <button class="primary-action" type="button" data-pain-skip>Skip this exercise</button>
-            <button class="danger-action" type="button" data-pain-end>Stop for now</button>
+            <button class="btn btn--primary primary-action" type="button" data-pain-skip><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path d="M9 7l9 5-9 5V7Z"/></svg><span>Skip this exercise</span></button>
+            <button class="btn btn--danger danger-action" type="button" data-pain-end><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg><span>Stop for now</span></button>
           </div>
         </section>
 
@@ -488,8 +488,8 @@
           </div>
           <p class="main-rest-next">Next: <strong>{{ item.display_name }} · Set 2 of {{ item.sets_target }}</strong></p>
           <div class="main-rest-actions">
-            <button class="secondary-action" type="button" data-add-rest>+15 sec</button>
-            <button class="primary-action" type="button" data-end-rest>Start next set</button>
+            <button class="btn btn--secondary secondary-action" type="button" data-add-rest><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/></svg><span>+15 sec</span></button>
+            <button class="btn btn--primary primary-action" type="button" data-end-rest><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7V5Z"/></svg><span>Start next set</span></button>
           </div>
         </section>
       </article>
@@ -507,8 +507,8 @@
         <p class="muted" id="rest-timer-label">Complete a set to start the prescribed rest.</p>
         {% if not review_mode|default(false) %}
         <div class="timer-actions">
-          <button class="secondary-action" id="rest-start" type="button">Start</button>
-          <button class="ghost-action" id="rest-reset" type="button">Reset</button>
+          <button class="btn btn--secondary secondary-action" id="rest-start" type="button">Start</button>
+          <button class="btn btn--ghost ghost-action" id="rest-reset" type="button">Reset</button>
         </div>
         {% endif %}
       </section>
@@ -527,10 +527,10 @@
   </div>
 
   <div class="workout-command-bar" aria-label="Workout controls">
-    <button class="ghost-action" id="previous-stage" type="button">← Previous</button>
-    <button class="secondary-action" id="pause-workout" type="button">Pause</button>
-    <button class="ghost-action" id="skip-stage" type="button">Skip</button>
-    <button class="primary-action" id="next-stage" type="button">Next →</button>
+    <button class="btn btn--ghost ghost-action" id="previous-stage" type="button">← Previous</button>
+    <button class="btn btn--secondary secondary-action" id="pause-workout" type="button">Pause</button>
+    <button class="btn btn--ghost ghost-action" id="skip-stage" type="button">Skip</button>
+    <button class="btn btn--primary primary-action" id="next-stage" type="button">Next →</button>
   </div>
 
   {% if not review_mode|default(false) %}
@@ -543,7 +543,7 @@
     <label>Session RPE
       <input id="session-rpe" name="session-rpe" type="number" min="1" max="10" step="0.5" inputmode="decimal" placeholder="1–10">
     </label>
-    <button class="primary-action" id="complete-workout" type="button">Complete workout</button>
+    <button class="btn btn--primary btn--block primary-action" id="complete-workout" type="button"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg><span>Complete workout</span></button>
     <p class="muted" id="completion-status">Your active draft remains resumable until completion succeeds.</p>
   </section>
   {% endif %}
@@ -555,7 +555,7 @@
   <p class="eyebrow">Workout</p>
   <h2>No workout is currently in progress</h2>
   <p class="muted">Start your next approved session from Today. Another person's draft is never shown here.</p>
-  <a class="primary-action" href="{{ ingress_url(request, '/') }}">Go to Today</a>
+  <a class="btn btn--primary btn--block primary-action" href="{{ ingress_url(request, '/') }}">Go to Today</a>
 </section>
 {% endif %}
 {% endblock %}

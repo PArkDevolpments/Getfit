@@ -44,23 +44,23 @@
     <div id="foundation-primary" class="home-primary-action">
       {% if primary_action == "start" and primary_day %}
       <button
-        class="primary-action"
+        class="btn btn--primary btn--block primary-action"
         id="primary-action"
         data-primary-action="start"
         data-programme-day-id="{{ primary_day.id }}"
         data-workout-url="{{ ingress_url(request, '/workout') }}"
         type="button"
-      >Start Workout</button>
+      ><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7V5Z"/></svg><span>Start Workout</span></button>
       <p class="action-status" id="action-status">Your workout saves automatically as you train.</p>
       {% elif primary_action == "resume" and today_view.draft_id %}
       <a
-        class="primary-action"
+        class="btn btn--primary btn--block primary-action"
         id="primary-action"
         href="{{ ingress_url(request, '/workout') }}"
         data-primary-action="resume"
         data-draft-id="{{ today_view.draft_id }}"
         data-draft-version="{{ today_view.draft_version }}"
-      >Resume Workout</a>
+      ><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v6h6"/></svg><span>Resume Workout</span></a>
       <p class="action-status">Continue from your latest saved set.</p>
       {% endif %}
     </div>
@@ -279,6 +279,7 @@
 
   button.addEventListener('click', async () => {
     button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
     status.textContent = 'Starting workout…';
     try {
       const response = await fetch('{{ ingress_url(request, "/api/v1/workouts/drafts") }}', {
@@ -295,6 +296,7 @@
     } catch (_) {
       status.textContent = 'Workout could not be started. Your existing data was not changed.';
       button.disabled = false;
+      button.removeAttribute('aria-busy');
     }
   });
 })();
