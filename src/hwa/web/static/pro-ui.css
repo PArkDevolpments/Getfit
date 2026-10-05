@@ -1289,3 +1289,56 @@ body:not([data-active-nav="workout"]) .settings-grid .muted {
     height:11px;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* 0.1.39 visual evidence and accessibility polish                            */
+/* -------------------------------------------------------------------------- */
+
+/* Library and exercise detail belong to More, so their light surfaces get the
+   same deliberate ink hierarchy as the rest of the non-workout product. */
+body[data-active-nav="more"] .exercise-coaching-card h3,
+body[data-active-nav="more"] .exercise-history-section h3,
+body[data-active-nav="more"] .cue-list,
+body[data-active-nav="more"] .exercise-history-row strong,
+body[data-active-nav="more"] .settings-safety-note strong {
+  color: var(--pro-ink) !important;
+}
+
+body[data-active-nav="more"] .exercise-history-row span,
+body[data-active-nav="more"] .settings-safety-note span,
+body[data-active-nav="more"] .more-link-row span {
+  color: var(--pro-muted) !important;
+}
+
+/* Keep Progress history/chart labels readable on the warm light cards instead
+   of inheriting decorative low-contrast accent values. */
+body[data-active-nav="progress"] .history-row__title strong,
+body[data-active-nav="progress"] .history-row__metrics span,
+body[data-active-nav="progress"] .progress-chart text,
+body[data-active-nav="progress"] .training-pr-row > div:first-child strong,
+body[data-active-nav="progress"] .muscle-coverage-row__copy strong {
+  color: var(--pro-ink) !important;
+  fill: var(--pro-ink) !important;
+}
+
+body[data-active-nav="progress"] .history-row__title .muted,
+body[data-active-nav="progress"] .training-pr-row span,
+body[data-active-nav="progress"] .muscle-coverage-row__copy span,
+body[data-active-nav="progress"] .activity-heatmap__legend {
+  color: var(--pro-muted) !important;
+}
+
+/* On phone widths the category choices wrap rather than presenting a clipped
+   final pill or relying on an invisible horizontal scrollbar. */
+@media (max-width: 820px) {
+  body[data-active-nav="more"] .library-filter-pills {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  body[data-active-nav="more"] .library-filter-pills button {
+    flex: 0 0 auto;
+  }
+}
