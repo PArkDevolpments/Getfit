@@ -20,7 +20,7 @@ GitHub issue numbers below are the governed backlog created for this programme.
 
 | Workstream | Status | GitHub issue | Dependencies | Primary owner lane | Release gate |
 |---|---|---:|---|---|---|
-| GF-0140-01 Review-pack visibility correctness | PLANNED | #74 | none | Visual QA + Frontend | pending |
+| GF-0140-01 Review-pack visibility correctness | ACTIVE | #74 | none | Visual QA + Frontend | pending |
 | GF-0140-02 Review-pack privacy sanitisation | PLANNED | #75 | none | Security/Privacy + Frontend | pending |
 | GF-0140-03 Mobile workout secondary controls | PLANNED | #76 | none | Frontend + Product/UX | pending |
 | GF-0140-04 Today responsive contract alignment | PLANNED | #77 | none | Product/UX + Frontend | pending |
