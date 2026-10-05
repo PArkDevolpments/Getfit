@@ -241,3 +241,40 @@ def test_review_pack_workflow_cancels_stale_runs_and_limits_artifact_retention()
     assert "concurrency:" in workflow
     assert "cancel-in-progress: true" in workflow
     assert "retention-days: 1" in workflow
+
+def test_0140_review_capture_exports_visibility_state_as_visual_evidence() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "function isScreenReaderOnly" in script
+    assert "function elementReviewState" in script
+    assert "node.hidden" in script
+    assert "node.getAttribute('aria-hidden') === 'true'" in script
+    assert "style.pointerEvents === 'none'" in script
+    assert "geometry:" in script
+    assert "in_viewport:" in script
+    assert "fully_in_viewport:" in script
+    assert "reachable:" in script
+    assert "visual_evidence:" in script
+    assert "accessibility_metadata:" in script
+
+
+def test_0140_hidden_or_inactive_controls_cannot_satisfy_visual_acceptance() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "function visuallyPresent" in script
+    assert "function reachableControl" in script
+    assert "const has = (selector) => visuallyPresent(documentRef, selector, profile)" in script
+    assert "documentRef?.body?.innerText" in script
+    assert "controlSelectors.every((selector) => reachableControl(" in script
+    assert "Complete Set control is visible and reachable" in script
+    assert "hidden, inactive or unreachable" in script
+
+
+def test_0140_review_content_keeps_non_visual_accessibility_metadata_separate() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "visual_headings" in script
+    assert "visual_controls" in script
+    assert "non_visual_headings" in script
+    assert "non_visual_controls" in script
+    assert "screen_reader_only" in script
