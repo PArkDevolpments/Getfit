@@ -21,6 +21,18 @@ The repository keeps the approved architecture and product direction under `docs
 - [`Getfit Product Implementation Plan`](docs/superpowers/plans/2026-09-30-getfit-product-implementation.md) — post-Foundation implementation tasks through authoritative Pep `WORKOUT_EVENT_SOURCE`, Home Assistant ingress and whole-product acceptance.
 - `docs/superpowers/approved-foundation-baseline.zip` preserves the exact approved Foundation source documents for audit/recovery.
 
+## Active UI/UX evolution programme
+
+The governed premium-product evolution is tracked under `docs/programme/ui-evolution/`.
+
+Start with:
+
+- [`AGENTS.md`](AGENTS.md) — repository-wide engineering operating contract for human and agentic contributors.
+- [UI/UX Evolution Programme](docs/programme/ui-evolution/README.md) — programme index and release sequence.
+- [Programme Ledger](docs/programme/ui-evolution/PROGRAMME_LEDGER.md) — authoritative workstream status.
+- [Workstream Catalogue](docs/programme/ui-evolution/WORKSTREAM_CATALOGUE.md) — stable `GF-xxxx-xx` workstream IDs.
+- [Acceptance and Release Gates](docs/programme/ui-evolution/ACCEPTANCE_AND_RELEASE_GATES.md) — Definition of Done and release controls.
+
 ## Foundation development
 
 Requires Python 3.12+ and [`uv`](https://docs.astral.sh/uv/).
