@@ -152,6 +152,93 @@
   </article>
 </section>
 
+{% if progress.summary.completed_workouts > 0 %}
+<section class="training-insights-grid" aria-label="Training analytics">
+  <article class="card training-pr-card">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Personal bests</p>
+        <h2>Strength PRs</h2>
+        <p class="muted">Best recorded load and Epley estimated 1RM from completed sets only. Estimates stay on the load basis you recorded.</p>
+      </div>
+    </div>
+    <div class="training-pr-list">
+      {% for item in progress.analytics.personal_bests[:6] %}
+      <a class="training-pr-row" href="{{ ingress_url(request, '/library/' ~ item.exercise_id) }}">
+        <div>
+          <strong>{{ item.display_name }}</strong>
+          <span>{{ item.sessions }} session{% if item.sessions != 1 %}s{% endif %} · last {{ item.last_performed_at.strftime('%d %b') }}</span>
+        </div>
+        <div class="training-pr-row__metrics">
+          {% if item.estimated_1rm_kg is not none %}
+          <strong>{{ item.estimated_1rm_kg }} kg e1RM</strong>
+          {% elif item.best_load_kg is not none %}
+          <strong>{{ item.best_load_kg }} kg best load</strong>
+          {% elif item.best_reps is not none %}
+          <strong>{{ item.best_reps }} reps</strong>
+          {% else %}
+          <strong>Completed</strong>
+          {% endif %}
+          {% if item.best_load_kg is not none and item.estimated_1rm_kg is not none %}<span>{{ item.best_load_kg }} kg best recorded</span>{% endif %}
+        </div>
+      </a>
+      {% else %}
+      <div class="empty-state">Complete loaded strength sets to build personal-best estimates.</div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="card muscle-coverage-card">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Muscle coverage</p>
+        <h2>Last 14 days</h2>
+        <p class="muted">Descriptive set exposure only: primary muscles count 1.0 set equivalent and secondary muscles 0.5. This is not a recovery or Health score.</p>
+      </div>
+    </div>
+    <div class="muscle-coverage-list">
+      {% for muscle in progress.analytics.muscle_coverage %}
+      <div class="muscle-coverage-row{% if muscle.recent_set_equivalents == 0 %} is-quiet{% endif %}">
+        <div class="muscle-coverage-row__copy">
+          <strong>{{ muscle.display_name }}</strong>
+          <span>
+            {{ muscle.recent_set_equivalents }} set eq
+            {% if muscle.last_trained_at %} · last {{ muscle.last_trained_at.strftime('%d %b') }}{% else %} · no recorded history{% endif %}
+          </span>
+        </div>
+        <div class="muscle-coverage-bar" aria-hidden="true">
+          <i style="--coverage: {{ muscle.intensity_percent }}%"></i>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="card activity-heatmap-card">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Consistency</p>
+      <h2>12-week activity</h2>
+      <p class="muted">A compact view of completed Getfit workouts and strength sets. Empty days stay empty rather than being filled from Health or activity sensors.</p>
+    </div>
+  </div>
+  <div class="activity-heatmap" role="img" aria-label="Getfit training activity over the last 12 weeks">
+    {% for day in progress.analytics.activity_days %}
+    <span
+      class="activity-heatmap__day activity-heatmap__day--{{ day.intensity_level }}"
+      title="{{ day.day.strftime('%d %b %Y') }} · {{ day.workout_count }} workout{% if day.workout_count != 1 %}s{% endif %} · {{ day.completed_sets }} completed strength sets"
+    ></span>
+    {% endfor %}
+  </div>
+  <div class="activity-heatmap__legend" aria-hidden="true">
+    <span>Less</span>
+    {% for level in range(5) %}<i class="activity-heatmap__day activity-heatmap__day--{{ level }}"></i>{% endfor %}
+    <span>More</span>
+  </div>
+</section>
+{% endif %}
+
 <section class="card">
   <div class="section-heading">
     <div>
