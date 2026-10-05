@@ -7,7 +7,7 @@
   <div>
     <p class="eyebrow">Technique</p>
     <h2>Exercise Library</h2>
-    <p class="muted">Local movement demos and coaching cues for approved programme exercises.</p>
+    <p class="muted">Local movement demos, coaching cues and equipment/muscle filters for approved programme exercises.</p>
   </div>
   <div class="library-hero__badge">
     <strong>{{ exercises|length }}</strong>
@@ -25,6 +25,8 @@
     <button type="button" data-library-filter="upper" aria-pressed="false">Upper</button>
     <button type="button" data-library-filter="lower" aria-pressed="false">Lower</button>
     <button type="button" data-library-filter="core" aria-pressed="false">Core</button>
+    <button type="button" data-library-filter="dumbbells" aria-pressed="false">Dumbbells</button>
+    <button type="button" data-library-filter="bodyweight" aria-pressed="false">Bodyweight</button>
   </div>
 </section>
 
@@ -33,7 +35,8 @@
   <article
     class="exercise-card exercise-card--visual"
     data-exercise-id="{{ exercise.exercise_id }}"
-    data-library-text="{{ (exercise.display_name ~ ' ' ~ exercise.body_area ~ ' ' ~ exercise.movement_family)|lower }}"
+    data-library-text="{{ (exercise.display_name ~ ' ' ~ exercise.body_area ~ ' ' ~ exercise.movement_family ~ ' ' ~ (exercise.equipment|join(' ')) ~ ' ' ~ (exercise.primary_muscles|join(' ')) ~ ' ' ~ (exercise.secondary_muscles|join(' ')))|lower }}"
+    data-library-equipment="{{ exercise.equipment|join(' ')|lower }}"
   >
     <a class="exercise-card__media" href="{{ ingress_url(request, '/library/' ~ exercise.exercise_id) }}" aria-label="Open {{ exercise.display_name }}">
       {% if exercise.media.local_demo_path %}
@@ -48,7 +51,7 @@
     <div class="exercise-card__body">
       <div>
         <h3>{{ exercise.display_name }}</h3>
-        <p class="exercise-card__meta">{{ exercise.body_area }}</p>
+        <p class="exercise-card__meta">{{ exercise.body_area }}{% if exercise.equipment %} · {{ exercise.equipment|join(' · ') }}{% endif %}</p>
       </div>
       <div class="exercise-card__footer">
         {% if exercise.media.available %}
@@ -86,8 +89,11 @@
     const query = (search?.value || '').trim().toLowerCase();
     for (const card of cards) {
       const text = card.dataset.libraryText || '';
+      const equipment = card.dataset.libraryEquipment || '';
       const matchesQuery = !query || text.includes(query);
-      const matchesFilter = active === 'all' || category(text) === active;
+      const matchesFilter = active === 'all'
+        || (['upper', 'lower', 'core'].includes(active) && category(text) === active)
+        || equipment.includes(active);
       card.hidden = !(matchesQuery && matchesFilter);
     }
   };

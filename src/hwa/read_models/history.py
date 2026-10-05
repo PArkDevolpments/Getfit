@@ -44,6 +44,24 @@ class ExerciseHistoryRow:
 
 
 @dataclass(frozen=True, slots=True)
+class StrengthSetHistoryRow:
+    event_id: str
+    revision_number: int
+    performed_at: datetime
+    exercise_id: str
+    set_number: int
+    laterality: str
+    load_value_kg: Decimal | None
+    load_mode: str
+    reps: int | None
+    duration_seconds: int | None
+    rir: int | None
+    rpe: Decimal | None
+    completed: bool
+    pain_flag: bool
+
+
+@dataclass(frozen=True, slots=True)
 class _EffectiveWorkout:
     event_id: str
     revision_number: int
@@ -169,6 +187,48 @@ def get_exercise_history(
                 )
             )
     rows.sort(key=lambda row: row.performed_at, reverse=True)
+    return tuple(rows)
+
+
+def get_strength_set_history(
+    session: Session,
+    person_id: str,
+    exercise_id: str | None = None,
+) -> tuple[StrengthSetHistoryRow, ...]:
+    """Return effective set-level strength evidence for descriptive analytics."""
+
+    rows: list[StrengthSetHistoryRow] = []
+    for item in _effective_workouts(session, person_id):
+        for exercise in item.event.performance.strength:
+            if exercise_id is not None and exercise.exercise_id != exercise_id:
+                continue
+            for set_item in exercise.sets:
+                rows.append(
+                    StrengthSetHistoryRow(
+                        event_id=item.event_id,
+                        revision_number=item.revision_number,
+                        performed_at=item.event.start_at,
+                        exercise_id=exercise.exercise_id,
+                        set_number=set_item.set_number,
+                        laterality=set_item.laterality.value,
+                        load_value_kg=(
+                            set_item.load_value
+                            if set_item.load_unit is LoadUnit.KG
+                            else None
+                        ),
+                        load_mode=set_item.load_mode.value,
+                        reps=set_item.reps,
+                        duration_seconds=set_item.duration_seconds,
+                        rir=set_item.rir,
+                        rpe=set_item.rpe,
+                        completed=set_item.completed,
+                        pain_flag=set_item.pain_flag,
+                    )
+                )
+    rows.sort(
+        key=lambda row: (row.performed_at, row.event_id, row.set_number),
+        reverse=True,
+    )
     return tuple(rows)
 
 

@@ -1104,3 +1104,188 @@ body:not([data-active-nav="workout"]) .settings-grid .muted {
     gap: 12px !important;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* 0.1.37 training analytics: PRs, muscle coverage and 12-week consistency    */
+/* -------------------------------------------------------------------------- */
+.training-insights-grid {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px;
+}
+
+.training-pr-list,
+.muscle-coverage-list {
+  display:grid;
+  gap:8px;
+}
+
+.training-pr-row {
+  min-height:62px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:10px 12px;
+  border:1px solid var(--pro-line);
+  border-radius:12px;
+  color:var(--pro-ink);
+  background:var(--pro-card-soft);
+  text-decoration:none;
+}
+
+.training-pr-row > div:first-child,
+.training-pr-row__metrics {
+  min-width:0;
+}
+
+.training-pr-row strong,
+.training-pr-row span {
+  display:block;
+}
+
+.training-pr-row > div:first-child strong {
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:.78rem;
+}
+
+.training-pr-row span {
+  margin-top:2px;
+  color:var(--pro-muted);
+  font-size:.62rem;
+}
+
+.training-pr-row__metrics {
+  flex:0 0 auto;
+  text-align:right;
+}
+
+.training-pr-row__metrics strong {
+  color:var(--pro-green-strong);
+  font-size:.72rem;
+}
+
+.muscle-coverage-row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 112px;
+  gap:12px;
+  align-items:center;
+  min-height:44px;
+}
+
+.muscle-coverage-row__copy strong,
+.muscle-coverage-row__copy span {
+  display:block;
+}
+
+.muscle-coverage-row__copy strong {
+  font-size:.72rem;
+}
+
+.muscle-coverage-row__copy span {
+  margin-top:2px;
+  color:var(--pro-muted);
+  font-size:.6rem;
+}
+
+.muscle-coverage-row.is-quiet {
+  opacity:.62;
+}
+
+.muscle-coverage-bar {
+  height:8px;
+  overflow:hidden;
+  border-radius:999px;
+  background:rgba(82,103,91,.14);
+}
+
+.muscle-coverage-bar i {
+  display:block;
+  width:var(--coverage, 0%);
+  height:100%;
+  border-radius:inherit;
+  background:var(--pro-green);
+}
+
+.activity-heatmap-card {
+  overflow:hidden;
+}
+
+.activity-heatmap {
+  width:max-content;
+  max-width:100%;
+  display:grid;
+  grid-auto-flow:column;
+  grid-template-rows:repeat(7, 12px);
+  grid-auto-columns:12px;
+  gap:4px;
+  overflow-x:auto;
+  padding:4px 2px 6px;
+  scrollbar-width:thin;
+}
+
+.activity-heatmap__day {
+  width:12px;
+  height:12px;
+  display:block;
+  border-radius:3px;
+  background:rgba(82,103,91,.12);
+}
+
+.activity-heatmap__day--1 { background:rgba(54,201,133,.20); }
+.activity-heatmap__day--2 { background:rgba(54,201,133,.38); }
+.activity-heatmap__day--3 { background:rgba(54,201,133,.62); }
+.activity-heatmap__day--4 { background:rgba(54,201,133,.88); }
+
+.activity-heatmap__legend {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+  margin-top:8px;
+  color:var(--pro-muted);
+  font-size:.58rem;
+}
+
+.activity-heatmap__legend .activity-heatmap__day {
+  flex:0 0 10px;
+  width:10px;
+  height:10px;
+}
+
+@media (max-width: 820px) {
+  .training-insights-grid {
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .training-pr-card,
+  .muscle-coverage-card,
+  .activity-heatmap-card {
+    padding:12px !important;
+  }
+
+  .training-pr-row {
+    min-height:58px;
+    padding:8px 10px;
+  }
+
+  .muscle-coverage-row {
+    grid-template-columns:minmax(0,1fr) 96px;
+    gap:9px;
+  }
+
+  .activity-heatmap {
+    grid-template-rows:repeat(7, 11px);
+    grid-auto-columns:11px;
+    gap:3px;
+  }
+
+  .activity-heatmap__day {
+    width:11px;
+    height:11px;
+  }
+}
