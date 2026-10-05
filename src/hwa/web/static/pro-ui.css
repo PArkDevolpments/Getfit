@@ -1300,6 +1300,7 @@ body:not([data-active-nav="workout"]) .settings-grid .muted {
 body[data-active-nav="more"] .exercise-coaching-card h3,
 body[data-active-nav="more"] .exercise-history-section h3,
 body[data-active-nav="more"] .cue-list,
+body[data-active-nav="more"] .cue-list--checks li,
 body[data-active-nav="more"] .exercise-history-row strong,
 body[data-active-nav="more"] .settings-safety-note strong {
   color: var(--pro-ink) !important;
