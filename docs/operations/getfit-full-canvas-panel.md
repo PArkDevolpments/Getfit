@@ -1,80 +1,75 @@
-# Getfit Full-Canvas Home Assistant Panel
+# Getfit Full-Canvas Home Assistant Host
 
-## Why this companion exists
+## Current supported path
 
-The normal Home Assistant app panel wraps Supervisor Ingress in the built-in app frame. On narrow iPhone views that frame can reserve its own toolbar and safe-area treatment before Getfit renders.
+Home Assistant's native app panel now supports the exact full-canvas protocol Getfit needs:
 
-Getfit 0.1.28 includes an optional Home Assistant custom integration that replaces only the sidebar host. The Getfit application itself continues to run as the existing Supervisor app, behind Supervisor Ingress, with the same person-scoped identity boundary and persistent data.
+- an app can subscribe with `home-assistant/subscribe-properties`;
+- `handleSafeArea: true` tells Home Assistant to remove iframe safe-area padding and forward the resolved inset values;
+- `kioskMode: true` lets a narrow app ask Home Assistant to remove the app header while the app is open.
 
-The companion does **not** expose a direct Getfit port, does **not** copy Home Assistant credentials into the browser child, and does **not** request write access to the Home Assistant configuration directory from the Getfit app.
+Getfit 0.1.33 uses that native protocol first. On a supported Home Assistant frontend, **no separate Getfit panel integration is required**.
 
-## Package
+The Getfit child remains behind normal Supervisor Ingress. No Home Assistant access token, raw `hass` object, websocket connection, or direct app port is exposed to Getfit.
 
-Copy this directory into Home Assistant:
+## Runtime handshake
 
-`custom_components/getfit_panel/`
+Every Getfit page loaded inside Home Assistant runs `ha-shell.js`.
 
-The resulting Home Assistant path must be:
+On narrow screens it requests:
 
-`/config/custom_components/getfit_panel/`
+```text
+home-assistant/subscribe-properties
+handleSafeArea = true
+kioskMode = true
+```
 
-It contains:
+The request is retried for a short bounded period so mobile navigation cannot lose the initial handshake during iframe/panel startup.
 
-- `__init__.py`
-- `config_flow.py`
-- `manifest.json`
-- `strings.json`
-- `translations/en.json`
-- `frontend/getfit_panel.js`
+When Home Assistant replies with `home-assistant/properties`, Getfit:
 
-## Installation
+1. records the native host as `home-assistant-app-panel`;
+2. applies the resolved safe-area insets to its own CSS variables;
+3. marks the shell handshake ready;
+4. allows the Home Assistant app panel to provide the full available canvas.
 
-1. Update the Getfit Home Assistant app to the matching release.
-2. Copy `custom_components/getfit_panel` from the exact release into `/config/custom_components/getfit_panel`.
-3. Restart Home Assistant Core so the custom integration is discovered.
-4. Open **Settings → Devices & services → Add integration**.
-5. Search for **Getfit Full-Canvas Panel** and add it.
-6. Open **Getfit** from the Home Assistant sidebar.
+The native Home Assistant parent continues to own Supervisor ingress sessions and authentication.
 
-The companion registers its full-canvas host at `/getfit-full` and suppresses the built-in Supervisor `/getfit` sidebar panel while the companion is loaded. Keeping separate internal routes avoids registration collisions when Supervisor refreshes app metadata, while the sidebar still presents a single **Getfit** destination.
+## Device verification
 
-## What the browser host does
+Go to **More → Diagnostics → Auto-review this device**.
 
-The Home Assistant custom panel:
+The device review now waits for the **outer Home Assistant shell handshake before measuring the viewport**. It records the outer host rather than the nested review iframes.
 
-1. receives the signed-in Home Assistant `hass` object;
-2. asks Supervisor for Getfit app information;
-3. creates the normal Supervisor Ingress session using Home Assistant's Supervisor WebSocket API;
-4. stores only the standard `ingress_session` cookie expected by Home Assistant;
-5. loads the Supervisor-provided Getfit `ingress_url` in a full-size iframe;
-6. keeps the ingress session alive;
-7. forwards resolved Home Assistant safe-area insets to Getfit.
+A valid native full-canvas result should show:
 
-The iframe never receives the raw `hass` object, Home Assistant access tokens or arbitrary Supervisor API capability.
+- `home_assistant_shell.ready: true` in `review-manifest.json`;
+- `ha_shell_ready: true` in `device-layout-diagnostics.json`;
+- `ha_panel_host: "home-assistant-app-panel"` (native host), or `"getfit-full-canvas-panel"` if the legacy companion is used;
+- safe-area values from Home Assistant;
+- the measured device viewport after the host has applied kiosk/safe-area handling.
 
-## Verification
+If no parent acknowledgement arrives, the review reports `HOME_ASSISTANT_FULL_CANVAS_HANDSHAKE_MISSING` instead of silently passing.
 
-After installation:
+## Legacy companion fallback
 
-1. Open Getfit from the sidebar.
-2. Confirm the duplicate Home Assistant app toolbar is not present.
-3. Confirm the visual canvas reaches the available top and bottom safe areas while controls remain clear of the iPhone gesture areas.
-4. Go to **More → Diagnostics → Auto-review this device**.
-5. Download the review ZIP.
-6. In `device-layout-diagnostics.json`, confirm:
-   - `ha_shell_ready` is `true`;
-   - `ha_panel_host` is `getfit-full-canvas-panel`;
-   - bottom-navigation geometry matches the viewport;
-   - no horizontal overflow is reported.
-7. Check Bike, Treadmill, HARD and Recovery states: the live prescription grid must be fully visible above the product navigation.
+The packaged `custom_components/getfit_panel/` integration remains available as a fallback for installations where the native app-panel protocol is unavailable or broken.
+
+It registers `/getfit-full`, obtains the normal Supervisor ingress URL/session in the trusted parent, and hosts Getfit without passing Home Assistant credentials into the child.
+
+Do **not** install the companion merely to work around Getfit layout sizing on a Home Assistant version that supports the native protocol. The native app panel is preferred because it avoids an additional custom integration lifecycle.
+
+## Companion installation (fallback only)
+
+1. Copy `custom_components/getfit_panel/` into:
+   `/config/custom_components/getfit_panel/`
+2. Restart Home Assistant Core.
+3. Open **Settings → Devices & services → Add integration**.
+4. Add **Getfit Full-Canvas Panel**.
+5. Open Getfit and rerun the device review.
 
 ## Rollback
 
-If the companion causes a problem:
+Native path: no installation rollback is needed; removing/updating Getfit removes the child-side request.
 
-1. Remove **Getfit Full-Canvas Panel** from Settings → Devices & services.
-2. Restart Home Assistant Core.
-3. Home Assistant will register the original Supervisor app panel again.
-4. The Getfit app, its SQLite database and workout history are untouched by this rollback.
-
-Do not delete Getfit app data to roll back the panel host.
+Companion fallback: remove **Getfit Full-Canvas Panel** from Devices & services and restart Home Assistant Core. The normal Supervisor app panel returns. Getfit data is not touched.
