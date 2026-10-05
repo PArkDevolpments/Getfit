@@ -279,6 +279,7 @@
 
   button.addEventListener('click', async () => {
     button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
     status.textContent = 'Starting workout…';
     try {
       const response = await fetch('{{ ingress_url(request, "/api/v1/workouts/drafts") }}', {
@@ -295,6 +296,7 @@
     } catch (_) {
       status.textContent = 'Workout could not be started. Your existing data was not changed.';
       button.disabled = false;
+      button.removeAttribute('aria-busy');
     }
   });
 })();
