@@ -10,7 +10,7 @@
       <h2>{{ exercise.display_name }}</h2>
       <p class="muted">{{ exercise.body_area }}</p>
     </div>
-    <a class="ghost-action" href="{{ ingress_url(request, '/library') }}">← Library</a>
+    <a class="btn btn--ghost btn--compact ghost-action" href="{{ ingress_url(request, '/library') }}"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Library</span></a>
   </header>
 
   <div class="exercise-detail-grid">
