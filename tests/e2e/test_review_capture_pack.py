@@ -186,7 +186,7 @@ def test_0133_real_device_review_verifies_native_home_assistant_full_canvas_hand
     assert "'home-assistant-app-panel'" in script
     assert "'getfit-full-canvas-panel'" in script
     assert "home_assistant_shell: deviceMode ? hostShell : null" in script
-    assert "collectDeviceDiagnostics(target, frame.contentDocument, profile, hostShell)" in script
+    assert "collectDeviceDiagnostics(target, documentRef, profile, hostShell)" in script
 
 
 def test_0135_review_capture_cannot_mix_target_states_or_overlap_runs() -> None:
