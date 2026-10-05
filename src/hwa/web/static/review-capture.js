@@ -385,13 +385,20 @@
       width: 0,
       height: 0,
     };
-    const hiddenByAttribute = Boolean(node?.hidden || node?.closest?.('[hidden]'));
-    const ariaHidden = node?.getAttribute?.('aria-hidden') === 'true'
-      || Boolean(node?.closest?.('[aria-hidden="true"]'));
+    const hiddenByAttribute = Boolean(
+      node && (node.hidden || node.closest?.('[hidden]')),
+    );
+    const ariaHidden = Boolean(
+      node
+      && (
+        node.getAttribute('aria-hidden') === 'true'
+        || node.closest?.('[aria-hidden="true"]')
+      ),
+    );
     const inert = Boolean(node?.closest?.('[inert]'));
     const disabled = Boolean(node?.disabled)
       || node?.getAttribute?.('aria-disabled') === 'true';
-    const pointerBlocked = style?.pointerEvents === 'none';
+    const pointerBlocked = Boolean(style && style.pointerEvents === 'none');
     const opacity = Number.parseFloat(style?.opacity || '1');
     const screenReaderOnly = isScreenReaderOnly(node, style);
     const clientRectCount = node?.getClientRects?.().length || 0;
@@ -407,7 +414,6 @@
     );
     const visible = rendered
       && !hiddenByAttribute
-      && !ariaHidden
       && !screenReaderOnly;
     const inViewport = visible
       && rect.bottom > 0
@@ -608,15 +614,16 @@
       const state = elementReviewState(node, documentRef);
       if (!state.reachable) continue;
       checked += 1;
-      if (state.geometry.height < 44 || state.geometry.width < 44) {
+      const rect = state.geometry;
+      if (rect.height < 44 || rect.width < 44) {
         failures.push({
           label: (
             node.textContent
             || node.getAttribute('aria-label')
             || node.tagName
           ).trim(),
-          width: state.geometry.width,
-          height: state.geometry.height,
+          width: rect.width,
+          height: rect.height,
         });
       }
     }
@@ -629,7 +636,7 @@
       return automatedResult('FAIL', 'Rendered document was unavailable to the audit runner.', profile);
     }
 
-    const text = pageText(documentRef);
+    const text = pageText(documentRef, profile);
     const has = (selector) => visuallyPresent(documentRef, selector, profile);
     const all = (...selectors) => selectors.every((selector) => has(selector));
     const includes = (...values) => values.every((value) => text.includes(value));
