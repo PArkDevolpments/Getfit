@@ -341,36 +341,182 @@
   }
 
   function pageText(documentRef) {
-    return (documentRef?.body?.textContent || '').replace(/\s+/g, ' ').trim();
+    return (documentRef?.body?.innerText || '').replace(/\\s+/g, ' ').trim();
+  }
+
+  function isScreenReaderOnly(node, style) {
+    if (!node || !style) return false;
+    if (
+      node.classList?.contains('sr-only')
+      || node.classList?.contains('visually-hidden')
+      || node.classList?.contains('screen-reader-only')
+    ) {
+      return true;
+    }
+
+    const width = Number.parseFloat(style.width || '0');
+    const height = Number.parseFloat(style.height || '0');
+    const clipped = style.clip && style.clip !== 'auto' && style.clip !== 'rect(auto, auto, auto, auto)';
+    const clipPathed = style.clipPath && style.clipPath !== 'none';
+    return style.position === 'absolute'
+      && width <= 1
+      && height <= 1
+      && style.overflow === 'hidden'
+      && Boolean(clipped || clipPathed);
+  }
+
+  function elementReviewState(node, documentRef, profile = null) {
+    const viewportWidth = documentRef?.documentElement?.clientWidth
+      || documentRef?.defaultView?.innerWidth
+      || profile?.width
+      || 0;
+    const viewportHeight = documentRef?.documentElement?.clientHeight
+      || documentRef?.defaultView?.innerHeight
+      || profile?.height
+      || 0;
+    const style = node && documentRef?.defaultView
+      ? documentRef.defaultView.getComputedStyle(node)
+      : null;
+    const rect = node?.getBoundingClientRect?.() || {
+      left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      width: 0,
+      height: 0,
+    };
+    const hiddenByAttribute = Boolean(node?.hidden || node?.closest?.('[hidden]'));
+    const ariaHidden = node?.getAttribute?.('aria-hidden') === 'true'
+      || Boolean(node?.closest?.('[aria-hidden="true"]'));
+    const inert = Boolean(node?.closest?.('[inert]'));
+    const disabled = Boolean(node?.disabled)
+      || node?.getAttribute?.('aria-disabled') === 'true';
+    const pointerBlocked = style?.pointerEvents === 'none';
+    const opacity = Number.parseFloat(style?.opacity || '1');
+    const screenReaderOnly = isScreenReaderOnly(node, style);
+    const clientRectCount = node?.getClientRects?.().length || 0;
+    const rendered = Boolean(
+      style
+      && style.display !== 'none'
+      && style.visibility !== 'hidden'
+      && style.visibility !== 'collapse'
+      && opacity > 0
+      && rect.width > 0
+      && rect.height > 0
+      && clientRectCount > 0
+    );
+    const visible = rendered
+      && !hiddenByAttribute
+      && !ariaHidden
+      && !screenReaderOnly;
+    const inViewport = visible
+      && rect.bottom > 0
+      && rect.right > 0
+      && rect.top < viewportHeight
+      && rect.left < viewportWidth;
+    const fullyInViewport = inViewport
+      && rect.top >= 0
+      && rect.left >= 0
+      && rect.bottom <= viewportHeight
+      && rect.right <= viewportWidth;
+    const reachable = visible
+      && !disabled
+      && !inert
+      && !pointerBlocked;
+
+    return {
+      visible,
+      reachable,
+      rendered,
+      disabled,
+      inert,
+      pointer_events_blocked: pointerBlocked,
+      hidden_attribute: hiddenByAttribute,
+      aria_hidden: ariaHidden,
+      screen_reader_only: screenReaderOnly,
+      in_viewport: inViewport,
+      fully_in_viewport: fullyInViewport,
+      geometry: {
+        left: Math.round(rect.left),
+        top: Math.round(rect.top),
+        right: Math.round(rect.right),
+        bottom: Math.round(rect.bottom),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      },
+    };
+  }
+
+  function visuallyPresent(documentRef, selector, profile) {
+    return Array.from(documentRef?.querySelectorAll(selector) || []).some(
+      (node) => elementReviewState(node, documentRef, profile).visible,
+    );
+  }
+
+  function reachableControl(documentRef, selector, profile) {
+    return Array.from(documentRef?.querySelectorAll(selector) || []).find(
+      (node) => elementReviewState(node, documentRef, profile).reachable,
+    ) || null;
+  }
+
+  function controlReviewRecord(node, documentRef, profile) {
+    const state = elementReviewState(node, documentRef, profile);
+    const label = (
+      node.getAttribute('aria-label')
+      || node.textContent
+      || node.getAttribute('placeholder')
+      || node.tagName
+    ).replace(/\\s+/g, ' ').trim();
+    const value = 'value' in node && state.visible
+      ? String(node.value || '').trim()
+      : '';
+    return {
+      kind: node.tagName.toLowerCase(),
+      label,
+      value: value || null,
+      disabled: state.disabled,
+      visibility: state,
+    };
   }
 
   function collectReviewContent(target, documentRef, profile, identity, pageState) {
     const visibleText = (documentRef?.body?.innerText || '')
-      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\\n{3,}/g, '\\n\\n')
       .trim();
 
-    const headings = Array.from(documentRef?.querySelectorAll('h1, h2, h3') || [])
-      .map((node) => (node.textContent || '').replace(/\s+/g, ' ').trim())
-      .filter(Boolean);
+    const visualHeadingRecords = [];
+    const nonVisualHeadingRecords = [];
+    for (const node of documentRef?.querySelectorAll('h1, h2, h3') || []) {
+      const label = (node.textContent || '').replace(/\\s+/g, ' ').trim();
+      if (!label) continue;
+      const visibility = elementReviewState(node, documentRef, profile);
+      const record = {label, visibility};
+      if (visibility.visible) visualHeadingRecords.push(record);
+      else nonVisualHeadingRecords.push(record);
+    }
 
-    const controls = Array.from(
-      documentRef?.querySelectorAll('button, a, input, select, textarea, summary') || [],
-    ).map((node) => {
-      const label = (
-        node.getAttribute('aria-label')
-        || node.textContent
-        || node.getAttribute('placeholder')
-        || node.getAttribute('name')
-        || node.tagName
-      ).replace(/\s+/g, ' ').trim();
-      const value = 'value' in node ? String(node.value || '').trim() : '';
-      return {
-        kind: node.tagName.toLowerCase(),
-        label,
-        value: value || null,
-        disabled: Boolean(node.disabled),
-      };
-    }).filter((item) => item.label);
+    const visualControls = [];
+    const nonVisualControls = [];
+    for (
+      const node of documentRef?.querySelectorAll(
+        'button, a, input, select, textarea, summary',
+      ) || []
+    ) {
+      const record = controlReviewRecord(node, documentRef, profile);
+      if (!record.label) continue;
+      if (record.visibility.visible && record.visibility.reachable) {
+        visualControls.push(record);
+      } else {
+        nonVisualControls.push({
+          kind: record.kind,
+          label: record.label,
+          disabled: record.disabled,
+          visibility: record.visibility,
+        });
+      }
+    }
+
+    const visualHeadings = visualHeadingRecords.map((item) => item.label);
 
     return {
       page: target.key,
@@ -383,9 +529,18 @@
       source_review_state: identity.review_state,
       source_media_tab: identity.media_tab,
       title: documentRef?.title || null,
-      headings,
-      controls,
+      headings: visualHeadings,
+      controls: visualControls,
       visible_text: visibleText,
+      visual_evidence: {
+        visual_headings: visualHeadingRecords,
+        visual_controls: visualControls,
+        visible_text: visibleText,
+      },
+      accessibility_metadata: {
+        non_visual_headings: nonVisualHeadingRecords,
+        non_visual_controls: nonVisualControls,
+      },
     };
   }
 
@@ -400,9 +555,8 @@
 
   function fullyVisible(node, documentRef, profile) {
     if (!node) return false;
-    const style = documentRef.defaultView?.getComputedStyle(node);
-    if (!style || style.display === 'none' || style.visibility === 'hidden') return false;
-    const rect = node.getBoundingClientRect();
+    const state = elementReviewState(node, documentRef, profile);
+    if (!state.visible) return false;
     const viewportHeight = documentRef.documentElement.clientHeight
       || documentRef.defaultView?.innerHeight
       || profile.height;
@@ -413,10 +567,10 @@
     const mobileReserve = navRect
       ? Math.max(0, viewportHeight - navRect.top)
       : 0;
-    return rect.top >= 0
-      && rect.bottom <= viewportHeight - mobileReserve
-      && rect.width > 0
-      && rect.height > 0;
+    return state.geometry.top >= 0
+      && state.geometry.bottom <= viewportHeight - mobileReserve
+      && state.geometry.width > 0
+      && state.geometry.height > 0;
   }
 
   function liveCardioTargetsFit(node, documentRef, profile) {
@@ -451,20 +605,18 @@
     for (const node of documentRef.querySelectorAll(selectors.join(','))) {
       if (seen.has(node)) continue;
       seen.add(node);
-      const style = documentRef.defaultView?.getComputedStyle(node);
-      const rect = node.getBoundingClientRect();
-      const visible = style
-        && style.display !== 'none'
-        && style.visibility !== 'hidden'
-        && rect.width > 0
-        && rect.height > 0;
-      if (!visible) continue;
+      const state = elementReviewState(node, documentRef);
+      if (!state.reachable) continue;
       checked += 1;
-      if (rect.height < 44 || rect.width < 44) {
+      if (state.geometry.height < 44 || state.geometry.width < 44) {
         failures.push({
-          label: (node.textContent || node.getAttribute('aria-label') || node.tagName).trim(),
-          width: Math.round(rect.width),
-          height: Math.round(rect.height),
+          label: (
+            node.textContent
+            || node.getAttribute('aria-label')
+            || node.tagName
+          ).trim(),
+          width: state.geometry.width,
+          height: state.geometry.height,
         });
       }
     }
@@ -478,7 +630,7 @@
     }
 
     const text = pageText(documentRef);
-    const has = (selector) => Boolean(documentRef.querySelector(selector));
+    const has = (selector) => visuallyPresent(documentRef, selector, profile);
     const all = (...selectors) => selectors.every((selector) => has(selector));
     const includes = (...values) => values.every((value) => text.includes(value));
     const noInternalIdentity = !/(hwa_person_id|pep_person_id|menu_person_id|health_profile_id|person_id)/i.test(text);
@@ -515,12 +667,16 @@
       );
     }
     if (criterionId === 'TODAY-04') {
-      const action = documentRef.querySelector('[data-primary-action="start"], [data-primary-action="resume"]');
+      const action = reachableControl(
+        documentRef,
+        '[data-primary-action="start"], [data-primary-action="resume"]',
+        profile,
+      );
       return automatedResult(
         action ? 'PASS' : 'FAIL',
         action
-          ? `Primary action is rendered as ${action.dataset.primaryAction}; mutation/resume persistence remains covered by automated integration tests.`
-          : 'No Start or Resume primary action was rendered.',
+          ? `Primary action is visible and reachable as ${action.dataset.primaryAction}; mutation/resume persistence remains covered by automated integration tests.`
+          : 'No visible, active and reachable Start or Resume primary action was rendered.',
         profile,
       );
     }
@@ -577,7 +733,8 @@
       }
       if (criterionId === 'STRENGTH-02') {
         const floorPress = Array.from(documentRef.querySelectorAll('.strength-item')).some(
-          (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press'),
+          (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press')
+            && elementReviewState(node, documentRef, profile).visible,
         );
         return automatedResult(
           floorPress && has('.workout-progress') ? 'REVIEW_REQUIRED' : 'FAIL',
@@ -589,7 +746,8 @@
       }
       if (criterionId === 'STRENGTH-03') {
         const floorPress = Array.from(documentRef.querySelectorAll('.strength-item')).find(
-          (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press'),
+          (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press')
+            && elementReviewState(node, documentRef, profile).visible,
         );
         const floorText = floorPress?.textContent || '';
         const metrics = /10\s*reps/i.test(floorText)
@@ -604,14 +762,15 @@
         );
       }
       if (criterionId === 'STRENGTH-04') {
-        const completeSet = Array.from(documentRef.querySelectorAll('button, label, span')).some(
-          (node) => /complete set/i.test((node.textContent || '').trim()),
+        const completeSet = Array.from(documentRef.querySelectorAll('button, label, span')).find(
+          (node) => /complete set/i.test((node.textContent || '').trim())
+            && elementReviewState(node, documentRef, profile).reachable,
         );
         return automatedResult(
           completeSet ? 'REVIEW_REQUIRED' : 'FAIL',
           completeSet
-            ? 'A Complete Set control exists; visual primacy requires screenshot review.'
-            : 'No dedicated “Complete Set” primary action was found.',
+            ? 'Complete Set control is visible and reachable; visual primacy requires screenshot review.'
+            : 'No visible and reachable “Complete Set” primary action was found.',
           profile,
         );
       }
@@ -635,8 +794,10 @@
         const feedbackVisible = profile.width > 700
           || fullyVisible(feedbackPanel, documentRef, profile);
         const touchSized = feedbackButtons.every((button) => {
-          const rect = button.getBoundingClientRect();
-          return rect.width >= 44 && rect.height >= 44;
+          const state = elementReviewState(button, documentRef, profile);
+          return state.reachable
+            && state.geometry.width >= 44
+            && state.geometry.height >= 44;
         });
         return automatedResult(
           feedback && feedbackVisible && feedbackButtons.length === 4 && touchSized
@@ -671,11 +832,23 @@
         );
       }
       if (criterionId === 'STRENGTH-09') {
+        const controlSelectors = [
+          '#previous-stage',
+          '#pause-workout',
+          '#skip-stage',
+          '#next-stage',
+          '#stop-workout',
+        ];
+        const allReachable = controlSelectors.every((selector) => reachableControl(
+          documentRef,
+          selector,
+          profile,
+        ));
         return automatedResult(
-          all('#previous-stage', '#pause-workout', '#skip-stage', '#next-stage', '#stop-workout')
-            ? 'PASS'
-            : 'FAIL',
-          'Checked Previous, Pause, Skip, Next and Stop controls.',
+          allReachable ? 'PASS' : 'FAIL',
+          allReachable
+            ? 'Previous, Pause, Skip, Next and Stop are visible, active and reachable.'
+            : 'One or more workout command controls are hidden, inactive or unreachable.',
           profile,
         );
       }
@@ -754,10 +927,12 @@
         return automatedResult('BLOCKED', 'No active workout draft was rendered.', profile);
       }
       const bike = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
-        (node) => node.dataset.equipment === 'SPIN_BIKE',
+        (node) => node.dataset.equipment === 'SPIN_BIKE'
+          && elementReviewState(node, documentRef, profile).visible,
       );
       const treadmill = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
-        (node) => node.dataset.equipment === 'TREADMILL',
+        (node) => node.dataset.equipment === 'TREADMILL'
+          && elementReviewState(node, documentRef, profile).visible,
       );
       const activeCardio = documentRef.querySelector('.cardio-item:not([hidden])');
       if (criterionId === 'CARDIO-01') {
@@ -814,7 +989,8 @@
       if (criterionId === 'CARDIO-03') {
         const finisher = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
           (node) => node.dataset.equipment === 'SPIN_BIKE'
-            && node.dataset.segmentType === 'CONDITIONING',
+            && node.dataset.segmentType === 'CONDITIONING'
+            && elementReviewState(node, documentRef, profile).visible,
         );
         if (!finisher) {
           return automatedResult(
@@ -844,7 +1020,9 @@
         );
       }
       if (criterionId === 'CARDIO-04') {
-        const hard = documentRef.querySelector('.cardio-item--hard');
+        const hard = Array.from(documentRef.querySelectorAll('.cardio-item--hard')).find(
+          (node) => elementReviewState(node, documentRef, profile).visible,
+        );
         const hardText = hard?.textContent || '';
         const targets = /00:30/.test(hardText)
           && /85–100\s*rpm/.test(hardText)
@@ -865,7 +1043,9 @@
         );
       }
       if (criterionId === 'CARDIO-05') {
-        const recovery = documentRef.querySelector('.cardio-item--recovery');
+        const recovery = Array.from(documentRef.querySelectorAll('.cardio-item--recovery')).find(
+          (node) => elementReviewState(node, documentRef, profile).visible,
+        );
         const recoveryText = recovery?.textContent || '';
         const targets = /01:30/.test(recoveryText)
           && /60–75\s*rpm/.test(recoveryText)
@@ -888,7 +1068,9 @@
       }
       if (criterionId === 'CARDIO-06') {
         return automatedResult(
-          bike && bike.querySelector('input[name*="-rpe"]') ? 'PASS' : 'REVIEW_REQUIRED',
+          bike && reachableControl(documentRef, '.cardio-item:not([hidden]) input[name*="-rpe"]', profile)
+            ? 'PASS'
+            : 'REVIEW_REQUIRED',
           'Checked separation of prescribed cardio content and actual RPE input where available.',
           profile,
         );
@@ -896,7 +1078,9 @@
     }
 
     if (criterionId === 'PROGRESS-01') {
-      const chart = documentRef.querySelector('svg[data-progress-chart]');
+      const chart = Array.from(documentRef.querySelectorAll('svg[data-progress-chart]')).find(
+        (node) => elementReviewState(node, documentRef, profile).visible,
+      );
       const points = Number(chart?.dataset.pointCount || 0);
       return automatedResult(
         chart && points >= 2 ? 'REVIEW_REQUIRED' : 'FAIL',
@@ -931,7 +1115,9 @@
     }
 
     if (criterionId === 'LIBRARY-01') {
-      const cards = Array.from(documentRef.querySelectorAll('.exercise-card'));
+      const cards = Array.from(documentRef.querySelectorAll('.exercise-card')).filter(
+        (node) => elementReviewState(node, documentRef, profile).visible,
+      );
       const sources = cards
         .map((card) => card.querySelector('.exercise-card__media img')?.getAttribute('src'))
         .filter(Boolean);
