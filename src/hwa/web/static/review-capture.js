@@ -422,15 +422,26 @@
     const disabled = Boolean(node?.disabled)
       || node?.getAttribute?.('aria-disabled') === 'true';
     const pointerBlocked = Boolean(style && style.pointerEvents === 'none');
-    const opacity = Number.parseFloat(style?.opacity || '1');
+    let ancestorRendered = Boolean(style);
+    let current = node;
+    while (ancestorRendered && current && documentRef?.defaultView) {
+      const currentStyle = documentRef.defaultView.getComputedStyle(current);
+      const currentOpacity = Number.parseFloat(currentStyle.opacity || '1');
+      if (
+        currentStyle.display === 'none'
+        || currentStyle.visibility === 'hidden'
+        || currentStyle.visibility === 'collapse'
+        || currentStyle.contentVisibility === 'hidden'
+        || currentOpacity <= 0
+      ) {
+        ancestorRendered = false;
+      }
+      current = current.parentElement;
+    }
     const screenReaderOnly = isScreenReaderOnly(node, style);
     const clientRectCount = node?.getClientRects?.().length || 0;
     const rendered = Boolean(
-      style
-      && style.display !== 'none'
-      && style.visibility !== 'hidden'
-      && style.visibility !== 'collapse'
-      && opacity > 0
+      ancestorRendered
       && rect.width > 0
       && rect.height > 0
       && clientRectCount > 0
@@ -490,10 +501,15 @@
 
   function controlReviewRecord(node, documentRef, profile) {
     const state = elementReviewState(node, documentRef, profile);
-    const label = (
-      node.getAttribute('aria-label')
-      || node.textContent
+    const visualLabel = (
+      node.textContent
       || node.getAttribute('placeholder')
+      || ''
+    ).replace(/\s+/g, ' ').trim();
+    const accessibleName = (
+      node.getAttribute('aria-label')
+      || visualLabel
+      || node.getAttribute('name')
       || node.tagName
     ).replace(/\s+/g, ' ').trim();
     const value = 'value' in node && state.visible
@@ -501,7 +517,8 @@
       : '';
     return {
       kind: node.tagName.toLowerCase(),
-      label,
+      visual_label: visualLabel || null,
+      accessible_name: accessibleName || null,
       value: value || null,
       disabled: state.disabled,
       visibility: state,
@@ -524,19 +541,33 @@
 
     const visualControls = [];
     const nonVisualControls = [];
+    const controlAccessibility = [];
     for (
       const node of documentRef?.querySelectorAll(
         'button, a, input, select, textarea, summary',
       ) || []
     ) {
       const record = controlReviewRecord(node, documentRef, profile);
-      if (!record.label) continue;
+      if (!record.visual_label && !record.accessible_name) continue;
+      controlAccessibility.push({
+        kind: record.kind,
+        visual_label: record.visual_label,
+        accessible_name: record.accessible_name,
+        disabled: record.disabled,
+        visibility: record.visibility,
+      });
       if (record.visibility.visible) {
-        visualControls.push(record);
+        visualControls.push({
+          kind: record.kind,
+          visual_label: record.visual_label,
+          value: record.value,
+          disabled: record.disabled,
+          visibility: record.visibility,
+        });
       } else {
         nonVisualControls.push({
           kind: record.kind,
-          label: record.label,
+          accessible_name: record.accessible_name,
           disabled: record.disabled,
           visibility: record.visibility,
         });
@@ -565,6 +596,7 @@
         visible_text: visibleText,
       },
       accessibility_metadata: {
+        controls: controlAccessibility,
         non_visual_headings: nonVisualHeadingRecords,
         non_visual_controls: nonVisualControls,
       },
@@ -658,10 +690,11 @@
     }
 
     const text = pageText(documentRef, profile);
+    const domText = (documentRef.body.textContent || '').replace(/\s+/g, ' ').trim();
     const has = (selector) => visuallyPresent(documentRef, selector, profile);
     const all = (...selectors) => selectors.every((selector) => has(selector));
     const includes = (...values) => values.every((value) => text.includes(value));
-    const noInternalIdentity = !/(hwa_person_id|pep_person_id|menu_person_id|health_profile_id|person_id)/i.test(text);
+    const noInternalIdentity = !/(hwa_person_id|pep_person_id|menu_person_id|health_profile_id|person_id)/i.test(domText);
 
     if (criterionId === 'TODAY-01') {
       return automatedResult(
@@ -1189,7 +1222,7 @@
       );
     }
     if (criterionId === 'SETTINGS-03') {
-      const unsafe = /(https?:\/\/|token|secret|pep_person_id|menu_person_id|hwa_person_id)/i.test(text);
+      const unsafe = /(https?:\/\/|token|secret|pep_person_id|menu_person_id|hwa_person_id)/i.test(domText);
       return automatedResult(
         has('#integration-settings') && !unsafe ? 'PASS' : 'FAIL',
         unsafe
