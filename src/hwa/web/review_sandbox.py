@@ -4,7 +4,7 @@ These projections never create drafts, workout events or revisions. They exist o
 the browser audit can render deterministic states without mutating live training data.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Literal
 
@@ -17,7 +17,12 @@ from hwa.db.models.programme import ProgrammeDay
 from hwa.domain.draft import DraftPhase, WorkoutDraftSnapshot
 from hwa.read_models.history import WorkoutHistoryRow
 from hwa.read_models.progress import ExerciseProgressSummary, ProgressSummary
-from hwa.read_models.training_analytics import TrainingAnalytics
+from hwa.read_models.training_analytics import (
+    ActivityDay,
+    ExercisePersonalBest,
+    MuscleCoverageRow,
+    TrainingAnalytics,
+)
 from hwa.web.progress import (
     ProgressChartPoint,
     ProgressChartSeries,
@@ -210,7 +215,141 @@ def build_review_progress() -> ProgressPageContext:
             (1, "upper_body_bike"),
         )
     )
-    analytics = TrainingAnalytics(personal_bests=(), muscle_coverage=(), activity_days=())
+    analytics_anchor = date(2026, 10, 4)
+    personal_bests = (
+        ExercisePersonalBest(
+            exercise_id="dumbbell_floor_press",
+            display_name="Dumbbell Floor Press",
+            sessions=4,
+            best_load_kg=Decimal("8"),
+            estimated_1rm_kg=Decimal("10.7"),
+            best_reps=10,
+            last_performed_at=datetime(2026, 10, 4, 18, 20, tzinfo=UTC),
+        ),
+        ExercisePersonalBest(
+            exercise_id="one_arm_dumbbell_row",
+            display_name="One-arm Dumbbell Row",
+            sessions=4,
+            best_load_kg=Decimal("10"),
+            estimated_1rm_kg=Decimal("13.3"),
+            best_reps=10,
+            last_performed_at=datetime(2026, 10, 4, 18, 28, tzinfo=UTC),
+        ),
+        ExercisePersonalBest(
+            exercise_id="goblet_squat",
+            display_name="Goblet Squat",
+            sessions=3,
+            best_load_kg=Decimal("10"),
+            estimated_1rm_kg=Decimal("14.0"),
+            best_reps=12,
+            last_performed_at=datetime(2026, 10, 3, 18, 16, tzinfo=UTC),
+        ),
+    )
+    muscle_coverage = (
+        MuscleCoverageRow(
+            muscle_id="chest",
+            display_name="Chest",
+            recent_set_equivalents=Decimal("8.0"),
+            intensity_percent=80,
+            last_trained_at=datetime(2026, 10, 4, 18, 20, tzinfo=UTC),
+        ),
+        MuscleCoverageRow(
+            muscle_id="back",
+            display_name="Back",
+            recent_set_equivalents=Decimal("10.0"),
+            intensity_percent=100,
+            last_trained_at=datetime(2026, 10, 4, 18, 28, tzinfo=UTC),
+        ),
+        MuscleCoverageRow(
+            muscle_id="shoulders",
+            display_name="Shoulders",
+            recent_set_equivalents=Decimal("6.0"),
+            intensity_percent=60,
+            last_trained_at=datetime(2026, 10, 4, 18, 34, tzinfo=UTC),
+        ),
+        MuscleCoverageRow(
+            muscle_id="quads",
+            display_name="Quads",
+            recent_set_equivalents=Decimal("7.0"),
+            intensity_percent=70,
+            last_trained_at=datetime(2026, 10, 3, 18, 16, tzinfo=UTC),
+        ),
+        MuscleCoverageRow(
+            muscle_id="glutes",
+            display_name="Glutes",
+            recent_set_equivalents=Decimal("5.5"),
+            intensity_percent=55,
+            last_trained_at=datetime(2026, 10, 3, 18, 16, tzinfo=UTC),
+        ),
+        MuscleCoverageRow(
+            muscle_id="hamstrings",
+            display_name="Hamstrings",
+            recent_set_equivalents=Decimal("3.0"),
+            intensity_percent=30,
+            last_trained_at=datetime(2026, 10, 3, 18, 26, tzinfo=UTC),
+        ),
+        MuscleCoverageRow(
+            muscle_id="biceps",
+            display_name="Biceps",
+            recent_set_equivalents=Decimal("5.0"),
+            intensity_percent=50,
+            last_trained_at=datetime(2026, 10, 4, 18, 28, tzinfo=UTC),
+        ),
+        MuscleCoverageRow(
+            muscle_id="triceps",
+            display_name="Triceps",
+            recent_set_equivalents=Decimal("4.0"),
+            intensity_percent=40,
+            last_trained_at=datetime(2026, 10, 4, 18, 20, tzinfo=UTC),
+        ),
+        MuscleCoverageRow(
+            muscle_id="core",
+            display_name="Core",
+            recent_set_equivalents=Decimal("4.5"),
+            intensity_percent=45,
+            last_trained_at=datetime(2026, 10, 3, 18, 34, tzinfo=UTC),
+        ),
+    )
+    active_activity = {
+        analytics_anchor - timedelta(days=offset): (workouts, sets, level)
+        for offset, workouts, sets, level in (
+            (0, 1, 10, 3),
+            (1, 1, 8, 3),
+            (2, 1, 6, 2),
+            (3, 1, 8, 3),
+            (7, 1, 10, 3),
+            (9, 1, 5, 2),
+            (12, 1, 4, 2),
+            (15, 1, 8, 3),
+            (20, 1, 3, 1),
+            (22, 1, 9, 3),
+            (28, 1, 6, 2),
+            (35, 1, 5, 2),
+            (43, 1, 4, 2),
+            (49, 1, 8, 3),
+            (57, 1, 3, 1),
+            (64, 1, 6, 2),
+            (71, 1, 4, 2),
+            (78, 1, 5, 2),
+        )
+    }
+    activity_days = tuple(
+        ActivityDay(
+            day=current,
+            workout_count=active_activity.get(current, (0, 0, 0))[0],
+            completed_sets=active_activity.get(current, (0, 0, 0))[1],
+            intensity_level=active_activity.get(current, (0, 0, 0))[2],
+        )
+        for current in (
+            analytics_anchor - timedelta(days=83 - offset)
+            for offset in range(84)
+        )
+    )
+    analytics = TrainingAnalytics(
+        personal_bests=personal_bests,
+        muscle_coverage=muscle_coverage,
+        activity_days=activity_days,
+    )
     return ProgressPageContext(
         summary=summary,
         history=history,
