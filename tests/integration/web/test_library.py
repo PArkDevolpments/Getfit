@@ -115,6 +115,9 @@ def test_library_lists_canonical_programme_exercises_without_requiring_media(
         assert "floor-press" in response.text
         assert 'href="/library/goblet-squat"' in response.text
         assert "Media unavailable" in response.text
+        assert 'data-active-nav="more"' in response.text
+        assert 'href="/more"' in response.text
+        assert 'aria-current="page"' in response.text
     finally:
         client.close()
         engine.dispose()
@@ -128,6 +131,7 @@ def test_exercise_detail_is_available_even_when_media_is_missing(tmp_path) -> No
         assert "goblet-squat" in response.text
         assert 'data-media-state="unavailable"' in response.text
         assert "You can still complete this exercise" in response.text
+        assert 'data-active-nav="more"' in response.text
     finally:
         client.close()
         engine.dispose()
