@@ -54,6 +54,13 @@
     root.dataset.haPanelHost = String(data.host || 'home-assistant-app-panel');
     ready = true;
     clearRetry();
+    window.dispatchEvent(new CustomEvent('getfit:host-properties', {
+      detail: {
+        host: root.dataset.haPanelHost,
+        safeAreaInsets: insets,
+        narrow: Boolean(data.narrow),
+      },
+    }));
   }
 
   window.addEventListener('message', (event) => {
