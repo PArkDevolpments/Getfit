@@ -1763,3 +1763,132 @@
     margin: 4px 0 0 !important;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* 0.1.36 adaptive-height workout composition                                 */
+/* The visual viewport is authority; controls never shrink below touch floor. */
+/* -------------------------------------------------------------------------- */
+@media (max-width: 700px) {
+  body[data-active-nav="workout"] .content {
+    min-height: var(--getfit-usable-h, auto) !important;
+  }
+
+  html[data-viewport-band="compact"] body[data-active-nav="workout"] .content {
+    padding: 5px 7px 7px !important;
+  }
+
+  html[data-viewport-band="compact"] .workout-player {
+    gap: 4px !important;
+  }
+
+  html[data-viewport-band="compact"] .workout-session-header {
+    min-height: 38px !important;
+  }
+
+  html[data-viewport-band="compact"] .workout-progress {
+    padding-block: 4px !important;
+  }
+
+  html[data-viewport-band="compact"] .workout-stage {
+    padding: 6px !important;
+  }
+
+  html[data-viewport-band="compact"] .workout-stage__visual--strength,
+  html[data-viewport-band="compact"] .workout-stage__visual--strength img {
+    min-height: 138px !important;
+    max-height: 152px !important;
+  }
+
+  html[data-viewport-band="compact"] .strength-heading-row h2 {
+    font-size: 1.22rem !important;
+  }
+
+  html[data-viewport-band="compact"] .strength-prescription-line {
+    margin-bottom: 5px !important;
+  }
+
+  html[data-viewport-band="compact"] .set-effort-presets {
+    margin-top: 5px !important;
+  }
+
+  html[data-viewport-band="compact"] .workout-player.is-strength-stage .complete-set-button {
+    margin-top: 5px !important;
+  }
+
+  html[data-viewport-band="compact"] .cardio-timer--hero {
+    width: 168px !important;
+    min-height: 168px !important;
+    height: 168px !important;
+    margin-block: 2px 4px !important;
+  }
+
+  html[data-viewport-band="compact"] .cardio-timer--hero .cardio-timer__display {
+    font-size: 2.55rem !important;
+  }
+
+  html[data-viewport-band="compact"] .cardio-prescription-grid > div {
+    min-height: 48px !important;
+    padding-block: 4px !important;
+  }
+
+  html[data-viewport-band="compact"] .cardio-rpe-control {
+    min-height: 46px !important;
+  }
+
+  html[data-viewport-band="standard"] .workout-stage__visual--strength,
+  html[data-viewport-band="standard"] .workout-stage__visual--strength img {
+    min-height: clamp(172px, calc(var(--getfit-viewport-h, 820px) * .225), 190px) !important;
+    max-height: clamp(184px, calc(var(--getfit-viewport-h, 820px) * .235), 198px) !important;
+  }
+
+  html[data-viewport-band="standard"] .cardio-timer--hero {
+    width: clamp(188px, calc(var(--getfit-viewport-h, 820px) * .245), 204px) !important;
+    min-height: clamp(188px, calc(var(--getfit-viewport-h, 820px) * .245), 204px) !important;
+    height: clamp(188px, calc(var(--getfit-viewport-h, 820px) * .245), 204px) !important;
+  }
+
+  html[data-viewport-band="tall"] .workout-stage__visual--strength,
+  html[data-viewport-band="tall"] .workout-stage__visual--strength img {
+    min-height: clamp(218px, calc(var(--getfit-viewport-h, 932px) * .245), 246px) !important;
+    max-height: clamp(230px, calc(var(--getfit-viewport-h, 932px) * .255), 254px) !important;
+  }
+
+  html[data-viewport-band="tall"] .strength-coach-grid {
+    gap: 8px !important;
+  }
+
+  html[data-viewport-band="tall"] .strength-prescription-line {
+    margin-bottom: 9px !important;
+  }
+
+  html[data-viewport-band="tall"] .set-effort-presets {
+    margin-top: 9px !important;
+  }
+
+  html[data-viewport-band="tall"] .workout-player.is-strength-stage .complete-set-button {
+    margin-top: 10px !important;
+  }
+
+  html[data-viewport-band="tall"] .cardio-timer--hero {
+    width: clamp(220px, calc(var(--getfit-viewport-h, 932px) * .245), 238px) !important;
+    min-height: clamp(220px, calc(var(--getfit-viewport-h, 932px) * .245), 238px) !important;
+    height: clamp(220px, calc(var(--getfit-viewport-h, 932px) * .245), 238px) !important;
+  }
+
+  html[data-viewport-band="tall"] .cardio-timer--hero .cardio-timer__display {
+    font-size: 3.25rem !important;
+  }
+
+  html[data-viewport-band="tall"] .cardio-prescription-grid {
+    margin-top: 4px !important;
+  }
+
+  /* State cards should sit comfortably in the available canvas rather than
+     looking pinned to the top on tall phones. */
+  html[data-viewport-band="tall"] .workout-player.is-set-feedback .set-feedback-panel,
+  html[data-viewport-band="tall"] .workout-player.is-pain-stop .pain-stop-panel,
+  html[data-viewport-band="tall"] .workout-player.is-resting .main-rest-panel {
+    margin-top: clamp(6px, calc((var(--getfit-usable-h, 760px) - 620px) * .12), 28px) !important;
+  }
+}
