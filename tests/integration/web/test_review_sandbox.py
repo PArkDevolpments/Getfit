@@ -106,3 +106,16 @@ def test_review_progress_is_isolated_and_exposes_populated_chart_component() -> 
     assert progress.chart.points[-1].value_label == "8 kg"
     assert progress.summary.completed_workouts == 4
     assert progress.summary.completion_percent == 100
+    assert [item.display_name for item in progress.analytics.personal_bests] == [
+        "Dumbbell Floor Press",
+        "One-arm Dumbbell Row",
+        "Goblet Squat",
+    ]
+    assert progress.analytics.personal_bests[0].estimated_1rm_kg == Decimal("10.7")
+    assert any(
+        row.display_name == "Quads" and row.recent_set_equivalents == Decimal("7.0")
+        for row in progress.analytics.muscle_coverage
+    )
+    assert len(progress.analytics.activity_days) == 84
+    assert progress.analytics.activity_days[-1].workout_count == 1
+    assert progress.analytics.activity_days[-1].intensity_level == 3
