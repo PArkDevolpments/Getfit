@@ -278,3 +278,11 @@ def test_0140_review_content_keeps_non_visual_accessibility_metadata_separate() 
     assert "non_visual_headings" in script
     assert "non_visual_controls" in script
     assert "screen_reader_only" in script
+    assert "accessible_name" in script
+
+    control_record = script.split(
+        "function controlReviewRecord", 1
+    )[1].split("function collectReviewContent", 1)[0]
+    assert "node.getAttribute('name')" not in control_record
+    assert "const domText" in script
+    assert ".test(domText)" in script
