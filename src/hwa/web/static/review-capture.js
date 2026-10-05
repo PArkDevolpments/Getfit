@@ -340,8 +340,31 @@
     return [];
   }
 
-  function pageText(documentRef) {
-    return (documentRef?.body?.innerText || '').replace(/\\s+/g, ' ').trim();
+  function pageText(documentRef, profile = null) {
+    if (!documentRef?.body) return '';
+    const nodeFilter = documentRef.defaultView?.NodeFilter;
+    if (!nodeFilter) {
+      return (documentRef?.body?.innerText || '').replace(/\s+/g, ' ').trim();
+    }
+    const walker = documentRef.createTreeWalker(
+      documentRef.body,
+      nodeFilter.SHOW_TEXT,
+    );
+    const parts = [];
+    let textNode = walker.nextNode();
+    while (textNode) {
+      const value = (textNode.nodeValue || '').replace(/\s+/g, ' ').trim();
+      const parent = textNode.parentElement;
+      if (
+        value
+        && parent
+        && elementReviewState(parent, documentRef, profile).visible
+      ) {
+        parts.push(value);
+      }
+      textNode = walker.nextNode();
+    }
+    return parts.join(' ').replace(/\s+/g, ' ').trim();
   }
 
   function isScreenReaderOnly(node, style) {
