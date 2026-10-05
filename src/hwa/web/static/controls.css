@@ -389,7 +389,7 @@ button[aria-disabled="true"] {
 }
 
 .technique-action {
-  min-height: 40px !important;
+  min-height: 44px !important;
   padding: 0 13px !important;
   border-radius: 999px !important;
   backdrop-filter: blur(12px);
