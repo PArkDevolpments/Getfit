@@ -6,6 +6,10 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ui-review-pack-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   build-review-pack:
     name: Build UI review pack
@@ -41,4 +45,4 @@ jobs:
           name: getfit-ui-review-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
           path: dist/review-pack/*.zip
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 1
