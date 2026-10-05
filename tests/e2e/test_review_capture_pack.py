@@ -186,4 +186,19 @@ def test_0133_real_device_review_verifies_native_home_assistant_full_canvas_hand
     assert "'home-assistant-app-panel'" in script
     assert "'getfit-full-canvas-panel'" in script
     assert "home_assistant_shell: deviceMode ? hostShell : null" in script
-    assert "collectDeviceDiagnostics(target, frame.contentDocument, profile, hostShell)" in script
+    assert "collectDeviceDiagnostics(target, documentRef, profile, hostShell)" in script
+
+
+def test_0135_review_capture_cannot_mix_target_states_or_overlap_runs() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "captureRunning" in script
+    assert "A review capture is already running" in script
+    assert "__getfit_review_capture" in script
+    assert "captureIdentity" in script
+    assert "captureIdentityMatches" in script
+    assert "waitForTargetIdentity" in script
+    assert "Capture integrity check failed" in script
+    assert "source_review_state: identity.review_state" in script
+    assert "source_media_tab: identity.media_tab" in script
+    assert "frame.addEventListener('load', onLoad)" in script
