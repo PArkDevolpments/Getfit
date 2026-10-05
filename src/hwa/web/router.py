@@ -272,7 +272,7 @@ def library(
         request=request,
         name="library.html",
         context={
-            "page": build_page_context(person, "workout"),
+            "page": build_page_context(person, "more"),
             "person": person,
             "exercises": list_exercises(session),
         },
@@ -297,7 +297,7 @@ def exercise_detail(
         request=request,
         name="exercise_detail.html",
         context={
-            "page": build_page_context(person, "workout"),
+            "page": build_page_context(person, "more"),
             "person": person,
             "exercise": exercise,
             "exercise_history": get_exercise_history(
