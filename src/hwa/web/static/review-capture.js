@@ -509,8 +509,7 @@
     const accessibleName = (
       node.getAttribute('aria-label')
       || visualLabel
-      || node.getAttribute('name')
-      || node.tagName
+      || ''
     ).replace(/\s+/g, ' ').trim();
     const value = 'value' in node && state.visible
       ? String(node.value || '').trim()
@@ -548,7 +547,6 @@
       ) || []
     ) {
       const record = controlReviewRecord(node, documentRef, profile);
-      if (!record.visual_label && !record.accessible_name) continue;
       controlAccessibility.push({
         kind: record.kind,
         visual_label: record.visual_label,
