@@ -95,12 +95,14 @@ def _exercise_personal_bests(
             for row in completed
             if row.load_value_kg is not None and row.load_value_kg > 0
         )
-        estimates = tuple(
-            estimate
-            for row in loaded
-            if row.reps is not None
-            and (estimate := estimate_epley_1rm(row.load_value_kg, row.reps)) is not None
-        )
+        estimates_list: list[Decimal] = []
+        for row in loaded:
+            if row.load_value_kg is None or row.reps is None:
+                continue
+            estimate = estimate_epley_1rm(row.load_value_kg, row.reps)
+            if estimate is not None:
+                estimates_list.append(estimate)
+        estimates = tuple(estimates_list)
         reps = tuple(row.reps for row in completed if row.reps is not None)
         bests.append(
             ExercisePersonalBest(
