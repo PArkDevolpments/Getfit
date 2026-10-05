@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
+from hwa.domain.exercise_catalog import display_name
 from hwa.read_models.history import (
     ExerciseHistoryRow,
     WorkoutHistoryRow,
@@ -12,6 +13,7 @@ from hwa.read_models.history import (
     get_workout_history,
 )
 from hwa.read_models.progress import ProgressSummary, get_progress_summary
+from hwa.read_models.training_analytics import TrainingAnalytics, get_training_analytics
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,10 +41,7 @@ class ProgressPageContext:
     summary: ProgressSummary
     history: tuple[WorkoutHistoryRow, ...]
     chart: ProgressChartSeries | None
-
-
-def _display_name(exercise_id: str) -> str:
-    return exercise_id.replace("-", " ").replace("_", " ").title()
+    analytics: TrainingAnalytics
 
 
 def _chart_values(
@@ -107,7 +106,7 @@ def _build_chart(
     suffix = " kg" if metric_name == "Load (kg)" else " reps"
     return ProgressChartSeries(
         exercise_id=preferred,
-        display_name=_display_name(preferred),
+        display_name=display_name(preferred),
         metric_name=metric_name,
         points=tuple(points),
         polyline=polyline,
@@ -122,4 +121,5 @@ def build_progress_context(session: Session, person_id: str) -> ProgressPageCont
         summary=summary,
         history=get_workout_history(session, person_id),
         chart=_build_chart(session, person_id, summary),
+        analytics=get_training_analytics(session, person_id),
     )
