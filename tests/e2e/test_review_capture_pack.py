@@ -3,6 +3,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = ROOT / "src" / "hwa" / "web" / "static"
 TEMPLATES = ROOT / "src" / "hwa" / "web" / "templates"
+SCRIPTS = ROOT / "scripts"
+WORKFLOWS = ROOT / ".github" / "workflows"
 
 
 def test_review_capture_pack_is_local_and_collects_all_product_surfaces() -> None:
@@ -203,3 +205,39 @@ def test_0135_review_capture_cannot_mix_target_states_or_overlap_runs() -> None:
     assert "source_review_state: identity.review_state" in script
     assert "source_media_tab: identity.media_tab" in script
     assert "frame.addEventListener('load', onLoad)" in script
+
+
+
+def test_review_pack_includes_machine_readable_rendered_content_for_ai_review() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "function collectReviewContent" in script
+    assert "documentRef?.body?.innerText" in script
+    assert "review-content.json" in script
+    assert "getfit-review-content-v1" in script
+    assert "AI-REVIEW-GUIDE.txt" in script
+    assert "text-only file extractors" in script
+    assert "getfit-ui-review-pack-v4" in script
+    assert "getfit-device-review-pack-v2" in script
+
+
+def test_ci_review_pack_adds_browser_rendered_pngs_without_replacing_vector_evidence() -> None:
+    generator = (SCRIPTS / "generate_review_pack.py").read_text(encoding="utf-8")
+
+    assert "_enrich_pack_for_ai" in generator
+    assert "_rasterise_svg" in generator
+    assert "ai-screenshots/" in generator
+    assert 'type="png"' in generator
+    assert "full_page=True" in generator
+    assert "review-content.json" in generator
+    assert "vector_source_complete" in generator
+    assert "ZIP_DEFLATED" in generator
+    assert '{"ha-phone", "desktop"}' in generator
+
+
+def test_review_pack_workflow_cancels_stale_runs_and_limits_artifact_retention() -> None:
+    workflow = (WORKFLOWS / "review-pack.yml").read_text(encoding="utf-8")
+
+    assert "concurrency:" in workflow
+    assert "cancel-in-progress: true" in workflow
+    assert "retention-days: 1" in workflow
