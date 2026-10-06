@@ -70,7 +70,7 @@ Governed coaching/progression/adaptation remains future scope and has no impleme
 
 | Workstream | PR | Current evidence |
 |---|---:|---|
-| GF-0140-01 Review-pack visibility correctness | #100 | TDD RED captured in CI run 37357826234; final-head CI and deterministic UI review-pack generation required before merge. |
+| GF-0140-01 Review-pack visibility correctness | #100 | TDD RED: CI 37357826234. Review head `5b6a4172102d305cab3b5a566d87d94b73fb30e6`: push CI 37445754863 green; PR CI 37445760100 green; UI Review Pack 37445760032 green with 72 captures and automated results 20 PASS / 4 FAIL / 20 REVIEW_REQUIRED. Independent approval pending. |
 
 ## Ledger update rule
 
