@@ -241,3 +241,87 @@ def test_review_pack_workflow_cancels_stale_runs_and_limits_artifact_retention()
     assert "concurrency:" in workflow
     assert "cancel-in-progress: true" in workflow
     assert "retention-days: 1" in workflow
+
+def test_0140_review_capture_exports_visibility_state_as_visual_evidence() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "function isScreenReaderOnly" in script
+    assert "function elementReviewState" in script
+    assert "current.hidden || current.hasAttribute?.('hidden')" in script
+    assert "current.getAttribute?.('aria-hidden') === 'true'" in script
+    assert "style.pointerEvents === 'none'" in script
+    assert "geometry:" in script
+    assert "in_viewport:" in script
+    assert "fully_in_viewport:" in script
+    assert "reachable:" in script
+    assert "visual_evidence:" in script
+    assert "accessibility_metadata:" in script
+
+
+def test_0140_hidden_or_inactive_controls_cannot_satisfy_visual_acceptance() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "function visuallyPresent" in script
+    assert "function reachableControl" in script
+    assert "const has = (selector) => visuallyPresent(documentRef, selector, profile)" in script
+    assert "documentRef?.body?.innerText" in script
+    assert "controlSelectors.every((selector) => reachableControl(" in script
+    assert "Complete Set control is visible and reachable" in script
+    assert "hidden, inactive or unreachable" in script
+
+
+def test_0140_review_content_keeps_non_visual_accessibility_metadata_separate() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "visual_headings" in script
+    assert "visual_controls" in script
+    assert "non_visual_headings" in script
+    assert "non_visual_controls" in script
+    assert "screen_reader_only" in script
+    assert "accessible_name" in script
+
+    control_record = script.split(
+        "function controlReviewRecord", 1
+    )[1].split("function collectReviewContent", 1)[0]
+    assert "node.getAttribute('name')" not in control_record
+    assert "const domText" in script
+    assert ".test(domText)" in script
+
+def test_0140_review_visibility_handles_composed_ancestors_and_overflow_clipping() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "function composedParentElement" in script
+    assert "node.assignedSlot" in script
+    assert "root?.host?.nodeType === 1" in script
+    assert "function clippedViewportRect" in script
+    assert "intersectsOverflowClip(currentStyle.overflowX)" in script
+    assert "intersectsOverflowClip(currentStyle.overflowY)" in script
+    assert "clipped_by_ancestor: clipping.clippedByAncestor" in script
+    assert "visible_geometry:" in script
+
+
+def test_0140_reachability_separates_active_state_from_pointer_diagnostics() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "function pointerReachable" in script
+    assert "documentRef.elementFromPoint(x, y)" in script
+    assert "const pointerIsReachable = inViewport" in script
+    assert "const reachable = visible" in script
+    assert "&& !disabled" in script
+    assert "&& !inert" in script
+    assert "&& !pointerBlocked" in script
+    assert "pointer_reachable: pointerIsReachable" in script
+    assert "current.hasAttribute?.('inert')" in script
+    assert "current.getAttribute?.('aria-hidden') === 'true'" in script
+
+
+def test_0140_visual_evidence_keeps_full_page_semantics_with_viewport_diagnostics() -> None:
+    script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
+
+    assert "elementReviewState(parent, documentRef, profile).visible" in script
+    assert "(node) => elementReviewState(node, documentRef, profile).visible" in script
+    assert "if (visibility.visible) visualHeadingRecords.push(record)" in script
+    assert "if (record.visibility.visible)" in script
+    assert "in_viewport: inViewport" in script
+    assert "if (!state.fully_in_viewport) return false" in script
+
