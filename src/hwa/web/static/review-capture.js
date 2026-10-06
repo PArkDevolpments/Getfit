@@ -358,7 +358,7 @@
       if (
         value
         && parent
-        && elementReviewState(parent, documentRef, profile).visible
+        && elementReviewState(parent, documentRef, profile).in_viewport
       ) {
         parts.push(value);
       }
@@ -367,10 +367,90 @@
     return parts.join(' ').replace(/\s+/g, ' ').trim();
   }
 
+  function composedParentElement(node) {
+    if (!node) return null;
+    if (node.assignedSlot) return node.assignedSlot;
+    if (node.parentElement) return node.parentElement;
+    const root = node.getRootNode?.();
+    return root?.host?.nodeType === 1 ? root.host : null;
+  }
+
+  function composedAncestors(node) {
+    const ancestors = [];
+    const seen = new Set();
+    let current = node;
+    while (current && !seen.has(current)) {
+      ancestors.push(current);
+      seen.add(current);
+      current = composedParentElement(current);
+    }
+    return ancestors;
+  }
+
+  function intersectsOverflowClip(value) {
+    return ['auto', 'clip', 'hidden', 'scroll'].includes(value);
+  }
+
+  function intersectRect(rect, clip, {clipX = true, clipY = true} = {}) {
+    const left = clipX ? Math.max(rect.left, clip.left) : rect.left;
+    const right = clipX ? Math.min(rect.right, clip.right) : rect.right;
+    const top = clipY ? Math.max(rect.top, clip.top) : rect.top;
+    const bottom = clipY ? Math.min(rect.bottom, clip.bottom) : rect.bottom;
+    return {
+      left,
+      top,
+      right,
+      bottom,
+      width: Math.max(0, right - left),
+      height: Math.max(0, bottom - top),
+    };
+  }
+
+  function clippedViewportRect(node, documentRef, rect, viewportWidth, viewportHeight) {
+    let clipped = intersectRect(
+      rect,
+      {left: 0, top: 0, right: viewportWidth, bottom: viewportHeight},
+    );
+    let current = composedParentElement(node);
+    while (
+      current
+      && clipped.width > 0
+      && clipped.height > 0
+      && documentRef?.defaultView
+    ) {
+      const currentStyle = documentRef.defaultView.getComputedStyle(current);
+      const clipX = intersectsOverflowClip(currentStyle.overflowX);
+      const clipY = intersectsOverflowClip(currentStyle.overflowY);
+      if (clipX || clipY) {
+        const ancestorRect = current.getBoundingClientRect?.();
+        if (ancestorRect) {
+          const left = ancestorRect.left + Number(current.clientLeft || 0);
+          const top = ancestorRect.top + Number(current.clientTop || 0);
+          const width = Number(current.clientWidth || 0);
+          const height = Number(current.clientHeight || 0);
+          clipped = intersectRect(
+            clipped,
+            {
+              left,
+              top,
+              right: left + width,
+              bottom: top + height,
+            },
+            {clipX, clipY},
+          );
+        }
+      }
+      current = composedParentElement(current);
+    }
+    return clipped;
+  }
+
   function isScreenReaderOnly(node, style) {
     if (!node || !style) return false;
     if (
-      node.closest?.('.sr-only, .visually-hidden, .screen-reader-only')
+      composedAncestors(node).some(
+        (current) => current.matches?.('.sr-only, .visually-hidden, .screen-reader-only'),
+      )
     ) {
       return true;
     }
@@ -386,6 +466,39 @@
       && height <= 1
       && style.overflow === 'hidden'
       && Boolean(clipped || clipPathed);
+  }
+
+  function pointerReachable(node, documentRef, clippedRect) {
+    if (
+      !node
+      || !documentRef?.elementFromPoint
+      || clippedRect.width <= 0
+      || clippedRect.height <= 0
+    ) {
+      return false;
+    }
+
+    const insetX = Math.min(2, clippedRect.width / 4);
+    const insetY = Math.min(2, clippedRect.height / 4);
+    const points = [
+      [(clippedRect.left + clippedRect.right) / 2, (clippedRect.top + clippedRect.bottom) / 2],
+      [clippedRect.left + insetX, clippedRect.top + insetY],
+      [clippedRect.right - insetX, clippedRect.top + insetY],
+      [clippedRect.left + insetX, clippedRect.bottom - insetY],
+      [clippedRect.right - insetX, clippedRect.bottom - insetY],
+    ];
+
+    return points.some(([x, y]) => {
+      const hit = documentRef.elementFromPoint(x, y);
+      return Boolean(
+        hit
+        && (
+          hit === node
+          || node.contains?.(hit)
+          || hit.contains?.(node)
+        )
+      );
+    });
   }
 
   function elementReviewState(node, documentRef, profile = null) {
@@ -408,23 +521,22 @@
       width: 0,
       height: 0,
     };
-    const hiddenByAttribute = Boolean(
-      node && (node.hidden || node.closest?.('[hidden]')),
+    const ancestors = composedAncestors(node);
+    const hiddenByAttribute = ancestors.some(
+      (current) => Boolean(current.hidden || current.hasAttribute?.('hidden')),
     );
-    const ariaHidden = Boolean(
-      node
-      && (
-        node.getAttribute('aria-hidden') === 'true'
-        || node.closest?.('[aria-hidden="true"]')
-      ),
+    const ariaHidden = ancestors.some(
+      (current) => current.getAttribute?.('aria-hidden') === 'true',
     );
-    const inert = Boolean(node?.closest?.('[inert]'));
+    const inert = ancestors.some(
+      (current) => current.hasAttribute?.('inert'),
+    );
     const disabled = Boolean(node?.disabled)
       || node?.getAttribute?.('aria-disabled') === 'true';
     const pointerBlocked = Boolean(style && style.pointerEvents === 'none');
     let ancestorRendered = Boolean(style);
-    let current = node;
-    while (ancestorRendered && current && documentRef?.defaultView) {
+    for (const current of ancestors) {
+      if (!ancestorRendered || !documentRef?.defaultView) break;
       const currentStyle = documentRef.defaultView.getComputedStyle(current);
       const currentOpacity = Number.parseFloat(currentStyle.opacity || '1');
       if (
@@ -436,7 +548,6 @@
       ) {
         ancestorRendered = false;
       }
-      current = current.parentElement;
     }
     const screenReaderOnly = isScreenReaderOnly(node, style);
     const clientRectCount = node?.getClientRects?.().length || 0;
@@ -449,33 +560,47 @@
     const visible = rendered
       && !hiddenByAttribute
       && !screenReaderOnly;
+    const clippedRect = visible
+      ? clippedViewportRect(
+        node,
+        documentRef,
+        rect,
+        viewportWidth,
+        viewportHeight,
+      )
+      : {left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0};
     const inViewport = visible
-      && rect.bottom > 0
-      && rect.right > 0
-      && rect.top < viewportHeight
-      && rect.left < viewportWidth;
+      && clippedRect.width > 0
+      && clippedRect.height > 0;
     const fullyInViewport = inViewport
       && rect.top >= 0
       && rect.left >= 0
       && rect.bottom <= viewportHeight
-      && rect.right <= viewportWidth;
-    const reachable = visible
+      && rect.right <= viewportWidth
+      && Math.abs(clippedRect.width - rect.width) <= 1
+      && Math.abs(clippedRect.height - rect.height) <= 1;
+    const pointerIsReachable = inViewport
+      && !pointerBlocked
+      && pointerReachable(node, documentRef, clippedRect);
+    const reachable = inViewport
       && !disabled
       && !inert
-      && !pointerBlocked;
+      && pointerIsReachable;
 
     return {
       visible,
-      reachable: reachable,
+      reachable,
       rendered,
       disabled,
       inert,
       pointer_events_blocked: pointerBlocked,
+      pointer_reachable: pointerIsReachable,
       hidden_attribute: hiddenByAttribute,
       aria_hidden: ariaHidden,
       screen_reader_only: screenReaderOnly,
       in_viewport: inViewport,
       fully_in_viewport: fullyInViewport,
+      clipped_by_ancestor: inViewport && !fullyInViewport,
       geometry: {
         left: Math.round(rect.left),
         top: Math.round(rect.top),
@@ -484,12 +609,20 @@
         width: Math.round(rect.width),
         height: Math.round(rect.height),
       },
+      visible_geometry: {
+        left: Math.round(clippedRect.left),
+        top: Math.round(clippedRect.top),
+        right: Math.round(clippedRect.right),
+        bottom: Math.round(clippedRect.bottom),
+        width: Math.round(clippedRect.width),
+        height: Math.round(clippedRect.height),
+      },
     };
   }
 
   function visuallyPresent(documentRef, selector, profile) {
     return Array.from(documentRef?.querySelectorAll(selector) || []).some(
-      (node) => elementReviewState(node, documentRef, profile).visible,
+      (node) => elementReviewState(node, documentRef, profile).in_viewport,
     );
   }
 
@@ -511,7 +644,7 @@
       || visualLabel
       || ''
     ).replace(/\s+/g, ' ').trim();
-    const value = 'value' in node && state.visible
+    const value = 'value' in node && state.in_viewport
       ? String(node.value || '').trim()
       : '';
     return {
@@ -534,7 +667,7 @@
       if (!label) continue;
       const visibility = elementReviewState(node, documentRef, profile);
       const record = {label, visibility};
-      if (visibility.visible) visualHeadingRecords.push(record);
+      if (visibility.in_viewport) visualHeadingRecords.push(record);
       else nonVisualHeadingRecords.push(record);
     }
 
@@ -554,7 +687,7 @@
         disabled: record.disabled,
         visibility: record.visibility,
       });
-      if (record.visibility.visible) {
+      if (record.visibility.in_viewport) {
         visualControls.push({
           kind: record.kind,
           visual_label: record.visual_label,
@@ -613,7 +746,7 @@
   function fullyVisible(node, documentRef, profile) {
     if (!node) return false;
     const state = elementReviewState(node, documentRef, profile);
-    if (!state.visible) return false;
+    if (!state.fully_in_viewport) return false;
     const viewportHeight = documentRef.documentElement.clientHeight
       || documentRef.defaultView?.innerHeight
       || profile.height;
@@ -793,7 +926,7 @@
       if (criterionId === 'STRENGTH-02') {
         const floorPress = Array.from(documentRef.querySelectorAll('.strength-item')).some(
           (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press')
-            && elementReviewState(node, documentRef, profile).visible,
+            && elementReviewState(node, documentRef, profile).in_viewport,
         );
         return automatedResult(
           floorPress && has('.workout-progress') ? 'REVIEW_REQUIRED' : 'FAIL',
@@ -806,7 +939,7 @@
       if (criterionId === 'STRENGTH-03') {
         const floorPress = Array.from(documentRef.querySelectorAll('.strength-item')).find(
           (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press')
-            && elementReviewState(node, documentRef, profile).visible,
+            && elementReviewState(node, documentRef, profile).in_viewport,
         );
         const floorText = floorPress?.textContent || '';
         const metrics = /10\s*reps/i.test(floorText)
@@ -987,11 +1120,11 @@
       }
       const bike = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
         (node) => node.dataset.equipment === 'SPIN_BIKE'
-          && elementReviewState(node, documentRef, profile).visible,
+          && elementReviewState(node, documentRef, profile).in_viewport,
       );
       const treadmill = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
         (node) => node.dataset.equipment === 'TREADMILL'
-          && elementReviewState(node, documentRef, profile).visible,
+          && elementReviewState(node, documentRef, profile).in_viewport,
       );
       const activeCardio = documentRef.querySelector('.cardio-item:not([hidden])');
       if (criterionId === 'CARDIO-01') {
@@ -1049,7 +1182,7 @@
         const finisher = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
           (node) => node.dataset.equipment === 'SPIN_BIKE'
             && node.dataset.segmentType === 'CONDITIONING'
-            && elementReviewState(node, documentRef, profile).visible,
+            && elementReviewState(node, documentRef, profile).in_viewport,
         );
         if (!finisher) {
           return automatedResult(
@@ -1080,7 +1213,7 @@
       }
       if (criterionId === 'CARDIO-04') {
         const hard = Array.from(documentRef.querySelectorAll('.cardio-item--hard')).find(
-          (node) => elementReviewState(node, documentRef, profile).visible,
+          (node) => elementReviewState(node, documentRef, profile).in_viewport,
         );
         const hardText = hard?.textContent || '';
         const targets = /00:30/.test(hardText)
@@ -1103,7 +1236,7 @@
       }
       if (criterionId === 'CARDIO-05') {
         const recovery = Array.from(documentRef.querySelectorAll('.cardio-item--recovery')).find(
-          (node) => elementReviewState(node, documentRef, profile).visible,
+          (node) => elementReviewState(node, documentRef, profile).in_viewport,
         );
         const recoveryText = recovery?.textContent || '';
         const targets = /01:30/.test(recoveryText)
@@ -1138,7 +1271,7 @@
 
     if (criterionId === 'PROGRESS-01') {
       const chart = Array.from(documentRef.querySelectorAll('svg[data-progress-chart]')).find(
-        (node) => elementReviewState(node, documentRef, profile).visible,
+        (node) => elementReviewState(node, documentRef, profile).in_viewport,
       );
       const points = Number(chart?.dataset.pointCount || 0);
       return automatedResult(
@@ -1175,7 +1308,7 @@
 
     if (criterionId === 'LIBRARY-01') {
       const cards = Array.from(documentRef.querySelectorAll('.exercise-card')).filter(
-        (node) => elementReviewState(node, documentRef, profile).visible,
+        (node) => elementReviewState(node, documentRef, profile).in_viewport,
       );
       const sources = cards
         .map((card) => card.querySelector('.exercise-card__media img')?.getAttribute('src'))
