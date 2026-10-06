@@ -247,8 +247,8 @@ def test_0140_review_capture_exports_visibility_state_as_visual_evidence() -> No
 
     assert "function isScreenReaderOnly" in script
     assert "function elementReviewState" in script
-    assert "node.hidden" in script
-    assert "node.getAttribute('aria-hidden') === 'true'" in script
+    assert "current.hidden || current.hasAttribute?.('hidden')" in script
+    assert "current.getAttribute?.('aria-hidden') === 'true'" in script
     assert "style.pointerEvents === 'none'" in script
     assert "geometry:" in script
     assert "in_viewport:" in script
