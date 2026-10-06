@@ -358,7 +358,7 @@
       if (
         value
         && parent
-        && elementReviewState(parent, documentRef, profile).in_viewport
+        && elementReviewState(parent, documentRef, profile).visible
       ) {
         parts.push(value);
       }
@@ -599,10 +599,10 @@
     const pointerIsReachable = inViewport
       && !pointerBlocked
       && pointerReachable(node, documentRef, clippedRect);
-    const reachable = inViewport
+    const reachable = visible
       && !disabled
       && !inert
-      && pointerIsReachable;
+      && !pointerBlocked;
 
     return {
       visible,
@@ -639,7 +639,7 @@
 
   function visuallyPresent(documentRef, selector, profile) {
     return Array.from(documentRef?.querySelectorAll(selector) || []).some(
-      (node) => elementReviewState(node, documentRef, profile).in_viewport,
+      (node) => elementReviewState(node, documentRef, profile).visible,
     );
   }
 
@@ -661,7 +661,7 @@
       || visualLabel
       || ''
     ).replace(/\s+/g, ' ').trim();
-    const value = 'value' in node && state.in_viewport
+    const value = 'value' in node && state.visible
       ? String(node.value || '').trim()
       : '';
     return {
@@ -684,7 +684,7 @@
       if (!label) continue;
       const visibility = elementReviewState(node, documentRef, profile);
       const record = {label, visibility};
-      if (visibility.in_viewport) visualHeadingRecords.push(record);
+      if (visibility.visible) visualHeadingRecords.push(record);
       else nonVisualHeadingRecords.push(record);
     }
 
@@ -704,7 +704,7 @@
         disabled: record.disabled,
         visibility: record.visibility,
       });
-      if (record.visibility.in_viewport) {
+      if (record.visibility.visible) {
         visualControls.push({
           kind: record.kind,
           visual_label: record.visual_label,
@@ -943,7 +943,7 @@
       if (criterionId === 'STRENGTH-02') {
         const floorPress = Array.from(documentRef.querySelectorAll('.strength-item')).some(
           (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press')
-            && elementReviewState(node, documentRef, profile).in_viewport,
+            && elementReviewState(node, documentRef, profile).visible,
         );
         return automatedResult(
           floorPress && has('.workout-progress') ? 'REVIEW_REQUIRED' : 'FAIL',
@@ -956,7 +956,7 @@
       if (criterionId === 'STRENGTH-03') {
         const floorPress = Array.from(documentRef.querySelectorAll('.strength-item')).find(
           (node) => (node.dataset.exerciseId || '').includes('dumbbell_floor_press')
-            && elementReviewState(node, documentRef, profile).in_viewport,
+            && elementReviewState(node, documentRef, profile).visible,
         );
         const floorText = floorPress?.textContent || '';
         const metrics = /10\s*reps/i.test(floorText)
@@ -1137,11 +1137,11 @@
       }
       const bike = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
         (node) => node.dataset.equipment === 'SPIN_BIKE'
-          && elementReviewState(node, documentRef, profile).in_viewport,
+          && elementReviewState(node, documentRef, profile).visible,
       );
       const treadmill = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
         (node) => node.dataset.equipment === 'TREADMILL'
-          && elementReviewState(node, documentRef, profile).in_viewport,
+          && elementReviewState(node, documentRef, profile).visible,
       );
       const activeCardio = documentRef.querySelector('.cardio-item:not([hidden])');
       if (criterionId === 'CARDIO-01') {
@@ -1199,7 +1199,7 @@
         const finisher = Array.from(documentRef.querySelectorAll('.cardio-item')).find(
           (node) => node.dataset.equipment === 'SPIN_BIKE'
             && node.dataset.segmentType === 'CONDITIONING'
-            && elementReviewState(node, documentRef, profile).in_viewport,
+            && elementReviewState(node, documentRef, profile).visible,
         );
         if (!finisher) {
           return automatedResult(
@@ -1230,7 +1230,7 @@
       }
       if (criterionId === 'CARDIO-04') {
         const hard = Array.from(documentRef.querySelectorAll('.cardio-item--hard')).find(
-          (node) => elementReviewState(node, documentRef, profile).in_viewport,
+          (node) => elementReviewState(node, documentRef, profile).visible,
         );
         const hardText = hard?.textContent || '';
         const targets = /00:30/.test(hardText)
@@ -1253,7 +1253,7 @@
       }
       if (criterionId === 'CARDIO-05') {
         const recovery = Array.from(documentRef.querySelectorAll('.cardio-item--recovery')).find(
-          (node) => elementReviewState(node, documentRef, profile).in_viewport,
+          (node) => elementReviewState(node, documentRef, profile).visible,
         );
         const recoveryText = recovery?.textContent || '';
         const targets = /01:30/.test(recoveryText)
@@ -1288,7 +1288,7 @@
 
     if (criterionId === 'PROGRESS-01') {
       const chart = Array.from(documentRef.querySelectorAll('svg[data-progress-chart]')).find(
-        (node) => elementReviewState(node, documentRef, profile).in_viewport,
+        (node) => elementReviewState(node, documentRef, profile).visible,
       );
       const points = Number(chart?.dataset.pointCount || 0);
       return automatedResult(
@@ -1325,7 +1325,7 @@
 
     if (criterionId === 'LIBRARY-01') {
       const cards = Array.from(documentRef.querySelectorAll('.exercise-card')).filter(
-        (node) => elementReviewState(node, documentRef, profile).in_viewport,
+        (node) => elementReviewState(node, documentRef, profile).visible,
       );
       const sources = cards
         .map((card) => card.querySelector('.exercise-card__media img')?.getAttribute('src'))
