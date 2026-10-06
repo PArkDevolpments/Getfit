@@ -300,26 +300,28 @@ def test_0140_review_visibility_handles_composed_ancestors_and_overflow_clipping
     assert "visible_geometry:" in script
 
 
-def test_0140_reachability_requires_active_viewport_and_pointer_hit_testing() -> None:
+def test_0140_reachability_separates_active_state_from_pointer_diagnostics() -> None:
     script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
 
     assert "function pointerReachable" in script
     assert "documentRef.elementFromPoint(x, y)" in script
     assert "const pointerIsReachable = inViewport" in script
-    assert "const reachable = inViewport" in script
+    assert "const reachable = visible" in script
     assert "&& !disabled" in script
     assert "&& !inert" in script
+    assert "&& !pointerBlocked" in script
     assert "pointer_reachable: pointerIsReachable" in script
     assert "current.hasAttribute?.('inert')" in script
     assert "current.getAttribute?.('aria-hidden') === 'true'" in script
 
 
-def test_0140_visual_evidence_uses_clipped_viewport_state() -> None:
+def test_0140_visual_evidence_keeps_full_page_semantics_with_viewport_diagnostics() -> None:
     script = (STATIC / "review-capture.js").read_text(encoding="utf-8")
 
-    assert "elementReviewState(parent, documentRef, profile).in_viewport" in script
-    assert "(node) => elementReviewState(node, documentRef, profile).in_viewport" in script
-    assert "if (visibility.in_viewport) visualHeadingRecords.push(record)" in script
-    assert "if (record.visibility.in_viewport)" in script
+    assert "elementReviewState(parent, documentRef, profile).visible" in script
+    assert "(node) => elementReviewState(node, documentRef, profile).visible" in script
+    assert "if (visibility.visible) visualHeadingRecords.push(record)" in script
+    assert "if (record.visibility.visible)" in script
+    assert "in_viewport: inViewport" in script
     assert "if (!state.fully_in_viewport) return false" in script
 
