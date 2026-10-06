@@ -411,6 +411,7 @@
       rect,
       {left: 0, top: 0, right: viewportWidth, bottom: viewportHeight},
     );
+    let clippedByAncestor = false;
     let current = composedParentElement(node);
     while (
       current
@@ -428,7 +429,7 @@
           const top = ancestorRect.top + Number(current.clientTop || 0);
           const width = Number(current.clientWidth || 0);
           const height = Number(current.clientHeight || 0);
-          clipped = intersectRect(
+          const next = intersectRect(
             clipped,
             {
               left,
@@ -438,11 +439,20 @@
             },
             {clipX, clipY},
           );
+          if (
+            Math.abs(next.left - clipped.left) > 0.5
+            || Math.abs(next.top - clipped.top) > 0.5
+            || Math.abs(next.right - clipped.right) > 0.5
+            || Math.abs(next.bottom - clipped.bottom) > 0.5
+          ) {
+            clippedByAncestor = true;
+          }
+          clipped = next;
         }
       }
       current = composedParentElement(current);
     }
-    return clipped;
+    return {rect: clipped, clippedByAncestor};
   }
 
   function isScreenReaderOnly(node, style) {
@@ -495,7 +505,6 @@
         && (
           hit === node
           || node.contains?.(hit)
-          || hit.contains?.(node)
         )
       );
     });
@@ -541,13 +550,17 @@
       const currentOpacity = Number.parseFloat(currentStyle.opacity || '1');
       if (
         currentStyle.display === 'none'
-        || currentStyle.visibility === 'hidden'
-        || currentStyle.visibility === 'collapse'
         || currentStyle.contentVisibility === 'hidden'
         || currentOpacity <= 0
       ) {
         ancestorRendered = false;
       }
+    }
+    if (
+      style
+      && (style.visibility === 'hidden' || style.visibility === 'collapse')
+    ) {
+      ancestorRendered = false;
     }
     const screenReaderOnly = isScreenReaderOnly(node, style);
     const clientRectCount = node?.getClientRects?.().length || 0;
@@ -560,7 +573,7 @@
     const visible = rendered
       && !hiddenByAttribute
       && !screenReaderOnly;
-    const clippedRect = visible
+    const clipping = visible
       ? clippedViewportRect(
         node,
         documentRef,
@@ -568,7 +581,11 @@
         viewportWidth,
         viewportHeight,
       )
-      : {left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0};
+      : {
+        rect: {left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0},
+        clippedByAncestor: false,
+      };
+    const clippedRect = clipping.rect;
     const inViewport = visible
       && clippedRect.width > 0
       && clippedRect.height > 0;
@@ -600,7 +617,7 @@
       screen_reader_only: screenReaderOnly,
       in_viewport: inViewport,
       fully_in_viewport: fullyInViewport,
-      clipped_by_ancestor: inViewport && !fullyInViewport,
+      clipped_by_ancestor: clipping.clippedByAncestor,
       geometry: {
         left: Math.round(rect.left),
         top: Math.round(rect.top),
