@@ -77,8 +77,10 @@ Checkpoint: `test: pin H6 Pep Health service contract`
 - [ ] Write RED tests for exact header/claim contract, deterministic compact JSON, unpadded base64url, Ed25519 verification, 30-second lifetime, issuer/audience, matching `kid`, trusted subject, unique `jti`, and injected UTC clock/random source.
 - [ ] Add rejection tests for blank subject/kid, non-finite time, invalid expiry, malformed key encoding, non-32-byte keys, symlink/non-regular/oversized key file, and group/world-readable permissions on POSIX.
 - [ ] Implement a file-only production key loader. It returns an immutable signer and never exposes raw key bytes through public attributes or representations.
+- [ ] Keep exactly one active signing private key and one active `kid` in Getfit at any time. Do not implement a multi-key signer, multiple active Getfit signing keys, or automatic fallback to another private key.
 - [ ] Add caplog sentinels proving key, subject, assertion and `jti` do not appear on success or failure.
-- [ ] Test two configured `kid` values for rotation overlap and prove every sign call creates a fresh `jti`.
+- [ ] Test old and new keys as separate, sequential signer configurations. Prove each signer emits only its configured `kid` and every sign call creates a fresh `jti`.
+- [ ] Keep rotation overlap on the Pep verifier side only, where old and new public keys may temporarily coexist. Emergency revocation remains Pep-side public-key removal followed by Getfit Health disable/restart; Getfit never falls back to another private key.
 
 Run:
 
@@ -235,11 +237,22 @@ Checkpoint: `test: lock H6 failure and privacy invariants`
 - Create: `docs/superpowers/evidence/2026-10-08-getfit-h6-contract-evidence.md`
 - Modify: `.github/workflows/ci.yml`
 
-- [ ] Build a sanitized protocol probe that can target a disposable HA Core/Supervisor-compatible endpoint. It may emit only version/build identity, pass/fail state, stable failure class and booleans for command/envelope invariants.
-- [ ] In deterministic CI, run the probe against a local protocol harness and prove the documented Supervisor WebSocket URL, token auth, `call_service` command and response shape. Do not include secrets or payloads in artifacts.
-- [ ] Against the pinned target HA Core image used by Pep verification, install the Pep component from provider SHA `f61b9644a88c5047176e87d4a7edf2939e218d32`, keep authority disabled, and prove Getfit reaches `peptide_site.get_health_context` and safely receives the governed envelope through the service API. Use synthetic keys/identities only.
+### Target HA Core image evidence
+
+- [ ] Build a sanitized protocol probe that can target the pinned HA Core image used by Pep verification. It may emit only version/build identity, pass/fail state, stable failure class and booleans for command/envelope invariants.
+- [ ] Install the Pep component from provider SHA `f61b9644a88c5047176e87d4a7edf2939e218d32` in that target Core image and prove `peptide_site.get_health_context` service registration.
+- [ ] Using synthetic identities and keys only, prove HA WebSocket `call_service` with `return_response=true` reaches the service and returns the governed `{status_code, body, headers}` envelope.
+- [ ] Do not claim that a plain HA Core image proves the Supervisor proxy URL or Supervisor token flow.
+
+### Supervisor-proxy proof
+
+- [ ] In deterministic CI, run the client against a protocol/proxy harness that proves Getfit selects exactly `ws://supervisor/core/websocket`, authenticates with `SUPERVISOR_TOKEN`, sends the governed `call_service` command, and parses its response. Do not include secrets or payloads in artifacts.
+- [ ] Retain and reference the existing H0 transport evidence where its Supervisor proxy findings remain applicable; do not reinterpret Core-image evidence as Supervisor evidence.
+
+### Pre-LIVE topology gate
+
 - [ ] Record exact Getfit/Pep/HA image SHAs or digests, commands, workflow URLs and results in the evidence file.
-- [ ] Keep the H0 full Supervisor/Ingress deployed-topology proof as a separate pre-LIVE L1 gate. If no representative staging Supervisor is available, record that limitation; do not substitute LIVE.
+- [ ] Keep representative deployed Supervisor + Getfit + Pep topology proof as a separate pre-LIVE L1 gate. If no representative staging Supervisor is available, record the limitation; do not substitute LIVE access.
 
 Run:
 
