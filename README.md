@@ -11,6 +11,28 @@ Home Workout Assistant (HWA), also known as Getfit, is a local-first Home Assist
 
 Generic steps, exercise minutes, calories, Withings workout summaries, or Apple aggregate activity must never be promoted into authoritative HWA Workout Events.
 
+## Optional Pep Health context
+
+Pep Health context is read-only, presentation-only and **off by default**:
+`pep_health_enabled: false`. Pep's Health-authority flag is separately governed.
+When disabled, Getfit loads no signing key and makes no Health service request.
+Unavailable Health never blocks workout planning, drafts, completion or history.
+An enabled reader fails closed on invalid configuration, identity, assertions,
+Pep denials, protocol errors or timeouts; it retains no previous successful
+projection and performs no local Health calculation or fallback.
+
+Getfit uses the trusted Home Assistant Ingress subject, one active Ed25519
+private key and `kid`, and an assertion-only HA service call. Pep makes the final
+subject-to-person mapping. The private key crosses into Python through an
+owner-readable file, never an inline environment value or browser response.
+The add-on grants the required `homeassistant_api: true` permission.
+
+See [add-on operations](getfit/DOCS.md) for unavailable states, configuration,
+Pep public-key overlap, rotation, revocation and rollback. H6 local verification
+does not authorize LIVE keys, mappings, deployment or activation. Remote CI,
+independent whole-branch review and representative staging remain separate gates;
+see [H6 evidence](docs/superpowers/evidence/2026-10-08-getfit-h6-contract-evidence.md).
+
 ## Approved design and plans
 
 The repository keeps the approved architecture and product direction under `docs/superpowers/`:

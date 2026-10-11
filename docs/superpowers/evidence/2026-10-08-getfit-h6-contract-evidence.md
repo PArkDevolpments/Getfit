@@ -240,3 +240,138 @@ revocation/rotation, and deleted/deactivated/unmapped user isolation. Neither
 the deterministic harness nor a successful Core-image artifact can close L1.
 Do not substitute LIVE for missing staging. Default-off/read-only/no-LIVE/no-H6S/
 no-H7 boundaries remain in force.
+
+## Task 9 local continuation — 2026-10-11
+
+Prospective independent plan approval and scoped local Task 8 acceptance are now
+recorded in the ignored continuation workspace. Task 8 acceptance applies to
+`58708599a8800b20fdc5caeee442e5efcb2128c8`; it does not backdate approval of the
+earlier implementation or close remote CI, exact-provider QA/current candidate
+image identity or representative staging L1. This continuation permits local
+documentation, verification and a separate commit only. No push, PR change,
+merge, version bump, release, LIVE access/activation, H6S or H7 occurred.
+
+README and the new `getfit/DOCS.md` document default-off/read-only behavior,
+stable unavailable states, private-file signing, minimum HA Core API permission,
+one active Getfit key, Pep public-key overlap, rotation/revocation and rollback.
+
+### Published CI failure investigation and test-only RED/GREEN
+
+The shared `HealthHarness` used a 30ms deadline for ordinary success setup, even
+though production uses five seconds. A controlled 50ms scheduling delay in its
+synthetic peer exercised the real signer, client and reader and reproduced the
+initial READY failure: the default case returned UNAVAILABLE. A separate case
+with an explicit 30ms deadline correctly returned UNAVAILABLE. This establishes
+the harness timing mechanism; the old remote run contains no elapsed-time trace
+that could retrospectively prove its exact scheduler delay.
+
+Only the shared test harness default changes to one second. The new delayed-peer
+regression keeps explicit 30ms deadline exhaustion, closed connections, no
+surviving tasks and private-log assertions. Existing timeout, cancellation,
+retry-metadata, person-isolation and recursive retained-state assertions remain.
+The e2e tests import this harness and require no assertion changes. Production
+code, its five-second deadline and Health behavior are unchanged.
+
+```powershell
+.venv/Scripts/python.exe -m pytest tests/integration/test_h6_health_failure_matrix.py -q -k scheduling_delay --basetemp=.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-red
+.venv/Scripts/python.exe -m pytest tests/integration/test_h6_health_failure_matrix.py tests/e2e/test_h6_health_privacy_and_isolation.py -q --basetemp=.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-green
+```
+
+RED: 1 failed (delayed ordinary READY setup), 1 passed, 45 deselected.
+GREEN: 70 passed, one existing Starlette/httpx deprecation warning.
+
+### Fresh local verification
+
+The original untracked `uv.lock` remains byte-identical, SHA-256
+`145296C31A9FCFA20D9BB548112E821C060EF7822892CACDEBF8D8E710A97A82`.
+Adapted sync asserts an unchanged lock and retains the existing Windows tzdata
+prerequisite/extraneous packages. Subsequent commands use `--no-sync` so they
+cannot rewrite the lock or remove that prerequisite. All basetemps below were
+new, inside the ignored continuation workspace. Prior artifacts are preserved.
+
+```powershell
+uv sync --dev --locked --inexact
+uv run --no-sync ruff check .
+uv run --no-sync mypy src
+uv run --no-sync pytest tests/unit -q --basetemp=.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-unit
+uv run --no-sync pytest tests/integration -q --basetemp=.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-integration
+uv run --no-sync pytest tests/contract -q --basetemp=.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-contract
+uv run --no-sync pytest tests/e2e -q --basetemp=.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-e2e
+uv run --no-sync pytest tests/unit/integrations/pep tests/integration/test_h6_health_failure_matrix.py tests/integration/web/test_h6_health_identity.py tests/contract/test_h6_health_service_contract.py tests/e2e/test_h6_health_privacy_and_isolation.py _tools/tests/test_qa_h6_ha_websocket_contract.py -q --import-mode=importlib --basetemp=.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-focused
+uv run --no-sync pytest -q --basetemp=.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-bare
+uv run --no-sync pytest -q --import-mode=importlib --basetemp=.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-full-importlib
+uv run --no-sync python _tools/qa_h6_ha_websocket_contract.py --proxy-harness
+uv run --no-sync python .superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/verify-task9-migrations.py
+git diff --check
+```
+
+- Sync: exit 0, 47 packages resolved / 46 checked. Ruff: all checks passed.
+  Strict mypy: no issues in 75 source files.
+- Split CI suites: unit 231 passed / 6 skipped; integration 169 passed;
+  contract 327 passed; e2e 121 passed. Total: **848 passed, 6 skipped**.
+- Focused H6/transport/tool suite: **277 passed, 7 skipped**. Six skips concern
+  Windows symlink privilege and POSIX key-file boundaries; the seventh is the
+  opt-in real-image tool test. Actual Task 8 Core runs remain separate evidence.
+- Bare pytest: exit 1 at collection, the two previously recorded duplicate-module
+  errors (`test_progress.py`, `test_production_bootstrap.py`). No layout change or
+  deletion of preserved caches was made. Importlib full suite: **848 passed,
+  6 skipped**. Each suite emits the existing Starlette/httpx warning.
+- Fresh deterministic proxy CLI: exit 0, NONE, all seven invariants true. It
+  records base SHA 5870859 while documentation/test changes are uncommitted;
+  it is not exact-head remote CI or representative deployed Supervisor evidence.
+- Safe migration adaptation: Alembic Config API overrides only sqlalchemy.url
+  to a new scratch SQLite database. `upgrade head` succeeds twice, actual head
+  equals `0003`, 13 tables. Scratch retained under
+  `task9-migrations-eqz1ld0c/scratch.sqlite3`. No owner `hwa.db` exists in this
+  checkout; no owner database was opened, removed or overwritten.
+
+### Local Docker build, with recorded environment adaptations
+
+Controller acquisition verified official public Dockerfile base
+`ghcr.io/home-assistant/base-python:3.12-alpine3.24`, original index
+`sha256:528aa9bc123dfd10a95210691973d2c507c579157a1af33aac28cbd9672a002d`,
+linux/amd64 manifest
+`sha256:227b19ebc05c44219baf06f8eef2cfb200b3864a27de2772cc50e7e2e68fcadc`
+and config `sha256:741c53d86f2fa1d5117c365becd524fe8d9114e2990e9b5fc79895715fb4dfd2`.
+Verified source bytes, archive/blob hashes, actual Docker identity and all three
+RootFS diff IDs are retained under ignored `image-acquisition/getfit-build-base`.
+Only the amd64 descendants were acquired; no signature verification is claimed.
+
+The ordinary repository-context build was interrupted before any build steps
+because it was transferring the approximately 2.94GB preserved ignored workspace.
+A new ignored `task9-build-context` copies the exact Dockerfile and all its COPY
+inputs plus `.dockerignore`. SHA-256 comparisons of 147 inputs passed. Its plain
+build reached pip build-dependency installation but made no progress through the
+known WSL DNS limitation; that task-owned build client was interrupted. Neither
+interruption is a successful normal build or a completed pip-error diagnostic.
+
+Windows DNS freshly resolved the package index hosts. The successful adaptation
+uses only ephemeral build-container host mappings and retains HTTPS/TLS domain
+validation and the base image's existing package indexes:
+
+```powershell
+wsl -d Ubuntu-24.04 --cd /mnt/c/Users/myher/Documents/Codex/2026-10-05/continue-work-in-ktgregson93-collab-pep/work/Getfit-H6 -- docker build -t getfit-h6-ci .
+wsl -d Ubuntu-24.04 --cd /mnt/c/Users/myher/Documents/Codex/2026-10-05/continue-work-in-ktgregson93-collab-pep/work/Getfit-H6/.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-build-context -- docker build -t getfit-h6-ci .
+wsl -d Ubuntu-24.04 --cd /mnt/c/Users/myher/Documents/Codex/2026-10-05/continue-work-in-ktgregson93-collab-pep/work/Getfit-H6/.superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/task9-build-context -- docker build --add-host pypi.org:151.101.0.223 --add-host files.pythonhosted.org:151.101.0.223 --add-host wheels.home-assistant.io:104.26.4.238 -t getfit-h6-ci .
+wsl -d Ubuntu-24.04 -- docker image inspect getfit-h6-ci --format '{{.Id}} {{.Os}}/{{.Architecture}}'
+wsl -d Ubuntu-24.04 -- docker ps -a --format '{{.ID}} {{.Image}} {{.Status}}'
+```
+
+Adapted build: **exit 0**, all 13 Dockerfile steps, tagged `getfit-h6-ci:latest`,
+image `sha256:b54871f102f64cac47b8c99db13984170d87451bd2d3d6ce6934eecc59ddacc5`,
+linux/amd64. Final container inventory is empty. Docker emits a legacy-builder
+deprecation and pip its root-user warning. No system DNS, daemon/global config,
+Dockerfile, package source or TLS trust setting changed. The Dockerfile installs
+from its declared dependency ranges, not the preserved Windows lock: this proves
+the local amd64 build, not locked runtime parity, aarch64 or deployed acceptance.
+
+### Gates still open
+
+Local Task 9 verification is ready for controller-dispatched whole-branch review;
+it is not self-approved. Remote exact-head CI remains unavailable because the
+local checkpoint is unpublished. Historical push/PR evidence remains mixed and
+cannot be retroactively marked green by the local harness fix. Exact f61 QA/current
+Pep candidate identity, representative deployed staging L1, publication, merge,
+main CI, release and supported-architecture production artifact verification
+remain unclosed or excluded. Do not claim H6 complete. The separate local commit
+and preservation checks are recorded in ignored `task-9-report.md` for handoff.

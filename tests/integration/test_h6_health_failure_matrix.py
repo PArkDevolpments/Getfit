@@ -107,7 +107,9 @@ class HealthHarness:
         self.transport = HaHealthServiceClient(
             supervisor_token=self.token,
             connector=self.connector,
-            timeout_seconds=0.03,
+            # Success/denial setup is not a host-speed benchmark. Explicit short
+            # deadlines below and real socket lifecycle tests cover exhaustion.
+            timeout_seconds=1.0,
         )
         self.reader = PepHealthReader(service_client=self.transport, signer=self.signer)
 
@@ -231,6 +233,41 @@ class HealthPeer:
             )
             response["headers"]["Retry-After"] = self.harness.retry_after
         return json.dumps(responses.websocket_result(response))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("short_deadline", [False, True])
+async def test_synthetic_peer_scheduling_delay_keeps_setup_and_timeout_distinct(
+    short_deadline, monkeypatch, caplog
+):
+    # Real signer/client/reader: a delayed synthetic peer must not make ordinary
+    # success setup a 30ms host-speed test. An explicit 30ms deadline still fails.
+    caplog.set_level(logging.DEBUG)
+    harness = HealthHarness()
+    if short_deadline:
+        transport = HaHealthServiceClient(
+            supervisor_token=harness.token,
+            connector=harness.connector,
+            timeout_seconds=0.03,
+        )
+        harness.reader = PepHealthReader(service_client=transport, signer=harness.signer)
+    original_send = HealthPeer.send
+
+    async def delayed_send(peer, raw):
+        await asyncio.sleep(0.05)
+        await original_send(peer, raw)
+
+    monkeypatch.setattr(HealthPeer, "send", delayed_send)
+    before = asyncio.all_tasks()
+    result = await harness.reader.read(ha_user_id="synthetic-ha-a", person=person())
+    if short_deadline:
+        assert result.status == "UNAVAILABLE" and result.reason == "PEP_HEALTH_UNAVAILABLE"
+        assert result.body == {}
+    else:
+        assert result.status == "READY" and result.body["body_mass"].value == 81.3
+    assert len(harness.connections) == 1 and all(peer.closed for peer in harness.connections)
+    assert asyncio.all_tasks() == before
+    harness.assert_private_logs(caplog)
 
 
 @pytest.mark.asyncio
