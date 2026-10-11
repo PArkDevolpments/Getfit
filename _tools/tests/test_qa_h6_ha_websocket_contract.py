@@ -1,9 +1,11 @@
 """Run the compatibility gate; reject wrong proxy selection and unsafe artifacts."""
 
 import asyncio
+import hashlib
 import importlib.util
 import io
 import json
+import os
 import subprocess
 import sys
 import tarfile
@@ -172,3 +174,99 @@ def test_core_gate_fails_closed_on_missing_or_inconsistent_provenance(monkeypatc
         assert command[command.index("--network") + 1] == "none"
         assert command[-3:] == [image_id, "/probe/qa_h6_ha_websocket_contract.py", "--core-worker"]
         assert "-p" not in command and "--publish" not in command
+
+
+@pytest.mark.skipif(os.getenv("H6_CORE_REGRESSION") != "1", reason="explicit local Core-image gate")
+def test_real_core_image_initializes_ha_and_dispatches_pinned_pep_service():
+    """Real-image regression for missing loader/config-entry prerequisites."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(TOOL),
+            "--docker-core",
+            "--image-ref",
+            "ghcr.io/home-assistant/home-assistant:2026.10.0",
+            "--wsl-distro",
+            "Ubuntu-24.04",
+            "--provider-repo",
+            str(ROOT.parent / "Pep-Site-H5"),
+            "--image-provenance",
+            str(
+                ROOT
+                / ".superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding"
+                / "image-acquisition/oci-verified-2/provenance.json"
+            ),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=240,
+    )
+    assert result.stderr == ""
+    report = json.loads(result.stdout)
+    assert result.returncode == 0, report["failure_class"]
+    assert report["passed"] is True
+    assert all(report["invariants"].values())
+    assert report["build"]["ha_version"] == "2026.10.0"
+    assert report["build"]["provider_sha"] == "f61b9644a88c5047176e87d4a7edf2939e218d32"
+
+
+@pytest.mark.parametrize("failure", [None, "manifest_bytes", "image_id", "source_ref"])
+def test_imported_image_provenance_requires_linked_registry_documents(tmp_path, failure):
+    probe = load_probe()
+    config_bytes = (
+        b'{"rootfs":{"diff_ids":["sha256:'
+        b'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"]}}'
+    )
+    config_digest = "sha256:" + hashlib.sha256(config_bytes).hexdigest()
+    manifest_bytes = json.dumps({"config": {"digest": config_digest}, "layers": []}).encode()
+    manifest_digest = "sha256:" + hashlib.sha256(manifest_bytes).hexdigest()
+    index_bytes = json.dumps(
+        {
+            "manifests": [
+                {
+                    "platform": {"os": "linux", "architecture": "amd64"},
+                    "digest": manifest_digest,
+                }
+            ]
+        }
+    ).encode()
+    index_digest = "sha256:" + hashlib.sha256(index_bytes).hexdigest()
+    provenance = {
+        "schema": "getfit-public-registry-image-acquisition-v1",
+        "source_ref": "ghcr.io/home-assistant/home-assistant:2026.10.0",
+        "platform": {"os": "linux", "architecture": "amd64"},
+        "index_digest": index_digest,
+        "platform_manifest_digest": manifest_digest,
+        "config_digest": config_digest,
+        "expected_config_id": config_digest,
+        "index_file": "official-index.json",
+        "platform_manifest_file": "official-linux-amd64-manifest.json",
+        "config_file": "official-config.json",
+    }
+    (tmp_path / "official-config.json").write_bytes(config_bytes)
+    (tmp_path / "official-linux-amd64-manifest.json").write_bytes(
+        manifest_bytes + (b" " if failure == "manifest_bytes" else b""),
+    )
+    (tmp_path / "official-index.json").write_bytes(index_bytes)
+    if failure == "source_ref":
+        provenance["source_ref"] = "ghcr.io/home-assistant/home-assistant:2026.10.1"
+    path = tmp_path / "provenance.json"
+    path.write_text(json.dumps(provenance))
+    image_id = "sha256:" + "d" * 64 if failure == "image_id" else config_digest
+    if failure:
+        with pytest.raises(ValueError):
+            probe.verify_image_provenance(
+                path, image_id, "ghcr.io/home-assistant/home-assistant:2026.10.0"
+            )
+    else:
+        verified = probe.verify_image_provenance(
+            path, image_id, "ghcr.io/home-assistant/home-assistant:2026.10.0"
+        )
+        assert verified == (
+            "ghcr.io/home-assistant/home-assistant@" + manifest_digest,
+            "ghcr.io/home-assistant/home-assistant@" + index_digest,
+            config_digest,
+            ["sha256:" + "c" * 64],
+        )

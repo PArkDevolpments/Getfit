@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import base64
+import hashlib
 import importlib.metadata
 import io
 import json
@@ -68,11 +69,16 @@ BUILD_PATTERNS = {
     "provider_sha": r"[0-9a-f]{40}",
     "ha_version": r"[0-9]+\.[0-9]+\.[0-9]+(?:[a-z][0-9]+)?",
     "ha_image_id": r"sha256:[0-9a-f]{64}",
+    "ha_image_config_digest": r"sha256:[0-9a-f]{64}",
     "ha_image_tag": (
         r"(?:ghcr\.io/home-assistant/home-assistant|homeassistant/home-assistant)"
         r":[0-9][0-9.a-z-]*"
     ),
     "ha_image_digest": (
+        r"(?:ghcr\.io/home-assistant/home-assistant|homeassistant/home-assistant)"
+        r"@sha256:[0-9a-f]{64}"
+    ),
+    "ha_image_index_digest": (
         r"(?:ghcr\.io/home-assistant/home-assistant|homeassistant/home-assistant)"
         r"@sha256:[0-9a-f]{64}"
     ),
@@ -172,9 +178,7 @@ async def run_proxy_harness(*, scenario: str = "success") -> dict[str, Any]:
                 f"{header}.{claims}".encode("ascii"),
             )
             decoded = json.loads(base64.urlsafe_b64decode(claims + "=" * (-len(claims) % 4)))
-            decoded_header = json.loads(
-                base64.urlsafe_b64decode(header + "=" * (-len(header) % 4))
-            )
+            decoded_header = json.loads(base64.urlsafe_b64decode(header + "=" * (-len(header) % 4)))
             checks["signature_verified"] = (
                 decoded_header == {"alg": "EdDSA", "typ": "H0-SA", "kid": "synthetic-h6-key"}
                 and set(decoded) == {"iss", "aud", "sub", "iat", "exp", "jti", "kid"}
@@ -279,8 +283,9 @@ async def run_core_worker() -> dict[str, Any]:
     )
     from custom_components.peptide_site.health_authority_identity import HealthIdentityMap
     from custom_components.peptide_site.health_authority_transport import HealthAuthorityTransport
-    from homeassistant.auth import auth_manager_from_config
+    from homeassistant import bootstrap, config_entries, loader
     from homeassistant.core import HomeAssistant
+    from homeassistant.core_config import async_process_ha_core_config
     from homeassistant.setup import async_setup_component
 
     report = new_report("core_image")
@@ -290,14 +295,24 @@ async def run_core_worker() -> dict[str, Any]:
     with tempfile.TemporaryDirectory(prefix="h6-core-") as directory:
         hass = HomeAssistant(directory)
         try:
-            hass.auth = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
             config = {"http": {"server_host": "127.0.0.1", "server_port": 18139}}
+            # HomeAssistant() alone lacks loader caches, config entries and
+            # registries. Follow the pinned Core bootstrap prerequisites before
+            # component setup rather than stubbing HA internals for this probe.
+            loader.async_setup(hass)
+            hass.config.skip_pip = True
+            hass.config_entries = config_entries.ConfigEntries(hass, config)
+            if not await bootstrap.async_load_base_functionality(hass):
+                return report
+            await async_process_ha_core_config(
+                hass, {"auth_providers": [{"type": "homeassistant"}], "auth_mfa_modules": []}
+            )
             if not await async_setup_component(hass, "http", config):
                 return report
             if not await async_setup_component(hass, "websocket_api", config):
                 return report
             user = await hass.auth.async_create_user("Synthetic H6 QA", group_ids=["system-admin"])
-            refresh = await hass.auth.async_create_refresh_token(user)
+            refresh = await hass.auth.async_create_refresh_token(user, client_id="http://127.0.0.1")
             token = hass.auth.async_create_access_token(refresh)
             key = Ed25519PrivateKey.generate()
             identity = HealthIdentityMap.from_payload(
@@ -369,31 +384,120 @@ def _command(args: list[str], *, timeout: int = 30) -> bytes:
     ).stdout
 
 
-def run_docker_core(provider_repo: Path) -> dict[str, Any]:
-    """Read only the existing Pep reference image; run a separate isolated container."""
+def verify_image_provenance(
+    path: Path, image_id: str, image_ref: str
+) -> tuple[str, str, str, list[str]]:
+    """Verify offline official registry document links for a Docker-save import.
+
+    Acquisition is a separate TLS-verified operation. This does not manufacture
+    Docker RepoDigests: it returns the hashes of the retained registry bytes.
+    """
+    provenance = json.loads(path.read_bytes())
+    if (
+        provenance.get("schema") != "getfit-public-registry-image-acquisition-v1"
+        or provenance.get("source_ref") != image_ref
+        or provenance.get("platform") != {"os": "linux", "architecture": "amd64"}
+        or provenance.get("expected_config_id") != provenance.get("config_digest")
+    ):
+        raise ValueError("IMAGE_PROVENANCE_UNAVAILABLE")
+    documents = {}
+    for file_key, digest_key, filename in (
+        ("index_file", "index_digest", "official-index.json"),
+        (
+            "platform_manifest_file",
+            "platform_manifest_digest",
+            "official-linux-amd64-manifest.json",
+        ),
+        ("config_file", "config_digest", "official-config.json"),
+    ):
+        if provenance.get(file_key) != filename:
+            raise ValueError("IMAGE_PROVENANCE_UNAVAILABLE")
+        raw = (path.parent / filename).read_bytes()
+        digest = "sha256:" + hashlib.sha256(raw).hexdigest()
+        if digest != provenance.get(digest_key):
+            raise ValueError("IMAGE_PROVENANCE_UNAVAILABLE")
+        documents[digest_key] = json.loads(raw)
+    index = documents["index_digest"]
+    manifest = documents["platform_manifest_digest"]
+    config = documents["config_digest"]
+    descriptors = [
+        row
+        for row in index["manifests"]
+        if row.get("platform", {}).get("os") == "linux"
+        and row.get("platform", {}).get("architecture") == "amd64"
+    ]
+    if (
+        len(descriptors) != 1
+        or descriptors[0]["digest"] != provenance["platform_manifest_digest"]
+        or manifest["config"]["digest"] != provenance["config_digest"]
+        or image_id not in {provenance["config_digest"], provenance["platform_manifest_digest"]}
+    ):
+        raise ValueError("IMAGE_PROVENANCE_UNAVAILABLE")
+    diff_ids = config["rootfs"]["diff_ids"]
+    if (
+        not isinstance(diff_ids, list)
+        or not diff_ids
+        or any(
+            not isinstance(value, str) or re.fullmatch(BUILD_PATTERNS["ha_image_id"], value) is None
+            for value in diff_ids
+        )
+    ):
+        raise ValueError("IMAGE_PROVENANCE_UNAVAILABLE")
+    repository = image_ref.rsplit(":", 1)[0]
+    return (
+        repository + "@" + provenance["platform_manifest_digest"],
+        repository + "@" + provenance["index_digest"],
+        provenance["config_digest"],
+        diff_ids,
+    )
+
+
+def run_docker_core(
+    provider_repo: Path,
+    *,
+    image_ref: str | None = None,
+    wsl_distro: str | None = None,
+    image_provenance: Path | None = None,
+) -> dict[str, Any]:
+    """Inspect an existing local official image; run a separate isolated container.
+
+    An explicit image is supplemental evidence unless independently reconciled
+    with Pep's target. This tool never pulls images or changes Docker/WSL config.
+    """
     report = new_report("core_image")
+    wrapper = ["wsl", "-d", wsl_distro, "--"] if wsl_distro else []
+    docker = [*wrapper, "docker"]
     try:
-        _command(["docker", "version", "--format", "{{.Server.Version}}"])
+        _command([*docker, "version", "--format", "{{.Server.Version}}"])
     except Exception:
         report["failure_class"] = "DOCKER_UNAVAILABLE"
         return report
     try:
-        image_id = (
-            _command(
-                [
-                    "docker",
-                    "inspect",
-                    "--format",
-                    "{{.Image}}",
-                    "menu-ha-candidate",
-                ]
+        if image_ref is not None:
+            if not any(
+                re.fullmatch(BUILD_PATTERNS[key], image_ref)
+                for key in ("ha_image_tag", "ha_image_digest")
+            ):
+                raise ValueError
+            image = json.loads(_command([*docker, "image", "inspect", image_ref]))[0]
+            image_id = image["Id"]
+        else:
+            image_id = (
+                _command(
+                    [
+                        *docker,
+                        "inspect",
+                        "--format",
+                        "{{.Image}}",
+                        "menu-ha-candidate",
+                    ]
+                )
+                .decode()
+                .strip()
             )
-            .decode()
-            .strip()
-        )
+            image = json.loads(_command([*docker, "image", "inspect", image_id]))[0]
         if re.fullmatch(BUILD_PATTERNS["ha_image_id"], image_id) is None:
             raise ValueError
-        image = json.loads(_command(["docker", "image", "inspect", image_id]))[0]
         tags = [
             tag
             for tag in image.get("RepoTags", [])
@@ -404,7 +508,24 @@ def run_docker_core(provider_repo: Path) -> dict[str, Any]:
             for digest in image.get("RepoDigests", [])
             if re.fullmatch(BUILD_PATTERNS["ha_image_digest"], digest)
         ]
-        if image["Id"] != image_id or not tags or not digests:
+        if image["Id"] != image_id or not tags:
+            raise ValueError
+        if image_provenance is not None:
+            if image_ref is None or image_ref not in tags:
+                raise ValueError
+            manifest_digest, index_digest, config_digest, diff_ids = verify_image_provenance(
+                image_provenance,
+                image_id,
+                image_ref,
+            )
+            if image["RootFS"]["Layers"] != diff_ids:
+                raise ValueError
+            digests = [manifest_digest]
+            report["build"]["ha_image_index_digest"] = index_digest
+            report["build"]["ha_image_config_digest"] = config_digest
+        if not digests:
+            raise ValueError
+        if image_ref is not None and image_ref not in [*tags, *digests]:
             raise ValueError
         report["build"].update(
             ha_image_id=image_id,
@@ -437,12 +558,17 @@ def run_docker_core(provider_repo: Path) -> dict[str, Any]:
             (staging / "provider-sha").write_text(PROVIDER_SHA)
             shutil.copyfile(__file__, staging / "qa_h6_ha_websocket_contract.py")
             shutil.copytree(ROOT / "src" / "hwa", staging / "src" / "hwa")
+            mount_path = str(staging)
+            if wrapper:
+                mount_path = (
+                    _command([*wrapper, "wslpath", "-a", "-u", staging.as_posix()]).decode().strip()
+                )
             # No host ports, socket, config, tokens, or existing container mounts.
             # The read-only source mount contains only the exact git archive and
             # Getfit source; HA config lives in the disposable container's /tmp.
             raw = _command(
                 [
-                    "docker",
+                    *docker,
                     "run",
                     "--rm",
                     "--network",
@@ -456,7 +582,7 @@ def run_docker_core(provider_repo: Path) -> dict[str, Any]:
                     "--env",
                     "PYTHONPATH=/probe:/probe/src",
                     "--volume",
-                    f"{staging}:/probe:ro",
+                    f"{mount_path}:/probe:ro",
                     image_id,
                     "/probe/qa_h6_ha_websocket_contract.py",
                     "--core-worker",
@@ -470,6 +596,8 @@ def run_docker_core(provider_repo: Path) -> dict[str, Any]:
             version = worker["build"].get("ha_version")
             matching_tags = [tag for tag in tags if tag.rsplit(":", 1)[1] == version]
             if not matching_tags:
+                raise ValueError
+            if image_ref in tags and image_ref not in matching_tags:
                 raise ValueError
             report["build"]["ha_image_tag"] = sorted(matching_tags)[0]
             worker["build"].update(report["build"])
@@ -488,13 +616,26 @@ def main(argv: list[str] | None = None) -> int:
     modes.add_argument(
         "--docker-core",
         action="store_true",
-        help="probe the existing Pep verification image in an isolated container",
+        help="probe an existing local official HA image in an isolated container",
     )
     modes.add_argument("--core-worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument(
         "--provider-repo",
         type=Path,
         help="local Pep git repository containing the pinned provider SHA",
+    )
+    parser.add_argument(
+        "--image-ref", help="explicit local official HA version tag or registry digest"
+    )
+    parser.add_argument(
+        "--image-provenance",
+        type=Path,
+        help="registry document sidecar for a local Docker-save import without RepoDigests",
+    )
+    parser.add_argument(
+        "--wsl-distro",
+        choices=["Ubuntu-24.04"],
+        help="use Docker in this WSL distro and translate the read-only source mount",
     )
     args = parser.parse_args(argv)
     proof = "proxy_harness" if args.proxy_harness else "core_image"
@@ -509,7 +650,12 @@ def main(argv: list[str] | None = None) -> int:
                 logging.disable(logging.CRITICAL)
                 report = asyncio.run(asyncio.wait_for(run_core_worker(), timeout=120))
             elif args.provider_repo is not None:
-                report = run_docker_core(args.provider_repo)
+                report = run_docker_core(
+                    args.provider_repo,
+                    image_ref=args.image_ref,
+                    wsl_distro=args.wsl_distro,
+                    image_provenance=args.image_provenance,
+                )
             else:
                 report["failure_class"] = "PROVIDER_SOURCE_UNAVAILABLE"
             if not args.core_worker:
