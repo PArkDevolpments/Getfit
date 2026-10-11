@@ -430,7 +430,12 @@ def verify_image_provenance(
         len(descriptors) != 1
         or descriptors[0]["digest"] != provenance["platform_manifest_digest"]
         or manifest["config"]["digest"] != provenance["config_digest"]
-        or image_id not in {provenance["config_digest"], provenance["platform_manifest_digest"]}
+        or image_id
+        not in {
+            provenance["config_digest"],
+            provenance["platform_manifest_digest"],
+            provenance["index_digest"],
+        }
     ):
         raise ValueError("IMAGE_PROVENANCE_UNAVAILABLE")
     diff_ids = config["rootfs"]["diff_ids"]
@@ -443,7 +448,15 @@ def verify_image_provenance(
         )
     ):
         raise ValueError("IMAGE_PROVENANCE_UNAVAILABLE")
-    repository = image_ref.rsplit(":", 1)[0]
+    if "@" in image_ref:
+        repository, source_digest = image_ref.split("@", 1)
+        if source_digest not in {
+            provenance["index_digest"],
+            provenance["platform_manifest_digest"],
+        }:
+            raise ValueError("IMAGE_PROVENANCE_UNAVAILABLE")
+    else:
+        repository = image_ref.rsplit(":", 1)[0]
     return (
         repository + "@" + provenance["platform_manifest_digest"],
         repository + "@" + provenance["index_digest"],
@@ -508,10 +521,11 @@ def run_docker_core(
             for digest in image.get("RepoDigests", [])
             if re.fullmatch(BUILD_PATTERNS["ha_image_digest"], digest)
         ]
-        if image["Id"] != image_id or not tags:
+        if image["Id"] != image_id:
             raise ValueError
+        verified_refs = []
         if image_provenance is not None:
-            if image_ref is None or image_ref not in tags:
+            if image_ref is None:
                 raise ValueError
             manifest_digest, index_digest, config_digest, diff_ids = verify_image_provenance(
                 image_provenance,
@@ -521,17 +535,21 @@ def run_docker_core(
             if image["RootFS"]["Layers"] != diff_ids:
                 raise ValueError
             digests = [manifest_digest]
+            verified_refs = [manifest_digest, index_digest]
             report["build"]["ha_image_index_digest"] = index_digest
             report["build"]["ha_image_config_digest"] = config_digest
         if not digests:
             raise ValueError
-        if image_ref is not None and image_ref not in [*tags, *digests]:
+        if image_ref is not None and image_ref not in [*tags, *digests, *verified_refs]:
+            raise ValueError
+        if not tags and (not verified_refs or image_ref not in verified_refs):
             raise ValueError
         report["build"].update(
             ha_image_id=image_id,
-            ha_image_tag=sorted(tags)[0],
             ha_image_digest=sorted(digests)[0],
         )
+        if tags:
+            report["build"]["ha_image_tag"] = sorted(tags)[0]
     except Exception:
         report["failure_class"] = "IMAGE_PROVENANCE_UNAVAILABLE"
         return report
@@ -595,11 +613,12 @@ def run_docker_core(
                 raise ValueError
             version = worker["build"].get("ha_version")
             matching_tags = [tag for tag in tags if tag.rsplit(":", 1)[1] == version]
-            if not matching_tags:
+            if tags and not matching_tags:
                 raise ValueError
             if image_ref in tags and image_ref not in matching_tags:
                 raise ValueError
-            report["build"]["ha_image_tag"] = sorted(matching_tags)[0]
+            if matching_tags:
+                report["build"]["ha_image_tag"] = sorted(matching_tags)[0]
             worker["build"].update(report["build"])
             return worker
     except Exception:

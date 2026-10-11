@@ -212,7 +212,9 @@ def test_real_core_image_initializes_ha_and_dispatches_pinned_pep_service():
     assert report["build"]["provider_sha"] == "f61b9644a88c5047176e87d4a7edf2939e218d32"
 
 
-@pytest.mark.parametrize("failure", [None, "manifest_bytes", "image_id", "source_ref"])
+@pytest.mark.parametrize(
+    "failure", [None, "manifest_bytes", "image_id", "source_ref", "index_ref", "wrong_digest"]
+)
 def test_imported_image_provenance_requires_linked_registry_documents(tmp_path, failure):
     probe = load_probe()
     config_bytes = (
@@ -252,17 +254,21 @@ def test_imported_image_provenance_requires_linked_registry_documents(tmp_path, 
     (tmp_path / "official-index.json").write_bytes(index_bytes)
     if failure == "source_ref":
         provenance["source_ref"] = "ghcr.io/home-assistant/home-assistant:2026.10.1"
+    source_ref = "ghcr.io/home-assistant/home-assistant:2026.10.0"
+    if failure in {"index_ref", "wrong_digest"}:
+        source_ref = "ghcr.io/home-assistant/home-assistant@" + (
+            index_digest if failure == "index_ref" else "sha256:" + "d" * 64
+        )
+        provenance["source_ref"] = source_ref
     path = tmp_path / "provenance.json"
     path.write_text(json.dumps(provenance))
     image_id = "sha256:" + "d" * 64 if failure == "image_id" else config_digest
-    if failure:
+    if failure and failure != "index_ref":
         with pytest.raises(ValueError):
-            probe.verify_image_provenance(
-                path, image_id, "ghcr.io/home-assistant/home-assistant:2026.10.0"
-            )
+            probe.verify_image_provenance(path, image_id, source_ref)
     else:
         verified = probe.verify_image_provenance(
-            path, image_id, "ghcr.io/home-assistant/home-assistant:2026.10.0"
+            path, index_digest if failure == "index_ref" else image_id, source_ref
         )
         assert verified == (
             "ghcr.io/home-assistant/home-assistant@" + manifest_digest,
@@ -270,3 +276,47 @@ def test_imported_image_provenance_requires_linked_registry_documents(tmp_path, 
             config_digest,
             ["sha256:" + "c" * 64],
         )
+
+
+def test_core_gate_accepts_verified_index_reference_without_fabricating_tag(monkeypatch):
+    probe = load_probe()
+    repository = "ghcr.io/home-assistant/home-assistant"
+    index = repository + "@sha256:" + "a" * 64
+    manifest = repository + "@sha256:" + "b" * 64
+    config = "sha256:" + "c" * 64
+    layer = "sha256:" + "d" * 64
+    worker = probe.new_report("core_image")
+    worker["build"]["ha_version"] = "2026.9.4"
+    worker["invariants"] = dict.fromkeys(worker["invariants"], True)
+    worker.update(passed=True, failure_class="NONE")
+    archive = io.BytesIO()
+    with tarfile.open(fileobj=archive, mode="w"):
+        pass
+
+    def command(args, **kwargs):
+        if args[0] == "git":
+            return archive.getvalue()
+        if args[1] == "version":
+            return b"29.1.3"
+        if args[1] == "image":
+            return json.dumps(
+                [
+                    {
+                        "Id": index.split("@")[1],
+                        "RepoTags": [],
+                        "RepoDigests": [index],
+                        "RootFS": {"Layers": [layer]},
+                    }
+                ]
+            ).encode()
+        return json.dumps(worker).encode()
+
+    monkeypatch.setattr(probe, "_command", command)
+    monkeypatch.setattr(
+        probe, "verify_image_provenance", lambda *args: (manifest, index, config, [layer])
+    )
+    result = probe.run_docker_core(ROOT, image_ref=index, image_provenance=ROOT / "sidecar")
+    assert result["passed"] is True
+    assert "ha_image_tag" not in result["build"]
+    assert result["build"]["ha_image_index_digest"] == index
+    assert result["build"]["ha_version"] == "2026.9.4"

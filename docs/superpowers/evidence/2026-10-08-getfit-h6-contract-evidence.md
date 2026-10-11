@@ -24,16 +24,18 @@ Synthetic fixtures and ephemeral keys are confined to QA infrastructure.
   [Pep runtime run 37628786842](https://github.com/PArkDevolpments/Pep-Site/actions/runs/37628786842)
   at `cb3de069d418d0651eb74c54b31a92da079c8066` recorded
   `sha256:3e6710a7ab2a61311d9d899b719f6c3657791c63e8f4942cec4ebc42401d6b76`.
-  That is not the provider pin. The successful
+  This is the last recorded Pep HA runtime verification target, not evidence of
+  the currently deployed candidate or of the provider-pin QA image. The successful
   [provider-pin QA run 37799930021](https://github.com/PArkDevolpments/Pep-Site/actions/runs/37799930021)
-  printed no image provenance. Neither establishes the required exact-pin target.
+  printed no image provenance. Exact f61 QA image identity remains unknown.
   The native Windows Docker CLI was absent during the first
   attempt, which exited 1 with `DOCKER_UNAVAILABLE`. Continuation found a local
   WSL Docker 29.1.3 engine in `Ubuntu-24.04`; the earlier absence statement did
   not cover that engine. Successful local Core probing must emit
-  `build.ha_version`, `build.ha_image_tag`, `build.ha_image_digest`, and
-  `build.ha_image_id`. Missing tag/digest or an installed HA version inconsistent
-  with the image tag fails closed. The explicitly selected official local image
+  `build.ha_version`, `build.ha_image_digest`, and `build.ha_image_id`, together
+  with a genuine `build.ha_image_tag` when available. Missing verified digest or
+  an installed HA version inconsistent with a present image tag fails closed.
+  The explicitly selected official local image
   `ghcr.io/home-assistant/home-assistant:2026.10.0` is a supplemental compatibility
   target, not evidence of Pep's unidentified exact-provider candidate.
 - Supplemental local Core execution: **PASS**, actual HA runtime `2026.10.0`,
@@ -45,8 +47,20 @@ Synthetic fixtures and ephemeral keys are confined to QA infrastructure.
   - image ID/platform manifest: `sha256:956a5d9effc091888cd34cb0b6fb4f66c448d257d20519e72302557682734fd0`;
   - registry index: `sha256:1b64d38f38d922bf9d59336451fd6453e1d614f934456af4ee3d2a51061be3a4`;
   - config: `sha256:e5ee66f11f90f86c50c1b7641e558b707ccc3d2bb354daf05c296e58382945e2`.
-  This image differs from the historical Pep image above. Task 8 remains
-  **PARTIAL** on original-target provenance/proof, despite this supplemental pass.
+  This image differs from the historical Pep image above and is supplemental.
+- Recorded Pep runtime target Core execution: **PASS** after independently
+  locating the exact historical `3e6710...` image ID as the official registry
+  index. Official `2026.9.4` tag resolves to that same index; real HA runtime is
+  `2026.9.4`. The pinned f61 Pep service passes all seven Core invariants in this
+  isolated image. Registry index -> linux/amd64 manifest -> config hashes and all
+  RootFS diff IDs are verified:
+  - immutable source/image ID/index: `ghcr.io/home-assistant/home-assistant@sha256:3e6710a7ab2a61311d9d899b719f6c3657791c63e8f4942cec4ebc42401d6b76`;
+  - genuine tag: `ghcr.io/home-assistant/home-assistant:2026.9.4`;
+  - platform manifest: `sha256:e47c978e1b801466e7f62f612fd552bc3a228e077b31a3f1c22c05cf63d754da`;
+  - config: `sha256:cd74b0e02cee84de9f53b0f8fc079c8979796b81a6b02e1ee0cd09f038703afd`.
+  This is concrete compatibility evidence against the recorded Pep runtime
+  target, not an assertion that f61 QA used it. Local Task 8 acceptance remains
+  subject to independent scoped review; remote exact-head CI and L1 remain open.
 - Task 8 workflow run URL/result: **unavailable; this commit has not been pushed**.
   The [Getfit CI workflow page](https://github.com/PArkDevolpments/Getfit/actions/workflows/ci.yml)
   is a discovery link, not evidence of a successful Task 8 run. Record the actual
@@ -178,6 +192,7 @@ $env:H6_CORE_REGRESSION='1'
 .venv/Scripts/python.exe -m pytest _tools/tests/test_qa_h6_ha_websocket_contract.py -q --basetemp=.pytest-h6-t8final
 Remove-Item Env:\H6_CORE_REGRESSION
 .venv/Scripts/python.exe _tools/qa_h6_ha_websocket_contract.py --docker-core --image-ref ghcr.io/home-assistant/home-assistant:2026.10.0 --wsl-distro Ubuntu-24.04 --provider-repo ../Pep-Site-H5 --image-provenance .superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/image-acquisition/oci-verified-2/provenance.json
+.venv/Scripts/python.exe _tools/qa_h6_ha_websocket_contract.py --docker-core --image-ref ghcr.io/home-assistant/home-assistant@sha256:3e6710a7ab2a61311d9d899b719f6c3657791c63e8f4942cec4ebc42401d6b76 --wsl-distro Ubuntu-24.04 --provider-repo ../Pep-Site-H5 --image-provenance .superpowers/sdd/2026-10-08-getfit-h6-health-context-production-binding/image-acquisition/target-lookup/acquired/provenance.json
 .venv/Scripts/python.exe _tools/qa_h6_ha_websocket_contract.py --proxy-harness
 .venv/Scripts/python.exe -m ruff check _tools
 .venv/Scripts/python.exe -m mypy src
@@ -190,6 +205,16 @@ Remove-Item Env:\H6_CORE_REGRESSION
 - Actual GREEN: corrected worker on the same supplemental image, exit 0,
   `failure_class=NONE`, all seven Core invariants true. HA WebSocket dispatch
   returned the registered pinned Pep service's governed no-store denial.
+- Recorded historical target GREEN: same isolated production service probe on
+  immutable `3e6710...` index / actual HA `2026.9.4`, exit 0, NONE and all seven
+  Core invariants true. No provider code changed. This is not Supervisor proof.
+- Immutable index support: three new cases RED then GREEN (valid index ID/ref,
+  wrong source digest rejection, tagless verified-ref behavior). Subsequent
+  scoped suite: **21 passed, 1 opt-in real-image skip in 1.44s**. Digest mode
+  retains the verified immutable index/platform/config links; if no genuine tag
+  exists it omits `ha_image_tag` rather than manufacturing one. Where tags exist,
+  their version must still match the real HA runtime. Both actual local image
+  executions succeeded independently of that hosted-suite opt-in skip.
 - Four registry-document provenance cases added; initial missing-function RED,
   then GREEN. Final focused suite, including the opt-in real-image regression:
   **19 passed in 10.27s**. The real-image test remains opt-in locally; hosted CI
