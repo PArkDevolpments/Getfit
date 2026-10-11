@@ -144,7 +144,8 @@ def test_unmapped_setup_becomes_kris_today_after_explicit_configuration(
         assert setup.status_code == 403
         assert setup.headers["content-type"].startswith("text/html")
         assert "Getfit setup required" in setup.text
-        assert "new-real-ha-user-id" in setup.text
+        assert "new-real-ha-user-id" not in setup.text
+        assert "administrator" in setup.text
         assert "Kris" not in setup.text
         assert "Kirsty" not in setup.text
     finally:

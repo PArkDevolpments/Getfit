@@ -32,6 +32,8 @@ def resolve_web_person_context(request: Request) -> PersonContext:
             detail={"code": exc.code},
         ) from exc
 
+    request.state.authenticated_principal = principal
+
     with session_factory() as session:
         try:
             return IdentityService(IdentityRepository(session)).resolve(principal)

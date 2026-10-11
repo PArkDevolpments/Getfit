@@ -27,7 +27,8 @@ class FakePepReader:
     def __init__(self, context: PepHealthContext) -> None:
         self.context = context
 
-    async def read(self, person) -> PepHealthContext:
+    async def read(self, *, ha_user_id, person) -> PepHealthContext:
+        assert ha_user_id == "ha-kris"
         assert person.pep_person_id == "person_a"
         assert person.health_profile_id == "kris"
         return self.context

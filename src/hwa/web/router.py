@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from hwa.api.dependencies import get_session
+from hwa.auth.models import AuthenticatedPrincipal
 from hwa.db.models.programme import ProgrammeDay
 from hwa.domain.equipment import InstallationEquipmentProfile
 from hwa.domain.external_context import ExternalContext, build_external_context
@@ -41,6 +42,18 @@ _IDENTITY_SELECTORS = frozenset(
         "pep_person_id",
         "health_profile_id",
         "menu_person_id",
+        "ha_user_id",
+        "user_id",
+        "subject_id",
+        "subject",
+        "sub",
+        "person",
+        "profile_id",
+        "profile",
+        "source_id",
+        "source",
+        "entity_id",
+        "entity",
     }
 )
 
@@ -48,7 +61,12 @@ _IDENTITY_SELECTORS = frozenset(
 def reject_identity_selectors(request: Request) -> None:
     """Reject browser attempts to choose identity instead of trusted ingress."""
 
-    if _IDENTITY_SELECTORS.intersection(request.query_params):
+    header_selectors = {
+        name.lower().replace("-", "_").removeprefix("x_") for name in request.headers
+    }
+    if _IDENTITY_SELECTORS.intersection(request.query_params) or _IDENTITY_SELECTORS.intersection(
+        header_selectors
+    ):
         raise HTTPException(status_code=400, detail="IDENTITY_SELECTOR_NOT_ALLOWED")
 
 
@@ -64,13 +82,16 @@ async def _external_context(request: Request, person: PersonContext) -> External
 
     pep_reader = cast(PepHealthReader | None, request.app.state.pep_health_reader)
     menu_reader = cast(MenuNutritionReader | None, request.app.state.menu_nutrition_reader)
+    principal = getattr(request.state, "authenticated_principal", None)
 
     pep = (
-        await pep_reader.read(person)
-        if pep_reader is not None
+        await pep_reader.read(ha_user_id=principal.subject_id, person=person)
+        if pep_reader is not None and isinstance(principal, AuthenticatedPrincipal)
         else PepHealthContext(
             status="UNAVAILABLE",
-            reason="PEP_HEALTH_NOT_CONFIGURED",
+            reason=(
+                "PEP_HEALTH_NOT_CONFIGURED" if pep_reader is None else "PEP_HEALTH_UNAVAILABLE"
+            ),
             pep_person_id=person.pep_person_id,
         )
     )
