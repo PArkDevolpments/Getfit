@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://peptide-site.local/schemas/health_context_v1.schema.json",
+  "title": "Pep-Site Health Context v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "schema_version", "authority", "exported_at", "person_id", "health_profile_id", "readiness", "journey", "body", "activity", "recovery", "sleep", "progress", "domains", "provenance", "automatic_action", "causation_asserted"],
+  "properties": {
+    "schema": {"const": "peptide-site.health-context"},
+    "schema_version": {"const": 1},
+    "authority": {"const": "PEPTIDE_SITE_HEALTH"},
+    "exported_at": {"type": "string", "format": "date-time"},
+    "person_id": {"type": ["string", "null"]},
+    "health_profile_id": {"type": ["string", "null"]},
+    "readiness": {"$ref": "#/$defs/readiness"},
+    "journey": {"$ref": "#/$defs/journey"},
+    "body": {"$ref": "#/$defs/body"},
+    "activity": {"$ref": "#/$defs/activity"},
+    "recovery": {"$ref": "#/$defs/recovery"},
+    "sleep": {"$ref": "#/$defs/sleep"},
+    "progress": {"$ref": "#/$defs/progress"},
+    "domains": {"type": "array", "items": {"$ref": "#/$defs/domain"}},
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "automatic_action": {"const": false},
+    "causation_asserted": {"const": false}
+  },
+  "$defs": {
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "metric", "value", "unit", "recorded_at", "derived", "reason"],
+      "properties": {
+        "status": {"enum": ["available", "unavailable"]},
+        "metric": {"type": "string", "minLength": 1},
+        "value": {"type": ["number", "null"]},
+        "unit": {"type": "string"},
+        "recorded_at": {"type": ["string", "null"]},
+        "derived": {"type": "boolean"},
+        "reason": {"type": "string", "minLength": 1},
+        "basis": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ready", "state", "reason", "usable_observation_count", "data_quality"],
+      "properties": {
+        "ready": {"type": "boolean"},
+        "state": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1},
+        "usable_observation_count": {"type": "number", "minimum": 0},
+        "data_quality": {"type": "string", "minLength": 1}
+      }
+    },
+    "journey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "verdict", "confidence", "reason", "flags"],
+      "properties": {
+        "status": {"enum": ["STRONG_PROGRESS", "PROGRESS", "STABLE_ON_TRACK", "MIXED_RESPONSE", "WATCH", "REVIEW", "CONCERNING", "UNKNOWN"]},
+        "verdict": {"type": "string", "minLength": 1},
+        "confidence": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1},
+        "flags": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["body_mass", "height", "body_fat_percentage", "lean_body_mass", "fat_mass", "waist_circumference", "muscle_mass", "bmi"],
+      "properties": {
+        "body_mass": {"$ref": "#/$defs/metric"}, "height": {"$ref": "#/$defs/metric"}, "body_fat_percentage": {"$ref": "#/$defs/metric"}, "lean_body_mass": {"$ref": "#/$defs/metric"}, "fat_mass": {"$ref": "#/$defs/metric"}, "waist_circumference": {"$ref": "#/$defs/metric"}, "muscle_mass": {"$ref": "#/$defs/metric"}, "bmi": {"$ref": "#/$defs/metric"}
+      }
+    },
+    "activity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["steps", "exercise_time", "active_calories", "distance"],
+      "properties": {"steps": {"$ref": "#/$defs/metric"}, "exercise_time": {"$ref": "#/$defs/metric"}, "active_calories": {"$ref": "#/$defs/metric"}, "distance": {"$ref": "#/$defs/metric"}}
+    },
+    "recovery": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resting_heart_rate", "heart_rate_variability", "vo2_max", "cardio_recovery", "oxygen_saturation", "respiratory_rate"],
+      "properties": {"resting_heart_rate": {"$ref": "#/$defs/metric"}, "heart_rate_variability": {"$ref": "#/$defs/metric"}, "vo2_max": {"$ref": "#/$defs/metric"}, "cardio_recovery": {"$ref": "#/$defs/metric"}, "oxygen_saturation": {"$ref": "#/$defs/metric"}, "respiratory_rate": {"$ref": "#/$defs/metric"}}
+    },
+    "sleep": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sleep_duration", "sleep_core_hours", "sleep_rem_hours", "sleep_deep_hours", "sleep_awake_hours"],
+      "properties": {"sleep_duration": {"$ref": "#/$defs/metric"}, "sleep_core_hours": {"$ref": "#/$defs/metric"}, "sleep_rem_hours": {"$ref": "#/$defs/metric"}, "sleep_deep_hours": {"$ref": "#/$defs/metric"}, "sleep_awake_hours": {"$ref": "#/$defs/metric"}}
+    },
+    "progress": {
+      "type": "object", "additionalProperties": false,
+      "required": ["semantics", "fat_mass_change_28d_kg", "waist_change_28d_cm", "ffm_change_28d_kg", "total_weight_loss_28d_kg", "ffm_loss_ratio_pct", "body_recomposition", "confidence", "data_quality"],
+      "properties": {
+        "semantics": {"const": "28_DAY_TREND_DERIVED"},
+        "fat_mass_change_28d_kg": {"type": ["number", "null"]}, "waist_change_28d_cm": {"type": ["number", "null"]}, "ffm_change_28d_kg": {"type": ["number", "null"]}, "total_weight_loss_28d_kg": {"type": ["number", "null"]}, "ffm_loss_ratio_pct": {"type": ["number", "null"]}, "body_recomposition": {"type": ["boolean", "null"]}, "confidence": {"type": ["string", "null"]}, "data_quality": {"type": ["string", "null"]}
+      }
+    },
+    "domain": {
+      "type": "object", "additionalProperties": false,
+      "required": ["domain_id", "state", "reason", "ready", "decision_eligible"],
+      "properties": {"domain_id": {"type": "string", "minLength": 1}, "state": {"type": "string", "minLength": 1}, "reason": {"type": "string", "minLength": 1}, "ready": {"type": "boolean"}, "decision_eligible": {"type": "boolean"}}
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["authority", "runtime_version"],
+      "properties": {"authority": {"const": "PEPTIDE_SITE_HEALTH"}, "runtime_version": {"type": ["string", "null"]}}
+    }
+  }
+}

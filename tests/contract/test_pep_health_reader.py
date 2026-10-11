@@ -336,3 +336,37 @@ async def test_reader_degrades_on_transport_failure() -> None:
 
     assert result.status == "UNAVAILABLE"
     assert result.reason == "PEP_HEALTH_UNAVAILABLE"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("path", "reason"),
+    [
+        (("schema_version",), "CONTRACT_SCHEMA_MISMATCH"),
+        (("body", "body_mass", "value"), "INVALID_CONTRACT"),
+        (("readiness", "usable_observation_count"), "INVALID_CONTRACT"),
+        (("progress", "total_weight_loss_28d_kg"), "INVALID_CONTRACT"),
+    ],
+    ids=["boolean-version", "boolean-metric", "boolean-count", "boolean-progress"],
+)
+async def test_reader_rejects_boolean_numeric_contract_fields(
+    path: tuple[str, ...], reason: str
+) -> None:
+    # Removing strict scalar checks must expose no partial Health context.
+    payload = _ready_payload()
+    target = payload
+    for field in path[:-1]:
+        target = target[field]
+    target[path[-1]] = True
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await _module().PepHealthReader(client).read(_context())
+    assert result.status == "UNAVAILABLE"
+    assert result.reason == reason
+    assert result.body == {}
+    assert result.recovery == {}
+    assert result.sleep == {}
+    assert result.progress is None
