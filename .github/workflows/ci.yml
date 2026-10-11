@@ -20,6 +20,73 @@ jobs:
       - run: uv run pytest tests/integration -q
       - run: uv run pytest tests/contract -q
       - run: uv run pytest tests/e2e -q
+      - name: Test sanitized H6 compatibility gate
+        run: uv run pytest _tools/tests/test_qa_h6_ha_websocket_contract.py -q
+      - name: Verify H6 Supervisor protocol boundary (synthetic loopback)
+        run: uv run python _tools/qa_h6_ha_websocket_contract.py --proxy-harness > h6-proxy-contract.json
+      - name: Preserve sanitized H6 proxy evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: h6-proxy-contract
+          path: h6-proxy-contract.json
+          if-no-files-found: error
+          retention-days: 7
       - run: rm -f hwa.db
       - run: uv run alembic upgrade head
       - run: docker build -t getfit-ci .
+
+  h6-core-image:
+    name: H6 pinned Pep service in target HA Core image
+    # Fork code must never execute on the private shared HA QA runner.
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: [self-hosted, linux, x64, peptide-ha-qa]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Require the existing Pep verification runner
+        shell: bash
+        run: |
+          test "$RUNNER_NAME" = "Peptide-HA-QA"
+          test "$RUNNER_OS" = "Linux"
+          test "$RUNNER_ARCH" = "X64"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: h6
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: PArkDevolpments/Pep-Site
+          ref: f61b9644a88c5047176e87d4a7edf2939e218d32
+          path: pep-provider
+          persist-credentials: false
+      - name: Verify exact source identities
+        shell: bash
+        run: |
+          test "$(git -C h6 rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git -C pep-provider rev-parse HEAD)" = "f61b9644a88c5047176e87d4a7edf2939e218d32"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: false
+      - run: uv sync --dev
+        working-directory: h6
+      - name: Verify real Core WebSocket return_response and pinned Pep service
+        working-directory: h6
+        shell: bash
+        run: |
+          uv run python _tools/qa_h6_ha_websocket_contract.py --docker-core \
+            --provider-repo ../pep-provider > "$RUNNER_TEMP/h6-core-contract-${GITHUB_RUN_ID}.json"
+      - name: Preserve only sanitized Core-image evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: h6-core-contract
+          path: ${{ runner.temp }}/h6-core-contract-${{ github.run_id }}.json
+          if-no-files-found: error
+          retention-days: 7
