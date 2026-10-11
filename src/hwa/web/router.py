@@ -549,7 +549,7 @@ def settings(
     settings_view = build_settings_view(
         person,
         profile,
-        pep_health_configured=request.app.state.pep_health_reader is not None,
+        pep_health_configured=request.app.state.pep_health_configured,
         menu_nutrition_configured=request.app.state.menu_nutrition_reader is not None,
     )
     return templates.TemplateResponse(

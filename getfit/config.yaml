@@ -11,6 +11,7 @@ arch:
   - amd64
   - aarch64
 ingress: true
+homeassistant_api: true
 ingress_port: 8099
 panel_icon: "mdi:dumbbell"
 panel_title: "Getfit"
@@ -30,6 +31,9 @@ options:
   pep_bridge_token: ""
   pep_bridge_allow_person_a: false
   pep_bridge_allow_person_b: false
+  pep_health_enabled: false
+  pep_health_signing_kid: ""
+  pep_health_signing_private_key: ""
 schema:
   treadmill_available: bool
   treadmill_max_incline_percent: "int(0,20)"
@@ -40,3 +44,6 @@ schema:
   pep_bridge_token: password
   pep_bridge_allow_person_a: bool
   pep_bridge_allow_person_b: bool
+  pep_health_enabled: bool
+  pep_health_signing_kid: str
+  pep_health_signing_private_key: password

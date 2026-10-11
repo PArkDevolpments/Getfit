@@ -43,7 +43,12 @@ def create_app(
         principal_provider or HomeAssistantIngressPrincipalProvider()
     )
     application.state.session_factory = create_session_factory(database_engine)
+    if pep_health_reader is None:
+        from hwa.runtime import build_pep_health_reader
+
+        pep_health_reader = build_pep_health_reader()
     application.state.pep_health_reader = pep_health_reader
+    application.state.pep_health_configured = getattr(pep_health_reader, "configured", True) is True
     application.state.menu_nutrition_reader = menu_nutrition_reader
     application.state.equipment_profile = equipment_profile
     application.state.pep_bridge_token = pep_bridge_token.strip() if pep_bridge_token else None
@@ -114,4 +119,11 @@ def create_app(
     return application
 
 
-app = create_app()
+def __getattr__(name: str) -> FastAPI:
+    """Keep the ASGI app entry point lazy so factory imports cannot consume secrets."""
+
+    if name != "app":
+        raise AttributeError(name)
+    application = create_app()
+    globals()["app"] = application
+    return application
