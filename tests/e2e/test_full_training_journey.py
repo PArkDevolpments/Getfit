@@ -1,6 +1,8 @@
+import importlib.util
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -12,10 +14,19 @@ from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import ExternalIdentityMapping, Person
 from hwa.db.models.programme import ProgrammeDay
 from hwa.main import create_app
+from hwa.runtime import build_pep_health_reader
 from hwa.services.programmes import import_week_seed
 
 PROGRAMME_MANIFEST = Path("programme_seed/home-workout-12m-v1/programme.json")
 WEEK_ONE = Path("programme_seed/home-workout-12m-v1/week-01.json")
+
+_spec = importlib.util.spec_from_file_location(
+    "h6_journey_matrix",
+    Path(__file__).parents[1] / "integration/test_h6_health_failure_matrix.py",
+)
+assert _spec is not None and _spec.loader is not None
+_matrix = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_matrix)
 
 
 def _seed(session: Session) -> str:
@@ -118,7 +129,15 @@ def _event_payload() -> dict[str, object]:
     }
 
 
-def test_kris_can_start_interrupt_resume_complete_review_and_export(tmp_path) -> None:
+@pytest.mark.parametrize(
+    "health_failure", [failure for failure in _matrix.FAILURES if failure != "cancellation"]
+)
+def test_kris_can_start_interrupt_resume_complete_review_and_export(
+    tmp_path,
+    health_failure,
+    monkeypatch,
+    caplog,
+) -> None:
     db_path = tmp_path / "task12.db"
     settings = DatabaseSettings(database_url=f"sqlite:///{db_path}")
     engine = create_engine(settings)
@@ -126,8 +145,19 @@ def test_kris_can_start_interrupt_resume_complete_review_and_export(tmp_path) ->
     with Session(engine) as session:
         day_id = _seed(session)
 
+    harness = _matrix.HealthHarness(persons={"ha-kris": ("person_a", "kris", 81.3)})
+    harness.failure = health_failure
+    health_reader = harness.reader
+    if health_failure == "getfit-disabled":
+        monkeypatch.setenv("HWA_PEP_HEALTH_ENABLED", "false")
+        health_reader = build_pep_health_reader()
+
     client = TestClient(
-        create_app(principal_provider=StaticPrincipalProvider("ha-kris"), engine=engine)
+        create_app(
+            principal_provider=StaticPrincipalProvider("ha-kris"),
+            engine=engine,
+            pep_health_reader=health_reader,
+        )
     )
     try:
         for path in ("/", "/workout", "/progress", "/library", "/settings"):
@@ -182,6 +212,7 @@ def test_kris_can_start_interrupt_resume_complete_review_and_export(tmp_path) ->
         create_app(
             principal_provider=StaticPrincipalProvider("ha-kris"),
             engine=restarted_engine,
+            pep_health_reader=health_reader,
         )
     )
     try:
@@ -206,6 +237,9 @@ def test_kris_can_start_interrupt_resume_complete_review_and_export(tmp_path) ->
         assert "1 of 4 programme workouts completed" in progress.text
         assert "task12-kris-event" not in progress.text
         assert "Dumbbell Floor Press" in progress.text
+
+        assert all(peer.closed for peer in harness.connections)
+        harness.assert_private_logs(caplog)
 
         with Session(restarted_engine) as session:
             provider = PepWorkoutSourceProvider(session)

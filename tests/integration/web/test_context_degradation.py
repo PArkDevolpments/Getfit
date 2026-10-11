@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -217,6 +218,35 @@ def test_default_app_degrades_without_configured_external_readers(tmp_path) -> N
         assert "Health context unavailable" not in response.text
         assert "Nutrition context unavailable" not in response.text
         assert 'class="home-context-rail"' not in response.text
+    finally:
+        client.close()
+        engine.dispose()
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        "GETFIT_PEP_HEALTH_DISABLED",
+        "HEALTH_AUTHORITY_DISABLED",
+        "SERVICE_ASSERTION_STARTUP_QUARANTINE",
+        "INVALID_SERVICE_ASSERTION",
+        "PERSON_CONTEXT_UNAVAILABLE",
+        "ASSERTION_RATE_LIMITED",
+        "PEP_HEALTH_UNAVAILABLE",
+    ],
+)
+def test_unavailable_health_cannot_hide_independent_nutrition_or_workout(tmp_path, reason):
+    client, engine = _client(
+        tmp_path,
+        PepHealthContext(status="UNAVAILABLE", reason=reason, pep_person_id="person_a"),
+        _ready_menu(),
+    )
+    try:
+        html = client.get("/").text
+        assert 'data-primary-action="start"' in html
+        assert "2150 kcal target" in html
+        assert reason not in html and "person_a" not in html
+        assert "113.7" not in html and "7.2 h sleep" not in html
     finally:
         client.close()
         engine.dispose()
