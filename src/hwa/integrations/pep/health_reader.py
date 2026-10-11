@@ -2,43 +2,92 @@
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Literal, Protocol
 
-import httpx
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictBool,
+    StrictFloat,
+    StrictStr,
+    ValidationError,
+    field_validator,
+)
 
 from hwa.domain.identity import PersonContext
+from hwa.integrations.pep.ha_health_service import HaHealthServiceEnvelope, HaHealthServiceFailure
 
 PEP_HEALTH_SCHEMA = "peptide-site.health-context"
 PEP_HEALTH_VERSION = 1
 PEP_HEALTH_AUTHORITY = "PEPTIDE_SITE_HEALTH"
-DEFAULT_HEALTH_CONTEXT_URL = "http://homeassistant.local/api/peptide_site/health-context"
+_GOVERNED_ERRORS = {
+    "HEALTH_AUTHORITY_DISABLED": 503,
+    "SERVICE_ASSERTION_STARTUP_QUARANTINE": 503,
+    "INVALID_SERVICE_ASSERTION": 401,
+    "PERSON_CONTEXT_UNAVAILABLE": 403,
+    "ASSERTION_RATE_LIMITED": 429,
+}
+
+
+class HealthServiceClient(Protocol):
+    async def get_health_context(
+        self, assertion: str
+    ) -> HaHealthServiceEnvelope | HaHealthServiceFailure: ...
+
+
+class AssertionSigner(Protocol):
+    def sign(self, subject: str) -> str: ...
+
+
+def _aware_timestamp(value: str) -> str:
+    if (
+        re.fullmatch(
+            r"\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(?:\.\d+)?"
+            r"(?:[Zz]|[+-](?:[01]\d|2[0-3]):[0-5]\d)",
+            value,
+        )
+        is None
+    ):
+        raise ValueError("INVALID_CONTRACT_TIMESTAMP")
+    instant = datetime.fromisoformat(value.upper().replace("Z", "+00:00"))
+    if instant.tzinfo is None or instant.utcoffset() is None:
+        raise ValueError("INVALID_CONTRACT_TIMESTAMP")
+    return value
+
+
+AwareTimestamp = Annotated[StrictStr, AfterValidator(_aware_timestamp)]
 
 
 class StrictModel(BaseModel):
     """Closed contract model matching Pep's additionalProperties=false policy."""
 
-    model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True)
+    model_config = ConfigDict(
+        extra="forbid", frozen=True, populate_by_name=True, allow_inf_nan=False
+    )
 
 
 class PepHealthMetric(StrictModel):
     status: Literal["available", "unavailable"]
-    metric: str = Field(min_length=1)
-    value: float | None
-    unit: str
-    recorded_at: str | None
-    derived: bool
-    reason: str = Field(min_length=1)
-    basis: tuple[str, ...] | None = None
+    metric: StrictStr = Field(min_length=1)
+    value: StrictFloat | None
+    unit: StrictStr
+    recorded_at: AwareTimestamp | None
+    derived: StrictBool
+    reason: StrictStr = Field(min_length=1)
+    basis: tuple[StrictStr, ...] | None = None
 
 
 class PepHealthReadiness(StrictModel):
-    ready: bool
-    state: str = Field(min_length=1)
-    reason: str = Field(min_length=1)
-    usable_observation_count: float = Field(ge=0)
-    data_quality: str = Field(min_length=1)
+    ready: StrictBool
+    state: StrictStr = Field(min_length=1)
+    reason: StrictStr = Field(min_length=1)
+    usable_observation_count: StrictFloat = Field(ge=0)
+    data_quality: StrictStr = Field(min_length=1)
 
 
 class PepHealthJourney(StrictModel):
@@ -52,10 +101,10 @@ class PepHealthJourney(StrictModel):
         "CONCERNING",
         "UNKNOWN",
     ]
-    verdict: str = Field(min_length=1)
-    confidence: str = Field(min_length=1)
-    reason: str = Field(min_length=1)
-    flags: tuple[str, ...]
+    verdict: StrictStr = Field(min_length=1)
+    confidence: StrictStr = Field(min_length=1)
+    reason: StrictStr = Field(min_length=1)
+    flags: tuple[StrictStr, ...]
 
 
 class PepHealthBody(StrictModel):
@@ -95,36 +144,36 @@ class PepHealthSleep(StrictModel):
 
 class PepHealthProgress(StrictModel):
     semantics: Literal["28_DAY_TREND_DERIVED"]
-    fat_mass_change_28d_kg: float | None
-    waist_change_28d_cm: float | None
-    ffm_change_28d_kg: float | None
-    total_weight_loss_28d_kg: float | None
-    ffm_loss_ratio_pct: float | None
-    body_recomposition: bool | None
-    confidence: str | None
-    data_quality: str | None
+    fat_mass_change_28d_kg: StrictFloat | None
+    waist_change_28d_cm: StrictFloat | None
+    ffm_change_28d_kg: StrictFloat | None
+    total_weight_loss_28d_kg: StrictFloat | None
+    ffm_loss_ratio_pct: StrictFloat | None
+    body_recomposition: StrictBool | None
+    confidence: StrictStr | None
+    data_quality: StrictStr | None
 
 
 class PepHealthDomain(StrictModel):
-    domain_id: str = Field(min_length=1)
-    state: str = Field(min_length=1)
-    reason: str = Field(min_length=1)
-    ready: bool
-    decision_eligible: bool
+    domain_id: StrictStr = Field(min_length=1)
+    state: StrictStr = Field(min_length=1)
+    reason: StrictStr = Field(min_length=1)
+    ready: StrictBool
+    decision_eligible: StrictBool
 
 
 class PepHealthProvenance(StrictModel):
     authority: Literal["PEPTIDE_SITE_HEALTH"]
-    runtime_version: str | None
+    runtime_version: StrictStr | None
 
 
 class PepHealthContractV1(StrictModel):
     schema_name: Literal["peptide-site.health-context"] = Field(alias="schema")
     schema_version: Literal[1]
     authority: Literal["PEPTIDE_SITE_HEALTH"]
-    exported_at: str
-    person_id: str | None
-    health_profile_id: str | None
+    exported_at: AwareTimestamp
+    person_id: StrictStr | None
+    health_profile_id: StrictStr | None
     readiness: PepHealthReadiness
     journey: PepHealthJourney
     body: PepHealthBody
@@ -136,6 +185,20 @@ class PepHealthContractV1(StrictModel):
     provenance: PepHealthProvenance
     automatic_action: Literal[False]
     causation_asserted: Literal[False]
+
+    @field_validator("schema_version", mode="before")
+    @classmethod
+    def _integer_version(cls, value: object) -> object:
+        if type(value) is not int:
+            raise ValueError("INVALID_CONTRACT_VERSION")
+        return value
+
+    @field_validator("automatic_action", "causation_asserted", mode="before")
+    @classmethod
+    def _false_only(cls, value: object) -> object:
+        if value is not False:
+            raise ValueError("INVALID_CONTRACT_AUTHORITY_FLAG")
+        return value
 
 
 class PepHealthContext(BaseModel):
@@ -196,7 +259,7 @@ def _latest_recorded_at(groups: tuple[dict[str, PepHealthMetric], ...]) -> str |
             if not metric.recorded_at:
                 continue
             try:
-                instant = datetime.fromisoformat(metric.recorded_at.replace("Z", "+00:00"))
+                instant = datetime.fromisoformat(metric.recorded_at.upper().replace("Z", "+00:00"))
             except ValueError:
                 continue
             if instant.tzinfo is None:
@@ -212,24 +275,49 @@ class PepHealthReader:
 
     def __init__(
         self,
-        client: httpx.AsyncClient,
-        endpoint_url: str = DEFAULT_HEALTH_CONTEXT_URL,
+        *,
+        service_client: HealthServiceClient,
+        signer: AssertionSigner,
     ) -> None:
-        self._client = client
-        self._endpoint_url = endpoint_url
+        self._service_client = service_client
+        self._signer = signer
 
-    async def read(self, person: PersonContext) -> PepHealthContext:
+    async def read(self, *, ha_user_id: str, person: PersonContext) -> PepHealthContext:
+        if not isinstance(ha_user_id, str) or not ha_user_id.strip():
+            return self._unavailable(person, "PEP_HEALTH_UNAVAILABLE")
         try:
-            response = await self._client.get(self._endpoint_url)
-            response.raise_for_status()
-            payload: Any = response.json()
-        except (httpx.HTTPError, ValueError, TypeError):
+            assertion = self._signer.sign(ha_user_id)
+            response = await self._service_client.get_health_context(assertion)
+        except Exception:
+            # Dependency messages may include credentials or Health/identity data.
+            # Cancellation is a BaseException and propagates without retry.
             return self._unavailable(person, "PEP_HEALTH_UNAVAILABLE")
 
-        if not isinstance(payload, dict):
-            return self._unavailable(person, "INVALID_CONTRACT")
+        if (
+            not isinstance(response, HaHealthServiceEnvelope)
+            or type(response.status_code) is not int
+            or not isinstance(response.body, Mapping)
+            or not isinstance(response.headers, Mapping)
+            or any(
+                not isinstance(key, str) or not isinstance(value, str)
+                for key, value in response.headers.items()
+            )
+            or response.headers.get("Cache-Control") != "no-store"
+        ):
+            return self._unavailable(person, "PEP_HEALTH_UNAVAILABLE")
+        if response.status_code != 200:
+            error = response.body.get("error")
+            reason = (
+                error
+                if isinstance(error, str) and _GOVERNED_ERRORS.get(error) == response.status_code
+                else "PEP_HEALTH_UNAVAILABLE"
+            )
+            return self._unavailable(person, reason)
+
+        payload = response.body
         if (
             payload.get("schema") != PEP_HEALTH_SCHEMA
+            or type(payload.get("schema_version")) is not int
             or payload.get("schema_version") != PEP_HEALTH_VERSION
             or payload.get("authority") != PEP_HEALTH_AUTHORITY
         ):

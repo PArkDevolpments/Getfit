@@ -1,4 +1,4 @@
-"""Permanent H6 boundary tests; intentionally RED before production binding.
+"""Permanent H6 authority, identity and transport boundary tests.
 
 Signer and service doubles replace external signing/HA I/O only. Assertions
 observe reader output and the assertion-only request boundary, never fake output.
@@ -17,6 +17,7 @@ import httpx
 import pytest
 
 from hwa.domain.identity import PersonContext
+from hwa.integrations.pep.ha_health_service import HaHealthServiceEnvelope
 from hwa.integrations.pep.health_reader import PepHealthReader
 
 # The repository's tests directory is not a Python package. Load the standalone
@@ -56,7 +57,16 @@ class AssertionSigner:
 
 class HealthService:
     def __init__(self, response: object) -> None:
-        self.response = response
+        # Mirror the Task 3 seam: the reader receives a typed service envelope,
+        # while the real transport below still validates complete raw frames.
+        if isinstance(response, dict):
+            self.response = HaHealthServiceEnvelope(
+                status_code=response["status_code"],
+                body=response["body"],
+                headers=response["headers"],
+            )
+        else:
+            self.response = response
         self.assertions: list[str] = []
 
     async def get_health_context(self, assertion: str) -> object:
@@ -67,7 +77,7 @@ class HealthService:
 
 def bound_reader(service: HealthService, signer: AssertionSigner) -> Any:
     try:
-        return PepHealthReader(service_client=service, signer=signer)  # type: ignore[call-arg]
+        return PepHealthReader(service_client=service, signer=signer)  # type: ignore[arg-type]
     except TypeError:
         pytest.fail("Missing H6 PepHealthReader(service_client=..., signer=...) boundary")
 
@@ -245,9 +255,13 @@ async def test_ha_client_rejects_invalid_frames_before_reader_sees_payload(frame
 
 @pytest.mark.asyncio
 async def test_legacy_direct_http_reader_cannot_consume_ha_service_envelope() -> None:
+    requests: list[httpx.Request] = []
+
     def handler(_: httpx.Request) -> httpx.Response:
+        requests.append(_)
         return httpx.Response(200, json=websocket_result())
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        result = await PepHealthReader(client).read(person())
-    assert_closed(result, "CONTRACT_SCHEMA_MISMATCH")
+        with pytest.raises(TypeError):
+            PepHealthReader(client)  # type: ignore[call-arg]
+    assert requests == []
