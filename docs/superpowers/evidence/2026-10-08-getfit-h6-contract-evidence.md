@@ -375,3 +375,84 @@ Pep candidate identity, representative deployed staging L1, publication, merge,
 main CI, release and supported-architecture production artifact verification
 remain unclosed or excluded. Do not claim H6 complete. The separate local commit
 and preservation checks are recorded in ignored `task-9-report.md` for handoff.
+
+## Final local checkpoint and approval chronology — 2026-10-12
+
+Earlier implementation began before verified design/plan review approval. The
+independent prospective approval on 2026-10-11 permitted local continuation of
+Tasks 8 and 9 from that point; it does not backdate approval and is not a GitHub
+APPROVED review. Original history and earlier reports remain preserved. Tasks
+1–7 retain their existing acceptance; they have not been restarted or recreated.
+Independent scoped Task 8 review accepted
+`58708599a8800b20fdc5caeee442e5efcb2128c8`.
+
+Task 9's separate local documentation/test checkpoint is
+`29dfdd6f2af953b846b163216beb65d2b0a60749`. The independent whole-branch
+architecture/security/privacy review completed on 2026-10-12 against that exact
+head and provider pin `f61b9644a88c5047176e87d4a7edf2939e218d32`, with no
+demonstrated Critical or Important finding. Its one minor design discrepancy
+said Retry-After was parsed as diagnostic metadata. The final documentation
+correction records the actual behavior: discard without parsing/retention, one
+call, no automatic retry and no in-request quarantine sleep. No production
+behavior changes. This review accepts the local code/spec boundary, not merge,
+publication, deployment, release or H6 completion. Independent review of this
+later documentation diff remains a separate gate.
+
+The Task 9 verification/build results above are historical checkpoint evidence,
+not newly executed final-head results. The controller will record the final
+exact-head QA and actual hosted-CI URLs/results in the PR checkpoint after they
+run; this document makes no advance claim that either is green. Historical
+mixed push/PR CI remains mixed.
+
+Read-only image reconciliation on 2026-10-12 leaves the candidate gate blocked.
+Exact-pin QA [run 37798639009](https://github.com/PArkDevolpments/Pep-Site/actions/runs/37798639009)
+and [run 37799930021](https://github.com/PArkDevolpments/Pep-Site/actions/runs/37799930021)
+both succeeded, but currently expose zero artifacts and no resolved SHA-256
+image value in their checked logs. There are zero runtime-workflow runs at f61.
+Historical runtime [run 37628786842](https://github.com/PArkDevolpments/Pep-Site/actions/runs/37628786842)
+and its [artifact 11485333034](https://github.com/PArkDevolpments/Pep-Site/actions/runs/37628786842/artifacts/11485333034)
+explicitly bind image `3e6710...` to source `cb3de069...`, not f61. The latest
+non-pin QA [run 37908102805](https://github.com/PArkDevolpments/Pep-Site/actions/runs/37908102805)
+failed its target-image step and exposed no digest; the QA runner is currently
+offline. These facts supply neither a candidate identity nor a historical-to-
+current equivalence. An owner must supply a timestamped **non-LIVE** current-
+candidate lineage record, or an f61 QA job-linked image ID with immutable
+registry/index/platform/config provenance and actual HA version. A present-day
+candidate snapshot alone cannot prove the historical f61 QA image relationship.
+No exact-candidate probe can be instantiated from the available evidence.
+
+| Evidence/gate | Scope and current status |
+| --- | --- |
+| Historical HA Core 2026.9.4 | Actual isolated pinned-f61 service/envelope pass on the verified `3e6710...` historical image; no equivalence to f61 QA/current candidate or deployed Supervisor. |
+| Supplemental HA Core 2026.10.0 | Actual isolated pinned-f61 service/envelope pass on separately verified image; supplemental only. |
+| Exact f61 QA/current candidate image | **BLOCKED**: identity remains unknown pending authoritative version/image/digest provenance; neither local Core image substitutes. |
+| Synthetic Supervisor harness | Protocol/command contract proof only, not deployed proxy/token/Ingress topology. |
+| Representative deployed staging L1 | **OUTSTANDING before LIVE**, unexecuted; requires an explicitly authorized disposable non-LIVE Supervisor/Getfit/Pep environment. |
+| Final exact-head QA/hosted CI and new-diff review | Pending controller execution/recording; not preclaimed by the prior review. |
+| Merge, main CI, release and production artifacts | Unclosed; automatic production publication makes merge blocked under current authorization. |
+
+The [staging L1 acceptance runbook](2026-10-12-getfit-h6-staging-l1-acceptance.md)
+defines environment attestation, immutable inventory, synthetic fixtures,
+deployed boundary/isolation checks, clock/key lifecycle, failure/workout checks,
+rollback/cleanup and sanitized acceptance evidence. It authorizes no execution.
+Pep server Health enablement on staging needs explicit non-LIVE authorization;
+there is no LIVE substitute. L1 cannot close the independent exact-image gate
+without the required provenance, and does not imply H6S or H7 acceptance.
+
+### Automatic release merge blocker
+
+Read-only inspection of the current `.github/workflows/release.yml` confirms
+`workflow_run` on completed CI. Release initialization requires a successful
+**push** CI run whose head branch is **main**; downstream jobs publish amd64 and
+aarch64 architecture images and the production version/latest multi-arch
+manifest, then verify the public image. `skip-existing` does not establish that
+production publication is harmless or authorized. No LIVE-sensitive publication
+or deployment authorization is present for this continuation, so merge is
+blocked. No workflow disabling/mutation, merge or release is performed here.
+
+A feature-branch push triggers the checked-in CI workflow. Release can receive
+that completion event, but its main-only initialization condition is false, so
+its dependent publishing jobs cannot proceed on that event. This observation
+does not authorize this documentation worker to push or mutate a PR. The
+controller handles any separately authorized publication only after its gates;
+release/production-artifact requirements remain unchanged and unclosed.

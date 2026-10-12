@@ -113,8 +113,28 @@ proof have different scopes. Neither proves a deployed Supervisor + Getfit +
 Pep topology. Representative pre-LIVE staging still needs trusted Ingress
 identity, spoof rejection, actual proxy/token/service operation, Pep mapping,
 clock skew, key overlap/revocation and deleted/deactivated/unmapped isolation.
-The exact provider QA/current candidate image identity is unreconciled. Remote
-exact-head CI and independent whole-branch review also remain outstanding.
+The exact provider QA/current candidate image gate is **BLOCKED** pending
+authoritative identity evidence. Independent whole-branch architecture/security/
+privacy review accepted `29dfdd6` on 2026-10-12 with no Critical/Important finding;
+its minor Retry-After wording discrepancy is corrected in the design. Independent
+review and exact-head QA/hosted CI for subsequent changes remain outstanding.
+
+Use the [staging L1 acceptance runbook](../docs/superpowers/evidence/2026-10-12-getfit-h6-staging-l1-acceptance.md)
+only in an explicitly authorized disposable non-LIVE environment. It has not
+been executed. Enabling Pep server Health authority there requires explicit
+non-LIVE authorization; missing staging must never be replaced by LIVE. Neither
+the historical 2026.9.4 nor supplemental 2026.10.0 Core proof closes the unknown
+exact f61 QA/current candidate image gate or the representative L1 gate.
+
+Merge has an additional automatic-publication blocker. The current
+`.github/workflows/release.yml` listens for completed CI and initializes release
+only after successful **push** CI on **main**. Its downstream jobs publish amd64
+and aarch64 architecture images and the production version/latest multi-arch
+manifest. No LIVE-sensitive publication or deployment is authorized here, so
+merge remains blocked; do not disable or change the workflow to bypass that
+boundary. A feature-branch push triggers CI; the Release workflow may receive
+its completion event, but its main-only initialization condition is false.
+Release and production-artifact acceptance gates remain unclosed.
 
 See the [H6 evidence](../docs/superpowers/evidence/2026-10-08-getfit-h6-contract-evidence.md)
 for actual commands, image provenance and limitations. This continuation does

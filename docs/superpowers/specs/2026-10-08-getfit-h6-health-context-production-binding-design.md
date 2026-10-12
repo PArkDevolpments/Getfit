@@ -155,7 +155,7 @@ Activation and availability remain separate:
 - rate limit: `429 ASSERTION_RATE_LIMITED`; unavailable for the current request.
 - compute/overload/rebuild/integrity failure, connection failure, protocol failure or timeout: unavailable for the current request.
 
-One end-to-end monotonic timeout covers connect, authentication, command and response. H6 performs no in-request automatic retry. A retry would require a fresh assertion and is naturally performed by a later user request. In particular, authority-disabled, authentication and person failures are never retried. `Retry-After` is parsed only as bounded diagnostic metadata and never sleeps a request for the 35-second quarantine.
+One end-to-end monotonic timeout covers connect, authentication, command and response. H6 performs no in-request automatic retry. A retry would require a fresh assertion and is naturally performed by a later user request. In particular, authority-disabled, authentication and person failures are never retried. Getfit discards `Retry-After` without parsing or retaining it and never sleeps a request for the 35-second quarantine.
 
 ## 10. Cache and person isolation
 

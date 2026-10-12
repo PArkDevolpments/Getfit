@@ -29,9 +29,13 @@ The add-on grants the required `homeassistant_api: true` permission.
 
 See [add-on operations](getfit/DOCS.md) for unavailable states, configuration,
 Pep public-key overlap, rotation, revocation and rollback. H6 local verification
-does not authorize LIVE keys, mappings, deployment or activation. Remote CI,
-independent whole-branch review and representative staging remain separate gates;
-see [H6 evidence](docs/superpowers/evidence/2026-10-08-getfit-h6-contract-evidence.md).
+does not authorize LIVE keys, mappings, deployment or activation. Independent
+whole-branch architecture/security/privacy review accepted `29dfdd6` on
+2026-10-12; verification and independent review of subsequent changes remain
+separate gates. Exact current-image identity is still blocked, and representative
+staging, remote exact-head CI and release/production-artifact gates remain open;
+see [H6 evidence](docs/superpowers/evidence/2026-10-08-getfit-h6-contract-evidence.md)
+and the [unexecuted staging L1 runbook](docs/superpowers/evidence/2026-10-12-getfit-h6-staging-l1-acceptance.md).
 
 ## Approved design and plans
 
