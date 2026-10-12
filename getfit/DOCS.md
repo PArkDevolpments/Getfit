@@ -137,6 +137,12 @@ its completion event, but its main-only initialization condition is false.
 Release and production-artifact acceptance gates remain unclosed.
 
 See the [H6 evidence](../docs/superpowers/evidence/2026-10-08-getfit-h6-contract-evidence.md)
-for actual commands, image provenance and limitations. This continuation does
-not authorize push, PR changes, merge, release, LIVE access/configuration,
-activation, H6S or H7. No H6 completion claim follows from local tests alone.
+for actual commands, image provenance and limitations. The earlier Task 9
+continuation on 2026-10-11 authorized local documentation and verification only;
+it did not authorize push, PR changes, merge or release. The current 2026-10-12
+scope separately grants the controller fast-forward publication and PR updates
+subject to verification and the applicable gates. This documentation worker does
+not publish. Merge remains blocked by the automatic production-publication
+boundary above; the exact-image and production/release gates remain unclosed.
+No LIVE access/configuration, deployment, activation, H6S or H7 is authorized.
+No H6 completion claim follows from local tests alone.
