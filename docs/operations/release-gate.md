@@ -58,28 +58,32 @@ before the combined manifest. They never execute on a LIVE runner.
 
 Before dispatch, an independent reviewer must record and review exact-source
 staging, compatibility, security and rollback acceptance. Supply four distinct
-same-repository evidence references as `staging_evidence`,
-`compatibility_evidence`, `security_evidence` and `rollback_evidence`. Supported
-references are:
+same-repository acceptance-comment URLs as `staging_evidence`,
+`compatibility_evidence`, `security_evidence` and `rollback_evidence`. Every
+input must use this form:
+`https://github.com/ktgregson93-collab/Getfit/issues/<issue-id>#issuecomment-<comment-id>`.
+For every named gate, an independent maintain/admin reviewer (neither the
+initiating nor rerun operator) must record these exact standalone lines, with
+the applicable gate and full source SHA:
 
-- `https://github.com/ktgregson93-collab/Getfit/actions/runs/<run-id>`: the helper
-  checks completed/successful status, exact source SHA, repository and all jobs
-  in the latest attempt. Reviewers must inspect that run's actual evidence and
-  confirm it covers the named gate; a successful arbitrary run does not prove
-  staging or independent acceptance.
-- `https://github.com/ktgregson93-collab/Getfit/issues/<issue-id>#issuecomment-<comment-id>`:
-  an independent maintain/admin reviewer (neither initiating nor rerun operator)
-  must record these exact standalone lines, with the applicable gate and SHA:
+```text
+release-acceptance: staging
+source-sha: <full source SHA>
+decision: accepted
+```
 
-  ```text
-  release-acceptance: staging
-  source-sha: <full source SHA>
-  decision: accepted
-  ```
-
-References and successful API responses do not replace independent acceptance
-of the actual tests, staging outcome, compatibility and rollback readiness.
-Never invent a reference or acceptance decision to satisfy the workflow.
+Use `compatibility`, `security` and `rollback` in their respective comments.
+Each comment must independently accept the actual evidence for that named gate;
+a generic acceptance, an operator's own comment, a stale SHA or a run-only URL
+cannot satisfy the gate. A reviewer may link supporting successful runs in the
+comment body using
+`https://github.com/ktgregson93-collab/Getfit/actions/runs/<run-id>`.
+The helper checks every such linked same-repository run's completed/successful
+status, exact source SHA and all jobs in its latest attempt. Successful runs
+remain supporting evidence and cannot replace the reviewer's named-gate
+acceptance. Reviewers must inspect actual tests, staging outcomes, compatibility,
+security and rollback readiness before recording acceptance. Never invent a
+reference or acceptance decision to satisfy the workflow.
 
 Separately authorize and carry out the LIVE Home Assistant change to disable
 Getfit automatic update before merging version-bearing app-store metadata and

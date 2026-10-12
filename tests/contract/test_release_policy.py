@@ -41,7 +41,7 @@ def candidate():
         "triggering_actor": "rerunner",
         "auto_update_disabled": "true",
         "evidence": {
-            gate: f"https://github.com/{REPO}/actions/runs/{number}"
+            gate: f"https://github.com/{REPO}/issues/20#issuecomment-{number + 100}"
             for number, gate in enumerate(("staging", "compatibility", "security", "rollback"), 10)
         },
     }
@@ -77,8 +77,20 @@ def api():
             ],
         },
     }
-    for number in range(10, 14):
-        values[f"/actions/runs/{number}"] = dict(run, id=number, name="Recorded gate")
+    values["/collaborators/reviewer/permission"] = {"permission": "write", "role_name": "maintain"}
+    for number, gate in enumerate(("staging", "compatibility", "security", "rollback"), 10):
+        reference = f"https://github.com/{REPO}/issues/20#issuecomment-{number + 100}"
+        values[f"/issues/comments/{number + 100}"] = {
+            "id": number + 100,
+            "html_url": reference,
+            "issue_url": f"https://api.github.com/repos/{REPO}/issues/20",
+            "user": {"login": "reviewer", "type": "User"},
+            "body": f"release-acceptance: {gate}\nsource-sha: {SHA}\ndecision: accepted\n"
+            f"Supporting evidence: https://github.com/{REPO}/actions/runs/{number}",
+        }
+        values[f"/actions/runs/{number}"] = dict(
+            run, id=number, name="Generic quality run", actor={"login": "operator"}
+        )
         values[f"/actions/runs/{number}/attempts/2/jobs?per_page=100"] = copy.deepcopy(
             values["/actions/runs/7/attempts/2/jobs?per_page=100"]
         )
@@ -186,8 +198,43 @@ def test_failed_evidence_run_denied(policy, candidate, api):
         policy.authorize(candidate, api, [VERSION] * 5)
 
 
-def test_one_ci_run_cannot_substitute_for_all_independent_gate_references(policy, candidate, api):
+def test_one_acceptance_comment_cannot_substitute_for_all_gate_references(policy, candidate, api):
     candidate["evidence"] = dict.fromkeys(candidate["evidence"], candidate["evidence"]["staging"])
+    with pytest.raises(policy.Denied):
+        policy.authorize(candidate, api, [VERSION] * 5)
+
+
+def test_four_operator_owned_green_runs_cannot_replace_independent_acceptance(
+    policy, candidate, api
+):
+    candidate["evidence"] = {
+        gate: f"https://github.com/{REPO}/actions/runs/{number}"
+        for number, gate in enumerate(("staging", "compatibility", "security", "rollback"), 10)
+    }
+    with pytest.raises(policy.Denied):
+        policy.authorize(candidate, api, [VERSION] * 5)
+
+
+@pytest.mark.parametrize("gate", ["staging", "compatibility", "security", "rollback"])
+@pytest.mark.parametrize(
+    "mutation", ["green_run", "wrong_gate", "operator", "rerunner", "stale_sha"]
+)
+def test_every_gate_requires_independent_named_exact_source_acceptance(
+    policy, candidate, api, gate, mutation
+):
+    reference = candidate["evidence"][gate]
+    comment_id = reference.rsplit("-", 1)[1]
+    comment = api.values[f"/issues/comments/{comment_id}"]
+    if mutation == "green_run":
+        candidate["evidence"][gate] = f"https://github.com/{REPO}/actions/runs/10"
+    elif mutation == "wrong_gate":
+        comment["body"] = comment["body"].replace(
+            f"release-acceptance: {gate}", "release-acceptance: unrelated"
+        )
+    elif mutation in {"operator", "rerunner"}:
+        comment["user"]["login"] = mutation
+    else:
+        comment["body"] = comment["body"].replace(SHA, "b" * 40)
     with pytest.raises(policy.Denied):
         policy.authorize(candidate, api, [VERSION] * 5)
 

@@ -8,19 +8,19 @@ on:
         required: true
         type: string
       staging_evidence:
-        description: Independent staging acceptance reference (see release-gate.md)
+        description: Independent exact-SHA staging acceptance issue-comment URL (see release-gate.md)
         required: true
         type: string
       compatibility_evidence:
-        description: Independent compatibility acceptance reference
+        description: Independent exact-SHA compatibility acceptance issue-comment URL
         required: true
         type: string
       security_evidence:
-        description: Independent security acceptance reference
+        description: Independent exact-SHA security acceptance issue-comment URL
         required: true
         type: string
       rollback_evidence:
-        description: Independent rollback acceptance reference
+        description: Independent exact-SHA rollback acceptance issue-comment URL
         required: true
         type: string
       auto_update_disabled:

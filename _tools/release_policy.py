@@ -146,29 +146,31 @@ def authorize(context: dict[str, Any], api: JsonAPI, versions: list[str]) -> str
         for gate in GATES:
             reference = evidence[gate]
             prefix = re.escape(f"https://github.com/{REPOSITORY}")
-            run_match = re.fullmatch(prefix + r"/actions/runs/([1-9][0-9]*)", reference)
             comment_match = re.fullmatch(
                 prefix + r"/issues/([1-9][0-9]*)#issuecomment-([1-9][0-9]*)", reference
             )
-            require(bool(run_match or comment_match), "malformed evidence reference")
-            if run_match:
-                successful_run(api, int(run_match[1]), sha)
-            elif comment_match:
-                comment = api(f"/issues/comments/{comment_match[2]}")
-                require(comment.get("html_url") == reference, "acceptance reference mismatch")
-                author = comment["user"]["login"]
-                require(
-                    author not in {context["actor"], context["triggering_actor"]},
-                    "acceptance must be independently recorded",
-                )
-                privileged(api, author)
-                body = comment.get("body", "").splitlines()
-                require(
-                    f"release-acceptance: {gate}" in body
-                    and f"source-sha: {sha}" in body
-                    and "decision: accepted" in body,
-                    "missing exact-source acceptance",
-                )
+            require(comment_match is not None, "independent acceptance comment required")
+            assert comment_match is not None
+            comment = api(f"/issues/comments/{comment_match[2]}")
+            require(comment.get("html_url") == reference, "acceptance reference mismatch")
+            author = comment["user"]["login"]
+            require(
+                author not in {context["actor"], context["triggering_actor"]},
+                "acceptance must be independently recorded",
+            )
+            privileged(api, author)
+            body = comment.get("body", "")
+            lines = body.splitlines()
+            require(
+                f"release-acceptance: {gate}" in lines
+                and f"source-sha: {sha}" in lines
+                and "decision: accepted" in lines,
+                "missing exact-source named-gate acceptance",
+            )
+            # Runs can support a reviewer's acceptance, never replace it. Check any
+            # same-repository linked runs using the existing exact-source job guard.
+            for run_id in re.findall(prefix + r"/actions/runs/([1-9][0-9]*)\b", body):
+                successful_run(api, int(run_id), sha)
         require(api("/branches/main")["commit"]["sha"] == sha, "main moved during preflight")
         return versions[0]
     except Denied:
