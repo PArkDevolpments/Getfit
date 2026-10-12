@@ -17,13 +17,13 @@ async def setup_required_exception_handler(
     request: Request,
     exc: Exception,
 ) -> HTMLResponse:
-    """Render only the authenticated subject needed for administrator mapping."""
+    """Render mapping guidance without exposing the authenticated principal."""
 
     if not isinstance(exc, WebIdentitySetupRequired):
         raise exc
     return templates.TemplateResponse(
         request=request,
         name="setup_required.html",
-        context={"subject_id": exc.subject_id},
+        context={},
         status_code=403,
     )

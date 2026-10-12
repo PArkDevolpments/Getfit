@@ -15,11 +15,54 @@ from hwa.domain.equipment import (
     EquipmentKind,
     InstallationEquipmentProfile,
 )
-from hwa.main import create_app
+from hwa.domain.identity import PersonContext
+from hwa.integrations.pep.ha_health_service import HaHealthServiceClient
+from hwa.integrations.pep.health_reader import PepHealthContext, PepHealthReader
+from hwa.integrations.pep.service_assertion import load_service_assertion_signer
 from hwa.services.production_bootstrap import (
     ProductionBootstrapConfig,
     bootstrap_production,
 )
+
+
+class _UnavailablePepHealthReader(PepHealthReader):
+    """An explicit activation/configuration state with no signing or transport."""
+
+    configured = False
+
+    def __init__(self, reason: str) -> None:
+        self._reason = reason
+
+    async def read(self, *, ha_user_id: str, person: PersonContext) -> PepHealthContext:
+        return PepHealthContext(
+            status="UNAVAILABLE", reason=self._reason, pep_person_id=person.pep_person_id,
+        )
+
+
+def build_pep_health_reader() -> PepHealthReader:
+    """Load one signer and private HA client only for explicit Health activation."""
+
+    try:
+        enabled = _bool_env("HWA_PEP_HEALTH_ENABLED", False)
+    except ValueError:
+        os.environ.pop("SUPERVISOR_TOKEN", None)
+        return _UnavailablePepHealthReader("PEP_HEALTH_CONFIGURATION_INVALID")
+    if not enabled:
+        return _UnavailablePepHealthReader("GETFIT_PEP_HEALTH_DISABLED")
+
+    # Consume the credential even when another enabled configuration value is invalid.
+    # Only the client's private field retains it after this construction returns.
+    token = os.environ.pop("SUPERVISOR_TOKEN", "")
+    try:
+        signer = load_service_assertion_signer(
+            os.getenv("HWA_PEP_HEALTH_SIGNING_KEY_FILE", ""),
+            kid=os.getenv("HWA_PEP_HEALTH_SIGNING_KID", "").strip(),
+        )
+        client = HaHealthServiceClient(supervisor_token=token, timeout_seconds=5.0)
+        return PepHealthReader(service_client=client, signer=signer)
+    except Exception:
+        # Never disclose exception text, secrets, paths or raw dependency state.
+        return _UnavailablePepHealthReader("PEP_HEALTH_CONFIGURATION_INVALID")
 
 
 def _bool_env(name: str, default: bool) -> bool:
@@ -127,6 +170,8 @@ def _programme_seed_root() -> Path:
 
 def build_production_app() -> FastAPI:
     """Bootstrap the migrated production database, then construct the serving app."""
+
+    from hwa.main import create_app
 
     engine = create_engine()
     seed_root = _programme_seed_root() / "home-workout-12m-v1"

@@ -20,6 +20,18 @@ jobs:
       - run: uv run pytest tests/integration -q
       - run: uv run pytest tests/contract -q
       - run: uv run pytest tests/e2e -q
+      - name: Test sanitized H6 compatibility gate
+        run: uv run pytest _tools/tests/test_qa_h6_ha_websocket_contract.py -q
+      - name: Verify H6 Supervisor protocol boundary (synthetic loopback)
+        run: uv run python _tools/qa_h6_ha_websocket_contract.py --proxy-harness > h6-proxy-contract.json
+      - name: Preserve sanitized H6 proxy evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: h6-proxy-contract
+          path: h6-proxy-contract.json
+          if-no-files-found: error
+          retention-days: 7
       - run: rm -f hwa.db
       - run: uv run alembic upgrade head
       - run: docker build -t getfit-ci .

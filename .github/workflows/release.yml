@@ -1,62 +1,79 @@
 name: Release
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact full current-main SHA with successful main-push CI
+        required: true
+        type: string
+      staging_evidence:
+        description: Independent exact-SHA staging acceptance issue-comment URL (see release-gate.md)
+        required: true
+        type: string
+      compatibility_evidence:
+        description: Independent exact-SHA compatibility acceptance issue-comment URL
+        required: true
+        type: string
+      security_evidence:
+        description: Independent exact-SHA security acceptance issue-comment URL
+        required: true
+        type: string
+      rollback_evidence:
+        description: Independent exact-SHA rollback acceptance issue-comment URL
+        required: true
+        type: string
+      auto_update_disabled:
+        description: LIVE auto-update was disabled by a separately authorized change
+        required: true
+        default: false
+        type: boolean
 
 permissions: {}
+
+concurrency:
+  group: getfit-publication
+  cancel-in-progress: false
 
 env:
   ARCHITECTURES: '["amd64", "aarch64"]'
   IMAGE_NAME: getfit
   REGISTRY_PREFIX: ghcr.io/ktgregson93-collab
   PUBLIC_IMAGE: ghcr.io/ktgregson93-collab/getfit
+  SOURCE_SHA: ${{ inputs.source_sha }}
+  STAGING_EVIDENCE: ${{ inputs.staging_evidence }}
+  COMPATIBILITY_EVIDENCE: ${{ inputs.compatibility_evidence }}
+  SECURITY_EVIDENCE: ${{ inputs.security_evidence }}
+  ROLLBACK_EVIDENCE: ${{ inputs.rollback_evidence }}
+  AUTO_UPDATE_DISABLED: ${{ inputs.auto_update_disabled }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   init:
-    name: Initialize release
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main'
+    name: Authorize manual release
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+      actions: read
+      packages: read
+      issues: read
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
-      version: ${{ steps.version.outputs.version }}
+      version: ${{ steps.policy.outputs.version }}
     steps:
-      - name: Checkout exact tested commit
+      - name: Checkout dispatch commit (never operator-supplied code)
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Validate release version
-        id: version
-        shell: bash
-        run: |
-          python - <<'PY'
-          import os
-          import re
-          import tomllib
-          from pathlib import Path
+      - name: Require authorized exact-main CI and recorded acceptance
+        id: policy
+        run: python _tools/release_policy.py authorize
 
-          config = Path("getfit/config.yaml").read_text(encoding="utf-8")
-          match = re.search(r'^version:\s*"([^"]+)"\s*$', config, re.MULTILINE)
-          if match is None:
-              raise SystemExit("getfit/config.yaml version is missing")
-          app_version = match.group(1)
-          with Path("pyproject.toml").open("rb") as handle:
-              project_version = tomllib.load(handle)["project"]["version"]
-          if app_version != project_version:
-              raise SystemExit(
-                  f"release version mismatch: app={app_version} project={project_version}"
-              )
-          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
-              output.write(f"version={app_version}\n")
-          PY
+      - name: Require all version tags absent in authenticated and public inventory
+        run: python _tools/release_policy.py absent
 
       - name: Prepare Home Assistant build matrix
         id: matrix
@@ -67,70 +84,153 @@ jobs:
           registry-prefix: ${{ env.REGISTRY_PREFIX }}
 
   build:
-    name: Build ${{ matrix.arch }} production image
+    name: Build ${{ matrix.arch }} version image
     needs: init
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+      actions: read
+      issues: read
       packages: write
       id-token: write
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.init.outputs.matrix) }}
     steps:
-      - name: Checkout exact tested commit
+      - name: Checkout dispatch commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Build and publish architecture image
+      - name: Recheck operator and current-main gates before writable builder
+        run: python _tools/release_policy.py authorize
+
+      - name: Recheck this architecture and combined version before writable builder
+        run: python _tools/release_policy.py absent --images getfit ${{ matrix.arch }}-getfit
+
+      - name: Build and publish architecture version
+        id: build
         uses: home-assistant/builder/actions/build-image@7412f0023ea9b6e58e8bb5059f1660f51376f49a
         with:
           arch: ${{ matrix.arch }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           image: ${{ matrix.image }}
-          image-tags: |
-            ${{ needs.init.outputs.version }}
-            latest
+          image-tags: ${{ needs.init.outputs.version }}
           push: "true"
-          skip-existing: ${{ needs.init.outputs.version }}
           version: ${{ needs.init.outputs.version }}
+          build-args: |
+            BUILD_REVISION=${{ github.sha }}
+
+      - name: Record this successful build digest
+        env:
+          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
+          BUILD_ARCH: ${{ matrix.arch }}
+          RELEASE_VERSION: ${{ needs.init.outputs.version }}
+        run: |
+          mkdir receipts
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          receipt = {
+              "arch": os.environ["BUILD_ARCH"],
+              "digest": os.environ["BUILD_DIGEST"],
+              "source_sha": os.environ["SOURCE_SHA"],
+              "version": os.environ["RELEASE_VERSION"],
+          }
+          Path("receipts", receipt["arch"] + ".json").write_text(json.dumps(receipt))
+          PY
+
+      - name: Verify anonymous architecture digest and exact-source provenance
+        run: python _tools/release_policy.py verify --image ${{ matrix.arch }}-getfit
+
+      - name: Preserve verified build receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-digest-${{ matrix.arch }}
+          path: receipts/*.json
+          if-no-files-found: error
+          retention-days: 30
 
   manifest:
-    name: Publish production multi-arch manifest
+    name: Publish verified version index
     needs: [init, build]
     runs-on: ubuntu-24.04
     permissions:
+      contents: read
+      actions: read
+      issues: read
       packages: write
       id-token: write
     steps:
-      - name: Publish Home Assistant multi-arch manifest
+      - name: Checkout dispatch commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Collect only this run's verified architecture receipts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-digest-*
+          path: receipts
+          merge-multiple: true
+
+      - name: Recheck operator and current-main gates before writable manifest
+        run: python _tools/release_policy.py authorize
+
+      - name: Verify both architecture digests and provenance before index publication
+        run: python _tools/release_policy.py verify --architectures-only
+
+      - name: Recheck combined version absence immediately before publication
+        run: python _tools/release_policy.py absent --images getfit
+
+      - name: Publish Home Assistant multi-arch version manifest
         uses: home-assistant/builder/actions/publish-multi-arch-manifest@7412f0023ea9b6e58e8bb5059f1660f51376f49a
         with:
           architectures: ${{ env.ARCHITECTURES }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           image-name: ${{ env.IMAGE_NAME }}
-          image-tags: |
-            ${{ needs.init.outputs.version }}
-            latest
+          image-tags: ${{ needs.init.outputs.version }}
           registry-prefix: ${{ env.REGISTRY_PREFIX }}
-          skip-existing: ${{ needs.init.outputs.version }}
 
   verify:
-    name: Verify public production image
+    name: Verify anonymous version index and pulls
     needs: [init, manifest]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+      actions: read
     steps:
-      - name: Inspect anonymous multi-arch manifest
-        shell: bash
-        run: |
-          docker manifest inspect "${PUBLIC_IMAGE}:${{ needs.init.outputs.version }}"
+      - name: Checkout dispatch commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Collect this run's verified architecture receipts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-digest-*
+          path: receipts
+          merge-multiple: true
+
+      - name: Join public index to this build's manifests and exact-source configs
+        run: python _tools/release_policy.py verify > release-provenance.json
+
+      - name: Preserve verified version and index/platform digests
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-provenance
+          path: release-provenance.json
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Prove anonymous pulls for supported architectures
-        shell: bash
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/anonymous-docker
         run: |
-          docker pull --platform linux/amd64 "${PUBLIC_IMAGE}:${{ needs.init.outputs.version }}"
-          docker pull --platform linux/arm64 "${PUBLIC_IMAGE}:${{ needs.init.outputs.version }}"
+          mkdir -p "$DOCKER_CONFIG"
+          INDEX_DIGEST="$(jq -r '.verified_digests.index' release-provenance.json)"
+          docker pull --platform linux/amd64 "${PUBLIC_IMAGE}@${INDEX_DIGEST}"
+          docker pull --platform linux/arm64 "${PUBLIC_IMAGE}@${INDEX_DIGEST}"

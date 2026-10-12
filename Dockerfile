@@ -1,11 +1,14 @@
 FROM ghcr.io/home-assistant/base-python:3.12-alpine3.24
 
-ARG BUILD_VERSION=0.1.39
+ARG BUILD_VERSION=0.1.40
 ARG BUILD_ARCH=amd64
+ARG BUILD_REVISION
 
 LABEL \
   org.opencontainers.image.source="https://github.com/ktgregson93-collab/Getfit" \
   org.opencontainers.image.description="Getfit Home Workout Assistant for Home Assistant" \
+  org.opencontainers.image.revision="${BUILD_REVISION}" \
+  org.opencontainers.image.version="${BUILD_VERSION}" \
   io.hass.version="${BUILD_VERSION}" \
   io.hass.type="app" \
   io.hass.arch="${BUILD_ARCH}"

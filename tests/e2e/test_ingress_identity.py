@@ -8,6 +8,7 @@ from hwa.auth.ha_ingress import HomeAssistantIngressPrincipalProvider
 from hwa.db.base import Base
 from hwa.db.engine import DatabaseSettings, create_engine
 from hwa.db.models.identity import ExternalIdentityMapping, Person
+from hwa.integrations.pep.health_reader import PepHealthReader
 from hwa.main import create_app
 
 _ROOT = Path(__file__).resolve().parents[2]
@@ -119,3 +120,49 @@ def test_trusted_supervisor_ingress_resolves_only_mapped_person(tmp_path) -> Non
     finally:
         client.close()
         engine.dispose()
+
+
+class _UnreachedHealthBoundary:
+    def __init__(self):
+        self.subjects = []
+
+    def sign(self, subject):
+        self.subjects.append(subject)
+        raise AssertionError("Untrusted or unmapped request reached signing")
+
+    async def get_health_context(self, assertion):
+        raise AssertionError("Untrusted or unmapped request reached HA service")
+
+
+def test_direct_spoofed_web_request_cannot_reach_health_signer(tmp_path):
+    engine = _engine(tmp_path)
+    boundary = _UnreachedHealthBoundary()
+    with TestClient(
+        create_app(
+            engine=engine,
+            pep_health_reader=PepHealthReader(service_client=boundary, signer=boundary),
+        )
+    ) as client:
+        response = client.get("/", headers={"X-Remote-User-Id": "ha-kris"})
+        assert response.status_code == 401
+        assert response.json()["detail"]["code"] == "UNAUTHENTICATED_INGRESS"
+        assert boundary.subjects == []
+    engine.dispose()
+
+
+def test_unmapped_trusted_web_subject_cannot_reach_health_signer(tmp_path):
+    engine = _engine(tmp_path)
+    boundary = _UnreachedHealthBoundary()
+    provider = HomeAssistantIngressPrincipalProvider(trusted_hosts={"testclient"})
+    with TestClient(
+        create_app(
+            engine=engine,
+            principal_provider=provider,
+            pep_health_reader=PepHealthReader(service_client=boundary, signer=boundary),
+        )
+    ) as client:
+        response = client.get("/", headers={"X-Remote-User-Id": "synthetic-unmapped"})
+        assert response.status_code == 403
+        assert "synthetic-unmapped" not in response.text
+        assert boundary.subjects == []
+    engine.dispose()

@@ -23,7 +23,9 @@ def _assert_safe_setup_page(response, subject_id: str) -> None:
     assert response.headers["content-type"].startswith("text/html")
     html = response.text
     assert "Getfit setup required" in html
-    assert subject_id in html
+    assert subject_id not in html
+    assert 'id="ha-user-id"' not in html
+    assert "administrator" in html
     assert "kris_ha_user_id" in html
     assert "kirsty_ha_user_id" in html
     assert "restart Getfit" in html

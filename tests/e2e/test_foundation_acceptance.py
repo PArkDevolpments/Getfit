@@ -17,6 +17,7 @@ from hwa.db.models.programme import ProgrammeDay
 from hwa.db.models.workout import WorkoutRevision
 from hwa.domain.identity import PersonContext
 from hwa.integrations.menu.reader import MenuNutritionReader
+from hwa.integrations.pep.ha_health_service import HaHealthServiceFailure
 from hwa.integrations.pep.health_reader import PepHealthReader
 from hwa.integrations.pep.workout_projection import project_workout_for_pep
 from hwa.main import create_app
@@ -278,12 +279,21 @@ def test_foundation_full_training_evidence_journey_survives_restart(tmp_path) ->
 
 @pytest.mark.asyncio
 async def test_external_context_outage_never_blocks_durable_workout_authority() -> None:
+    class OfflineHealthService:
+        async def get_health_context(self, assertion: str) -> HaHealthServiceFailure:
+            return HaHealthServiceFailure()
+
+    class SyntheticSigner:
+        def sign(self, subject: str) -> str:
+            return "synthetic-assertion"
+
     def offline(request: httpx.Request) -> httpx.Response:
         raise httpx.ConnectError("offline", request=request)
 
     transport = httpx.MockTransport(offline)
-    async with httpx.AsyncClient(transport=transport) as pep_client:
-        pep = await PepHealthReader(pep_client).read(_context())
+    pep = await PepHealthReader(
+        service_client=OfflineHealthService(), signer=SyntheticSigner()
+    ).read(ha_user_id="synthetic-ha-subject", person=_context())
     async with httpx.AsyncClient(transport=transport) as menu_client:
         menu = await MenuNutritionReader(menu_client).read(_context())
 
